@@ -8,6 +8,7 @@ import { SortieForm } from "@/components/sortie-conteneur/SortieForm";
 import { SortieTable } from "@/components/sortie-conteneur/SortieTable";
 import { ReturnDialog } from "@/components/sortie-conteneur/ReturnDialog";
 import { ExportDialog } from "@/components/sortie-conteneur/ExportDialog";
+import { SortieStats } from "@/components/sortie-conteneur/SortieStats";
 import { useSortieConteneur } from "@/hooks/useSortieConteneur";
 
 const SortieConteneurPage = () => {
@@ -58,6 +59,7 @@ const SortieConteneurPage = () => {
   }
   return (
     <div className="space-y-6">
+      {/* En-tête de la page */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Sortie de Conteneur</h1>
@@ -102,6 +104,11 @@ const SortieConteneurPage = () => {
           </Dialog>
         </div>
       </div>
+
+      {/* Statistiques récapitulatives */}
+      <SortieStats sorties={sorties} />
+
+      {/* Onglets et contenu */}
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full max-w-md grid-cols-2">
