@@ -158,9 +158,6 @@ return [
          * Package Service Providers...
          */
         Laravel\Sanctum\SanctumServiceProvider::class,
-        Spatie\Permission\PermissionServiceProvider::class,
-        Barryvdh\Cors\ServiceProvider::class,
-        Maatwebsite\Excel\ExcelServiceProvider::class,
 
         /*
          * Application Service Providers...
@@ -183,7 +180,7 @@ return [
     */
 
     'aliases' => Facade::defaultAliases()->merge([
-        'Excel' => Maatwebsite\Excel\Facades\Excel::class,
+        // Add custom aliases here when needed
     ])->toArray(),
 
 ];
