@@ -1,6 +1,7 @@
 import { Sidebar } from "./Sidebar";
 import { GlobalSearch } from "./GlobalSearch";
 import { NotificationCenter } from "@/components/notifications/NotificationCenter";
+import { UserMenu } from "./UserMenu";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -14,7 +15,10 @@ export function Layout({ children }: LayoutProps) {
         <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
           <div className="flex h-14 items-center justify-between px-6">
             <GlobalSearch />
-            <NotificationCenter />
+            <div className="flex items-center space-x-4">
+              <NotificationCenter />
+              <UserMenu />
+            </div>
           </div>
         </div>
         <div className="p-6">
