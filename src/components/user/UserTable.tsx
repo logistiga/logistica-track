@@ -4,12 +4,14 @@ import { Badge } from "@/components/ui/badge";
 import { Edit, Trash2 } from "lucide-react";
 
 interface User {
-  id: string;
-  nom: string;
+  id: number;
+  name: string;
   email: string;
   role: string;
-  dateCreation: string;
-  statut: "actif" | "inactif";
+  role_label?: string;
+  actif: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 interface Role {
@@ -23,7 +25,7 @@ interface Role {
 interface UserTableProps {
   users: User[];
   roles: Role[];
-  onDeleteUser: (id: string) => void;
+  onDeleteUser: (id: number) => void;
 }
 
 export function UserTable({ users, roles, onDeleteUser }: UserTableProps) {
@@ -55,16 +57,22 @@ export function UserTable({ users, roles, onDeleteUser }: UserTableProps) {
           <TableHead>Email</TableHead>
           <TableHead>Rôle</TableHead>
           <TableHead>Date de création</TableHead>
+          <TableHead>Statut</TableHead>
           <TableHead className="w-24">Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {users.map((user) => (
           <TableRow key={user.id}>
-            <TableCell className="font-medium">{user.nom}</TableCell>
+            <TableCell className="font-medium">{user.name}</TableCell>
             <TableCell>{user.email}</TableCell>
-            <TableCell>{getRoleBadge(user.role)}</TableCell>
-            <TableCell>{user.dateCreation}</TableCell>
+            <TableCell>{getRoleBadge(user.role_label || user.role)}</TableCell>
+            <TableCell>{new Date(user.created_at).toLocaleDateString('fr-FR')}</TableCell>
+            <TableCell>
+              <Badge variant={user.actif ? "default" : "secondary"}>
+                {user.actif ? "Actif" : "Inactif"}
+              </Badge>
+            </TableCell>
             <TableCell>
               <div className="flex space-x-2">
                 <Button variant="outline" size="sm">

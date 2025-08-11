@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,15 +10,9 @@ import { Users, Plus, Search, Shield, UserPlus } from "lucide-react";
 import { UserTable } from "@/components/user/UserTable";
 import { RoleTable } from "@/components/user/RoleTable";
 import { toast } from "@/hooks/use-toast";
-
-interface User {
-  id: string;
-  nom: string;
-  email: string;
-  role: string;
-  dateCreation: string;
-  statut: "actif" | "inactif";
-}
+import { useAuth } from "@/contexts/AuthContext";
+import { userService, CreateUserData } from "@/services/userService";
+import { User } from "@/services/authService";
 
 interface Role {
   id: string;
@@ -29,31 +23,82 @@ interface Role {
 }
 
 export default function Utilisateurs() {
-  const [users, setUsers] = useState<User[]>([
-    { id: "1", nom: "Youssef Alami", email: "youssef@logistica.com", role: "Chauffeur", dateCreation: "10/08/2025", statut: "actif" },
-    { id: "2", nom: "Salma Fassi", email: "salma@logistica.com", role: "Administrateur", dateCreation: "10/08/2025", statut: "actif" },
-    { id: "3", nom: "Omar Amraoui", email: "omar@logistica.com", role: "Super Administrateur", dateCreation: "10/08/2025", statut: "actif" },
-    { id: "4", nom: "Ahmed Benali", email: "ahmed@logistica.com", role: "Manager Opérations", dateCreation: "10/08/2025", statut: "actif" },
-    { id: "5", nom: "Hassan Idrissi", email: "hassan@logistica.com", role: "Opérateur", dateCreation: "10/08/2025", statut: "actif" },
-  ]);
+  const { user: currentUser } = useAuth();
+  const [users, setUsers] = useState<User[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const [roles, setRoles] = useState<Role[]>([
+  // Vérifier que l'utilisateur est admin
+  if (!currentUser || currentUser.role !== 'admin') {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Card className="p-8">
+          <CardContent className="text-center">
+            <Shield className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
+            <h2 className="text-xl font-semibold mb-2">Accès restreint</h2>
+            <p className="text-muted-foreground">
+              Seuls les administrateurs peuvent accéder à cette section.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  const [roles] = useState<Role[]>([
     { id: "1", nom: "Administrateur", description: "Gestion des utilisateurs et opérations", permissions: 39, couleur: "violet" },
-    { id: "2", nom: "Chauffeur", description: "Consultation des missions", permissions: 5, couleur: "orange" },
-    { id: "3", nom: "Lecteur", description: "Consultation uniquement", permissions: 12, couleur: "gray" },
-    { id: "4", nom: "Manager Opérations", description: "Supervision des opérations logistiques", permissions: 21, couleur: "blue" },
-    { id: "5", nom: "Opérateur", description: "Opérations courantes", permissions: 14, couleur: "yellow" },
-    { id: "6", nom: "Super Administrateur", description: "Accès complet au système", permissions: 49, couleur: "purple" },
+    { id: "2", nom: "Manager", description: "Supervision des opérations", permissions: 21, couleur: "blue" },
+    { id: "3", nom: "Opérateur", description: "Opérations courantes", permissions: 14, couleur: "yellow" },
+    { id: "4", nom: "Visiteur", description: "Consultation uniquement", permissions: 5, couleur: "gray" },
   ]);
 
   const [isAddUserDialogOpen, setIsAddUserDialogOpen] = useState(false);
   const [isAddRoleDialogOpen, setIsAddRoleDialogOpen] = useState(false);
-  const [newUser, setNewUser] = useState({ nom: "", email: "", role: "", motDePasse: "" });
+  const [newUser, setNewUser] = useState({
+    name: "",
+    email: "",
+    role: "operator" as const,
+    password: "",
+    telephone: "",
+    departement: ""
+  });
   const [newRole, setNewRole] = useState({ nom: "", description: "", permissions: 0, couleur: "" });
   const [searchTerm, setSearchTerm] = useState("");
 
-  const handleAddUser = () => {
-    if (!newUser.nom || !newUser.email || !newUser.role) {
+  // Charger les utilisateurs
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const userData = await userService.getUsers();
+        setUsers(userData);
+      } catch (error) {
+        toast({
+          title: 'Erreur',
+          description: 'Impossible de charger les utilisateurs',
+          variant: 'destructive',
+        });
+        // Fallback avec des données fictives si l'API n'est pas disponible
+        setUsers([
+          {
+            id: 1,
+            name: "Admin Principal",
+            email: "admin@logistica.com",
+            role: "admin",
+            role_label: "Administrateur",
+            actif: true,
+            created_at: "2024-01-15",
+            updated_at: "2024-01-15"
+          }
+        ]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchUsers();
+  }, []);
+
+  const handleAddUser = async () => {
+    if (!newUser.name || !newUser.email || !newUser.role || !newUser.password) {
       toast({
         title: "Erreur",
         description: "Veuillez remplir tous les champs obligatoires",
@@ -62,22 +107,31 @@ export default function Utilisateurs() {
       return;
     }
 
-    const user: User = {
-      id: Date.now().toString(),
-      nom: newUser.nom,
-      email: newUser.email,
-      role: newUser.role,
-      dateCreation: new Date().toLocaleDateString('fr-FR'),
-      statut: "actif",
-    };
-
-    setUsers([...users, user]);
-    setNewUser({ nom: "", email: "", role: "", motDePasse: "" });
-    setIsAddUserDialogOpen(false);
-    toast({
-      title: "Succès",
-      description: "Utilisateur ajouté avec succès",
-    });
+    try {
+      const userData: CreateUserData = {
+        name: newUser.name,
+        email: newUser.email,
+        role: newUser.role,
+        password: newUser.password,
+        telephone: newUser.telephone,
+        departement: newUser.departement,
+      };
+      
+      const createdUser = await userService.createUser(userData);
+      setUsers([...users, createdUser]);
+      setNewUser({ name: "", email: "", role: "operator", password: "", telephone: "", departement: "" });
+      setIsAddUserDialogOpen(false);
+      toast({
+        title: 'Utilisateur créé',
+        description: `${createdUser.name} a été créé avec succès.`,
+      });
+    } catch (error) {
+      toast({
+        title: 'Erreur',
+        description: error instanceof Error ? error.message : 'Erreur lors de la création',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleAddRole = () => {
@@ -95,41 +149,54 @@ export default function Utilisateurs() {
       ...newRole,
     };
 
-    setRoles([...roles, role]);
-    setNewRole({ nom: "", description: "", permissions: 0, couleur: "" });
-    setIsAddRoleDialogOpen(false);
     toast({
-      title: "Succès",
-      description: "Rôle ajouté avec succès",
+      title: "Info",
+      description: "La gestion des rôles sera bientôt disponible",
     });
   };
 
-  const handleDeleteUser = (id: string) => {
-    setUsers(users.filter(u => u.id !== id));
-    toast({
-      title: "Supprimé",
-      description: "Utilisateur supprimé avec succès",
-    });
+  const handleDeleteUser = async (userId: number) => {
+    try {
+      await userService.deleteUser(userId);
+      setUsers(users.filter(user => user.id !== userId));
+      toast({
+        title: 'Utilisateur supprimé',
+        description: 'L\'utilisateur a été supprimé avec succès.',
+      });
+    } catch (error) {
+      toast({
+        title: 'Erreur',
+        description: error instanceof Error ? error.message : 'Erreur lors de la suppression',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleDeleteRole = (id: string) => {
-    setRoles(roles.filter(r => r.id !== id));
     toast({
-      title: "Supprimé",
-      description: "Rôle supprimé avec succès",
+      title: "Info",
+      description: "La suppression des rôles sera bientôt disponible",
     });
   };
 
   const filteredUsers = users.filter(user =>
-    user.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.role.toLowerCase().includes(searchTerm.toLowerCase())
+    (user.role_label || user.role).toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const filteredRoles = roles.filter(role =>
     role.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
     role.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div>Chargement...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -150,7 +217,7 @@ export default function Utilisateurs() {
       <div className="relative w-96">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
         <Input
-          placeholder="Rechercher des rôles..."
+          placeholder="Rechercher des utilisateurs..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="pl-10"
@@ -181,16 +248,16 @@ export default function Utilisateurs() {
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Ajouter un nouvel utilisateur</DialogTitle>
+                  <DialogTitle>Créer un nouvel utilisateur</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4">
                   <div>
-                    <Label htmlFor="nom">Nom complet *</Label>
+                    <Label htmlFor="name">Nom complet *</Label>
                     <Input
-                      id="nom"
-                      value={newUser.nom}
-                      onChange={(e) => setNewUser({ ...newUser, nom: e.target.value })}
-                      placeholder="Ex: John Doe"
+                      id="name"
+                      value={newUser.name}
+                      onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
+                      placeholder="Ex: Jean Dupont"
                     />
                   </div>
                   <div>
@@ -200,40 +267,57 @@ export default function Utilisateurs() {
                       type="email"
                       value={newUser.email}
                       onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
-                      placeholder="Ex: john@logistica.com"
+                      placeholder="Ex: jean@logistica.com"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="password">Mot de passe *</Label>
+                    <Input
+                      id="password"
+                      type="password"
+                      value={newUser.password}
+                      onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+                      placeholder="••••••••"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="telephone">Téléphone</Label>
+                    <Input
+                      id="telephone"
+                      value={newUser.telephone}
+                      onChange={(e) => setNewUser({ ...newUser, telephone: e.target.value })}
+                      placeholder="+221 77 123 45 67"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="departement">Département</Label>
+                    <Input
+                      id="departement"
+                      value={newUser.departement}
+                      onChange={(e) => setNewUser({ ...newUser, departement: e.target.value })}
+                      placeholder="Transport, Logistique, etc."
                     />
                   </div>
                   <div>
                     <Label htmlFor="role">Rôle *</Label>
-                    <Select value={newUser.role} onValueChange={(value) => setNewUser({ ...newUser, role: value })}>
+                    <Select value={newUser.role} onValueChange={(value: any) => setNewUser({ ...newUser, role: value })}>
                       <SelectTrigger>
                         <SelectValue placeholder="Sélectionner un rôle" />
                       </SelectTrigger>
                       <SelectContent>
-                        {roles.map((role) => (
-                          <SelectItem key={role.id} value={role.nom}>
-                            {role.nom}
-                          </SelectItem>
-                        ))}
+                        <SelectItem value="admin">Administrateur</SelectItem>
+                        <SelectItem value="manager">Manager</SelectItem>
+                        <SelectItem value="operator">Opérateur</SelectItem>
+                        <SelectItem value="viewer">Visiteur</SelectItem>
                       </SelectContent>
                     </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="motDePasse">Mot de passe (optionnel)</Label>
-                    <Input
-                      id="motDePasse"
-                      type="password"
-                      value={newUser.motDePasse}
-                      onChange={(e) => setNewUser({ ...newUser, motDePasse: e.target.value })}
-                      placeholder="Laissez vide pour générer automatiquement"
-                    />
                   </div>
                   <div className="flex justify-end space-x-2">
                     <Button variant="outline" onClick={() => setIsAddUserDialogOpen(false)}>
                       Annuler
                     </Button>
                     <Button onClick={handleAddUser}>
-                      Ajouter
+                      Créer l'utilisateur
                     </Button>
                   </div>
                 </div>
@@ -244,7 +328,7 @@ export default function Utilisateurs() {
           {/* Users List */}
           <Card className="shadow-lg">
             <CardHeader>
-              <CardTitle>Liste des Utilisateurs</CardTitle>
+              <CardTitle>Liste des Utilisateurs ({filteredUsers.length})</CardTitle>
             </CardHeader>
             <CardContent>
               <UserTable 
@@ -277,9 +361,23 @@ export default function Utilisateurs() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground">Rôles Admin</p>
-                    <p className="text-3xl font-bold text-warning">2</p>
-                    <p className="text-xs text-muted-foreground">accès privilégiés</p>
+                    <p className="text-sm font-medium text-muted-foreground">Utilisateurs Actifs</p>
+                    <p className="text-3xl font-bold text-success">{users.filter(u => u.actif).length}</p>
+                    <p className="text-xs text-muted-foreground">comptes actifs</p>
+                  </div>
+                  <div className="p-3 bg-success-light rounded-xl">
+                    <Users className="w-6 h-6 text-success" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="shadow-lg">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Admins</p>
+                    <p className="text-3xl font-bold text-warning">{users.filter(u => u.role === 'admin').length}</p>
+                    <p className="text-xs text-muted-foreground">administrateurs</p>
                   </div>
                   <div className="p-3 bg-warning-light rounded-xl">
                     <Shield className="w-6 h-6 text-warning" />
@@ -291,107 +389,22 @@ export default function Utilisateurs() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground">Modules</p>
-                    <p className="text-3xl font-bold text-success">8</p>
-                    <p className="text-xs text-muted-foreground">modules disponibles</p>
-                  </div>
-                  <div className="p-3 bg-success-light rounded-xl">
-                    <Shield className="w-6 h-6 text-success" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="shadow-lg">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Permissions</p>
-                    <p className="text-3xl font-bold text-primary">49</p>
-                    <p className="text-xs text-muted-foreground">actions possibles</p>
+                    <p className="text-sm font-medium text-muted-foreground">Total Utilisateurs</p>
+                    <p className="text-3xl font-bold text-primary">{users.length}</p>
+                    <p className="text-xs text-muted-foreground">comptes créés</p>
                   </div>
                   <div className="p-3 bg-primary-light rounded-xl">
-                    <Shield className="w-6 h-6 text-primary" />
+                    <Users className="w-6 h-6 text-primary" />
                   </div>
                 </div>
               </CardContent>
             </Card>
-          </div>
-
-          {/* Add Role Button */}
-          <div className="flex justify-end">
-            <Dialog open={isAddRoleDialogOpen} onOpenChange={setIsAddRoleDialogOpen}>
-              <DialogTrigger asChild>
-                <Button className="bg-gradient-to-r from-primary to-primary-dark hover:shadow-primary">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Nouveau Rôle
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Ajouter un nouveau rôle</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="nomRole">Nom du rôle *</Label>
-                    <Input
-                      id="nomRole"
-                      value={newRole.nom}
-                      onChange={(e) => setNewRole({ ...newRole, nom: e.target.value })}
-                      placeholder="Ex: Gestionnaire"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="description">Description *</Label>
-                    <Input
-                      id="description"
-                      value={newRole.description}
-                      onChange={(e) => setNewRole({ ...newRole, description: e.target.value })}
-                      placeholder="Ex: Gestion des opérations courantes"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="permissions">Nombre de permissions</Label>
-                    <Input
-                      id="permissions"
-                      type="number"
-                      value={newRole.permissions}
-                      onChange={(e) => setNewRole({ ...newRole, permissions: parseInt(e.target.value) || 0 })}
-                      placeholder="Ex: 15"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="couleur">Couleur</Label>
-                    <Select value={newRole.couleur} onValueChange={(value) => setNewRole({ ...newRole, couleur: value })}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Choisir une couleur" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="blue">Bleu</SelectItem>
-                        <SelectItem value="green">Vert</SelectItem>
-                        <SelectItem value="yellow">Jaune</SelectItem>
-                        <SelectItem value="orange">Orange</SelectItem>
-                        <SelectItem value="purple">Violet</SelectItem>
-                        <SelectItem value="gray">Gris</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="flex justify-end space-x-2">
-                    <Button variant="outline" onClick={() => setIsAddRoleDialogOpen(false)}>
-                      Annuler
-                    </Button>
-                    <Button onClick={handleAddRole}>
-                      Ajouter
-                    </Button>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
           </div>
 
           {/* Roles Table */}
           <Card className="shadow-lg">
             <CardHeader>
-              <CardTitle>Liste des Rôles</CardTitle>
+              <CardTitle>Rôles Système</CardTitle>
             </CardHeader>
             <CardContent>
               <RoleTable 

@@ -128,13 +128,7 @@ export default function Login() {
 
             <div className="text-center">
               <p className="text-sm text-muted-foreground">
-                Pas encore de compte ?{" "}
-                <Link 
-                  to="/register" 
-                  className="text-primary hover:text-primary-dark font-medium underline"
-                >
-                  Créer un compte
-                </Link>
+                Contactez votre administrateur pour créer un compte
               </p>
             </div>
           </CardContent>
