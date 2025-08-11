@@ -70,12 +70,12 @@ export const ExportDialog = ({ sorties }: ExportDialogProps) => {
     });
   };
 
-  const getCamionLabel = (camionId: string) => {
+  const getCamionLabel = (camionId: number) => {
     return getVehiculeDisplay(camionId);
   };
 
-  const getArmateurLabel = (code: string) => {
-    return getArmateurDisplay(code);
+  const getArmateurLabel = (id: number) => {
+    return getArmateurDisplay(id);
   };
 
   const exportToExcel = () => {
@@ -87,7 +87,7 @@ export const ExportDialog = ({ sorties }: ExportDialogProps) => {
       const data = filteredSorties.map(sortie => ({
         'Numéro de conteneur': sortie.numeroConteneur,
         'Numéro BL': sortie.numeroBL,
-        'Code armateur': getArmateurLabel(sortie.codeArmateur),
+        'Code armateur': getArmateurLabel(parseInt(sortie.codeArmateur)),
         'Client': sortie.nomClient,
         'Prime chauffeur': formatCurrency(sortie.primeChauffeur),
         'Destination': sortie.destination === "base" ? "Base" : "Client",
@@ -96,7 +96,7 @@ export const ExportDialog = ({ sorties }: ExportDialogProps) => {
         'Jours BAD': sortie.joursBAD || "",
         'Date fin franchise': sortie.dateFinFranchise || "",
         'Transitaire': sortie.nomTransitaire,
-        'Camion': getCamionLabel(sortie.camion),
+        'Camion': getCamionLabel(parseInt(sortie.camion)),
         'Remorque': sortie.remorque,
         'Date de sortie': sortie.dateSortie,
         'Date de retour': sortie.dateRetour || "",

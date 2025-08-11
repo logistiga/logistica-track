@@ -19,7 +19,7 @@ interface SortieFormProps {
 }
 
 export const SortieForm = ({ formData, setFormData, onSubmit, onCancel }: SortieFormProps) => {
-  const { armateurs, getArmateurByCode, getArmateurOptions } = useArmateurs();
+  const { armateurs, getArmateurByCode, getArmateurById, getArmateurOptions } = useArmateurs();
   const { getCamionOptions, getRemorqueOptions } = useVehicules();
   const [selectedArmateur, setSelectedArmateur] = useState<any>(null);
   const [joursCalcules, setJoursCalcules] = useState<number>(0);
@@ -34,12 +34,11 @@ export const SortieForm = ({ formData, setFormData, onSubmit, onCancel }: Sortie
 
   // Mise à jour des informations armateur
   useEffect(() => {
-    const armateur = getArmateurByCode(formData.codeArmateur);
+    const armateurId = parseInt(formData.codeArmateur);
+    const armateur = getArmateurById(armateurId);
     setSelectedArmateur(armateur);
-    if (armateur && formData.typeDestination === "detention") {
-      setFormData({ ...formData, joursBAD: armateur.joursGratuits.toString() });
-    }
-  }, [formData.codeArmateur, formData.typeDestination, getArmateurByCode]);
+    // Note: joursGratuits ne fait plus partie du modèle armateur - à supprimer ou gérer différemment
+  }, [formData.codeArmateur, formData.typeDestination, getArmateurById]);
 
   return (
     <form onSubmit={onSubmit} className="space-y-6">
@@ -235,17 +234,15 @@ export const SortieForm = ({ formData, setFormData, onSubmit, onCancel }: Sortie
 
           {formData.typeDestination === "detention" && selectedArmateur && (
             <div className="p-4 bg-muted rounded-lg">
-              <h4 className="font-medium mb-2">Informations de franchise automatiques</h4>
+              <h4 className="font-medium mb-2">Informations armateur</h4>
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <span className="text-muted-foreground">Jours gratuits:</span>
-                  <span className="ml-2 font-medium">{selectedArmateur.joursGratuits} jours</span>
+                  <span className="text-muted-foreground">Code:</span>
+                  <span className="ml-2 font-medium">{selectedArmateur.code}</span>
                 </div>
                 <div>
-                  <span className="text-muted-foreground">Prix par jour:</span>
-                  <span className="ml-2 font-medium">
-                    {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF' }).format(selectedArmateur.prixParJour)}
-                  </span>
+                  <span className="text-muted-foreground">Nom:</span>
+                  <span className="ml-2 font-medium">{selectedArmateur.nom}</span>
                 </div>
               </div>
             </div>

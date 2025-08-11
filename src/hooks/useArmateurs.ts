@@ -1,13 +1,7 @@
 import { useState, useEffect } from "react";
+import { armateurService, Armateur } from "@/services/armateurService";
 
-export interface Armateur {
-  id: string;
-  code: string;
-  nom: string;
-  typeConteneur: string;
-  joursGratuits: number;
-  prixParJour: number;
-}
+export { type Armateur } from "@/services/armateurService";
 
 export function useArmateurs() {
   const [armateurs, setArmateurs] = useState<Armateur[]>([]);
@@ -23,12 +17,15 @@ export function useArmateurs() {
       setLoading(true);
       setError(null);
       
-      // Simulation d'un appel API - remplacer par votre logique réelle
-      const data = getArmateursMockData();
+      const data = await armateurService.getArmateurs();
       setArmateurs(data);
     } catch (err) {
       setError('Erreur lors du chargement des armateurs');
       console.error('Erreur armateurs:', err);
+      
+      // Fallback vers les données mock en cas d'erreur
+      const mockData = getArmateursMockData();
+      setArmateurs(mockData);
     } finally {
       setLoading(false);
     }
@@ -38,16 +35,22 @@ export function useArmateurs() {
     return armateurs.find(a => a.code === code);
   };
 
-  const getArmateurOptions = () => {
-    return armateurs.map(armateur => ({
-      value: armateur.code,
-      label: `${armateur.code} - ${armateur.nom} (${armateur.typeConteneur})`
-    }));
+  const getArmateurById = (id: number): Armateur | undefined => {
+    return armateurs.find(a => a.id === id);
   };
 
-  const getArmateurDisplay = (code: string): string => {
-    const armateur = getArmateurByCode(code);
-    return armateur ? `${armateur.code} - ${armateur.nom}` : code;
+  const getArmateurOptions = () => {
+    return armateurs
+      .filter(armateur => armateur.actif)
+      .map(armateur => ({
+        value: armateur.id.toString(),
+        label: `${armateur.code} - ${armateur.nom}`
+      }));
+  };
+
+  const getArmateurDisplay = (id: number): string => {
+    const armateur = getArmateurById(id);
+    return armateur ? `${armateur.code} - ${armateur.nom}` : id.toString();
   };
 
   return {
@@ -55,65 +58,39 @@ export function useArmateurs() {
     loading,
     error,
     getArmateurByCode,
+    getArmateurById,
     getArmateurOptions,
     getArmateurDisplay,
     reload: loadArmateurs
   };
 }
 
-// Mock data - remplacer par une vraie source de données
+// Mock data - fallback en cas d'erreur API
 function getArmateursMockData(): Armateur[] {
-  try {
-    const stored = localStorage.getItem('armateurs');
-    if (stored) {
-      return JSON.parse(stored);
-    }
-  } catch {
-    // Ignore les erreurs de parsing
-  }
-
-  // Données par défaut
-  const defaultArmateurs: Armateur[] = [
+  return [
     { 
-      id: "1", 
-      code: "CMA20", 
+      id: 1, 
+      code: "CMA", 
       nom: "CMA-CGM", 
-      typeConteneur: "20' sec", 
-      joursGratuits: 2, 
-      prixParJour: 10000 
+      actif: true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
     },
     { 
-      id: "2", 
-      code: "CMA40", 
-      nom: "CMA-CGM", 
-      typeConteneur: "40' sec", 
-      joursGratuits: 2, 
-      prixParJour: 20000 
-    },
-    { 
-      id: "3", 
-      code: "CMA20FRIGO", 
-      nom: "CMA-CGM", 
-      typeConteneur: "20' frigo", 
-      joursGratuits: 2, 
-      prixParJour: 100000 
-    },
-    { 
-      id: "4", 
-      code: "MSK20", 
+      id: 2, 
+      code: "MSK", 
       nom: "MAERSK", 
-      typeConteneur: "20' sec", 
-      joursGratuits: 5, 
-      prixParJour: 11800 
+      actif: true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    },
+    { 
+      id: 3, 
+      code: "ONE", 
+      nom: "Ocean Network Express", 
+      actif: true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
     },
   ];
-
-  // Sauvegarder les données par défaut
-  try {
-    localStorage.setItem('armateurs', JSON.stringify(defaultArmateurs));
-  } catch {
-    // Ignore les erreurs de stockage
-  }
-
-  return defaultArmateurs;
 }

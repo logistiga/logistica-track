@@ -1,12 +1,7 @@
 import { useState, useEffect } from "react";
+import { vehiculeService, Vehicule } from "@/services/vehiculeService";
 
-export interface Vehicule {
-  id: string;
-  numeroParc: string;
-  immatriculation: string;
-  statut: "disponible" | "en_mission" | "maintenance";
-  type: "camion" | "remorque";
-}
+export { type Vehicule } from "@/services/vehiculeService";
 
 export function useVehicules() {
   const [vehicules, setVehicules] = useState<Vehicule[]>([]);
@@ -22,12 +17,15 @@ export function useVehicules() {
       setLoading(true);
       setError(null);
       
-      // Simulation d'un appel API - remplacer par votre logique réelle
-      const data = getVehiculesMockData();
+      const data = await vehiculeService.getVehicules();
       setVehicules(data);
     } catch (err) {
       setError('Erreur lors du chargement des véhicules');
       console.error('Erreur véhicules:', err);
+      
+      // Fallback vers les données mock en cas d'erreur
+      const mockData = getVehiculesMockData();
+      setVehicules(mockData);
     } finally {
       setLoading(false);
     }
@@ -42,40 +40,49 @@ export function useVehicules() {
   };
 
   const getCamionsDisponibles = () => {
-    return getCamions().filter(v => v.statut === "disponible");
+    return getCamions().filter(v => v.statut === "disponible" && v.actif);
   };
 
   const getRemorquesDisponibles = () => {
-    return getRemorques().filter(v => v.statut === "disponible");
+    return getRemorques().filter(v => v.statut === "disponible" && v.actif);
   };
 
-  const getVehiculeById = (id: string): Vehicule | undefined => {
+  const getVehiculeById = (id: number): Vehicule | undefined => {
     return vehicules.find(v => v.id === id);
   };
 
   const getCamionOptions = () => {
     return getCamionsDisponibles().map(camion => ({
-      value: camion.id,
-      label: `${camion.numeroParc} - ${camion.immatriculation}`
+      value: camion.id.toString(),
+      label: `${camion.numero_parc} - ${camion.immatriculation}`
     }));
   };
 
   const getRemorqueOptions = () => {
     return getRemorquesDisponibles().map(remorque => ({
-      value: remorque.id,
-      label: `${remorque.numeroParc} - ${remorque.immatriculation}`
+      value: remorque.id.toString(),
+      label: `${remorque.numero_parc} - ${remorque.immatriculation}`
     }));
   };
 
-  const getVehiculeDisplay = (id: string): string => {
+  const getVehiculeDisplay = (id: number): string => {
     const vehicule = getVehiculeById(id);
-    return vehicule ? vehicule.numeroParc : id;
+    return vehicule ? vehicule.numero_parc : id.toString();
   };
 
-  const updateVehiculeStatut = (id: string, statut: Vehicule['statut']) => {
-    setVehicules(prev => 
-      prev.map(v => v.id === id ? { ...v, statut } : v)
-    );
+  const updateVehiculeStatut = async (id: number, statut: Vehicule['statut']) => {
+    try {
+      const updated = await vehiculeService.updateStatut(id, statut);
+      setVehicules(prev => 
+        prev.map(v => v.id === id ? updated : v)
+      );
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour du statut:', error);
+      // Mise à jour locale en cas d'erreur
+      setVehicules(prev => 
+        prev.map(v => v.id === id ? { ...v, statut } : v)
+      );
+    }
   };
 
   return {
@@ -95,78 +102,38 @@ export function useVehicules() {
   };
 }
 
-// Mock data - remplacer par une vraie source de données
+// Mock data - fallback en cas d'erreur API
 function getVehiculesMockData(): Vehicule[] {
-  try {
-    const stored = localStorage.getItem('vehicules');
-    if (stored) {
-      return JSON.parse(stored);
-    }
-  } catch {
-    // Ignore les erreurs de parsing
-  }
-
-  // Données par défaut
-  const defaultVehicules: Vehicule[] = [
-    // Camions
+  return [
     { 
-      id: "1", 
-      numeroParc: "TR 37", 
+      id: 1, 
+      numero_parc: "TR 37", 
       immatriculation: "TR 37", 
       statut: "disponible", 
-      type: "camion" 
+      type: "camion",
+      actif: true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
     },
     { 
-      id: "2", 
-      numeroParc: "tr 07", 
+      id: 2, 
+      numero_parc: "tr 07", 
       immatriculation: "tr 07", 
       statut: "en_mission", 
-      type: "camion" 
+      type: "camion",
+      actif: true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
     },
     { 
-      id: "3", 
-      numeroParc: "tr 08", 
-      immatriculation: "tr 08", 
-      statut: "disponible", 
-      type: "camion" 
-    },
-    { 
-      id: "4", 
-      numeroParc: "TR 41", 
-      immatriculation: "TR 41", 
-      statut: "disponible", 
-      type: "camion" 
-    },
-    // Remorques
-    { 
-      id: "5", 
-      numeroParc: "R 01", 
+      id: 3, 
+      numero_parc: "R 01", 
       immatriculation: "R01", 
       statut: "disponible", 
-      type: "remorque" 
-    },
-    { 
-      id: "6", 
-      numeroParc: "R 02", 
-      immatriculation: "R02", 
-      statut: "disponible", 
-      type: "remorque" 
-    },
-    { 
-      id: "7", 
-      numeroParc: "R 03", 
-      immatriculation: "R03", 
-      statut: "en_mission", 
-      type: "remorque" 
+      type: "remorque",
+      actif: true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
     },
   ];
-
-  // Sauvegarder les données par défaut
-  try {
-    localStorage.setItem('vehicules', JSON.stringify(defaultVehicules));
-  } catch {
-    // Ignore les erreurs de stockage
-  }
-
-  return defaultVehicules;
 }
