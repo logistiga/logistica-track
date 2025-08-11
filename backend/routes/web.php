@@ -1,0 +1,44 @@
+<?php
+
+use Illuminate\Support\Facades\Route;
+
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+|
+| Here is where you can register web routes for your application. These
+| routes are loaded by the RouteServiceProvider and all of them will
+| be assigned to the "web" middleware group. Make something great!
+|
+*/
+
+Route::get('/', function () {
+    return view('welcome');
+});
+
+// Documentation API
+Route::get('/api/documentation', function () {
+    return response()->json([
+        'name' => 'Logistica API',
+        'version' => '1.0.0',
+        'description' => 'API de gestion logistique pour conteneurs',
+        'endpoints' => [
+            'auth' => '/api/auth/*',
+            'sorties' => '/api/sorties/*',
+            'armateurs' => '/api/armateurs/*',
+            'vehicules' => '/api/vehicules/*',
+            'operations' => '/api/operations/*',
+            'admin' => '/api/admin/*',
+        ]
+    ]);
+});
+
+// Health check
+Route::get('/health', function () {
+    return response()->json([
+        'status' => 'ok',
+        'timestamp' => now(),
+        'service' => 'Logistica API'
+    ]);
+});
