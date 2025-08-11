@@ -76,19 +76,6 @@ export default function Utilisateurs() {
           description: 'Impossible de charger les utilisateurs',
           variant: 'destructive',
         });
-        // Fallback avec des données fictives si l'API n'est pas disponible
-        setUsers([
-          {
-            id: 1,
-            name: "Admin Principal",
-            email: "admin@logistica.com",
-            role: "admin",
-            role_label: "Administrateur",
-            actif: true,
-            created_at: "2024-01-15",
-            updated_at: "2024-01-15"
-          }
-        ]);
       } finally {
         setIsLoading(false);
       }
