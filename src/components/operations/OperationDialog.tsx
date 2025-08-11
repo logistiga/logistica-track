@@ -1,20 +1,22 @@
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Plus } from "lucide-react";
 import { CreateOperationData, OPERATION_TYPES } from "@/types/operations";
 
-interface OperationFormProps {
+interface OperationDialogProps {
   onSubmit: (data: CreateOperationData) => void;
   camions: Array<{ id: string; numero: string; marque: string; modele: string }>;
   remorques: Array<{ id: string; numero: string; type: string }>;
   clients: string[];
 }
 
-export function OperationForm({ onSubmit, camions, remorques, clients }: OperationFormProps) {
+export function OperationDialog({ onSubmit, camions, remorques, clients }: OperationDialogProps) {
+  const [isOpen, setIsOpen] = useState(false);
   const [formData, setFormData] = useState<CreateOperationData>({
     typeOperation: "location",
     dateExecution: "",
@@ -37,14 +39,21 @@ export function OperationForm({ onSubmit, camions, remorques, clients }: Operati
       instructions: "",
       montant: 0
     });
+    setIsOpen(false);
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Nouvelle opération</CardTitle>
-      </CardHeader>
-      <CardContent>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <Button>
+          <Plus className="w-4 h-4 mr-2" />
+          Nouvelle opération
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>Créer une nouvelle opération</DialogTitle>
+        </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -159,11 +168,16 @@ export function OperationForm({ onSubmit, camions, remorques, clients }: Operati
             />
           </div>
 
-          <Button type="submit" className="w-full">
-            Créer l'opération
-          </Button>
+          <div className="flex gap-2 justify-end">
+            <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
+              Annuler
+            </Button>
+            <Button type="submit">
+              Créer l'opération
+            </Button>
+          </div>
         </form>
-      </CardContent>
-    </Card>
+      </DialogContent>
+    </Dialog>
   );
 }

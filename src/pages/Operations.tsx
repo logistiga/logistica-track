@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { Operation, CreateOperationData } from "@/types/operations";
+import { Operation } from "@/types/operations";
 import { OperationStats } from "@/components/operations/OperationStats";
-import { OperationForm } from "@/components/operations/OperationForm";
+import { OperationDialog } from "@/components/operations/OperationDialog";
 import { OperationTable } from "@/components/operations/OperationTable";
-import { useToast } from "@/hooks/use-toast";
+import { useOperations } from "@/hooks/useOperations";
 
 export default function Operations() {
-  const { toast } = useToast();
+  const { camions, remorques, clients, createOperation, showToast } = useOperations();
   const [operations, setOperations] = useState<Operation[]>([
     {
       id: "1",
@@ -34,81 +34,46 @@ export default function Operations() {
     }
   ]);
 
-  // Mock data for dropdowns
-  const camions = [
-    { id: "1", numero: "CAM001", marque: "Mercedes", modele: "Actros" },
-    { id: "2", numero: "CAM002", marque: "Volvo", modele: "FH" },
-    { id: "3", numero: "CAM003", marque: "Scania", modele: "R500" }
-  ];
-
-  const remorques = [
-    { id: "1", numero: "REM001", type: "Porte-conteneur" },
-    { id: "2", numero: "REM002", type: "Semi-remorque" },
-    { id: "3", numero: "REM003", type: "Plateau" }
-  ];
-
-  const clients = ["Client ABC", "Client XYZ", "Client DEF", "Transport Martin", "Logistics Pro"];
-
-  const handleCreateOperation = (data: CreateOperationData) => {
-    const newOperation: Operation = {
-      id: Date.now().toString(),
-      ...data,
-      statut: "en-attente",
-      dateCreation: new Date().toISOString().split('T')[0]
-    };
-
+  const handleCreateOperation = (data: any) => {
+    const newOperation = createOperation(data);
     setOperations(prev => [newOperation, ...prev]);
-    toast({
-      title: "Opération créée",
-      description: "La nouvelle opération a été ajoutée avec succès."
-    });
+    showToast("Opération créée", "La nouvelle opération a été ajoutée avec succès.");
   };
 
   const handleEditOperation = (operation: Operation) => {
-    toast({
-      title: "Modification",
-      description: `Édition de l'opération ${operation.id}`
-    });
+    showToast("Modification", `Édition de l'opération ${operation.id}`);
   };
 
   const handleDeleteOperation = (operation: Operation) => {
     setOperations(prev => prev.filter(op => op.id !== operation.id));
-    toast({
-      title: "Opération supprimée",
-      description: "L'opération a été supprimée avec succès."
-    });
+    showToast("Opération supprimée", "L'opération a été supprimée avec succès.");
   };
 
   const handleConfirmOperation = (operation: Operation) => {
     setOperations(prev => prev.map(op =>
-      op.id === operation.id
-        ? { ...op, statut: "confirmee" as const }
-        : op
+      op.id === operation.id ? { ...op, statut: "confirmee" as const } : op
     ));
-    
-    toast({
-      title: "Opération confirmée",
-      description: "L'opération a été transférée vers la facturation."
-    });
+    showToast("Opération confirmée", "L'opération a été transférée vers la facturation.");
   };
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Opérations</h1>
-        <p className="text-muted-foreground">
-          Gestion des opérations spot de Logistica
-        </p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Opérations</h1>
+          <p className="text-muted-foreground">
+            Gestion des opérations spot de Logistica
+          </p>
+        </div>
+        <OperationDialog 
+          onSubmit={handleCreateOperation}
+          camions={camions}
+          remorques={remorques}
+          clients={clients}
+        />
       </div>
 
       <OperationStats operations={operations} />
-
-      <OperationForm 
-        onSubmit={handleCreateOperation}
-        camions={camions}
-        remorques={remorques}
-        clients={clients}
-      />
 
       <OperationTable
         operations={operations}
