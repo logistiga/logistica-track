@@ -8,6 +8,7 @@ import { SortieConteneur, SortieFormData, ReturnData } from "@/types/sortie-cont
 import { SortieForm } from "@/components/sortie-conteneur/SortieForm";
 import { SortieTable } from "@/components/sortie-conteneur/SortieTable";
 import { ReturnDialog } from "@/components/sortie-conteneur/ReturnDialog";
+import { ExportDialog } from "@/components/sortie-conteneur/ExportDialog";
 
 const SortieConteneurPage = () => {
   const { toast } = useToast();
@@ -240,10 +241,15 @@ const SortieConteneurPage = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="nouvelle">Sorties en cours</TabsTrigger>
-          <TabsTrigger value="historique">Historique</TabsTrigger>
-        </TabsList>
+        <div className="flex items-center justify-between">
+          <TabsList className="grid w-full max-w-md grid-cols-2">
+            <TabsTrigger value="nouvelle">Sorties en cours</TabsTrigger>
+            <TabsTrigger value="historique">Historique</TabsTrigger>
+          </TabsList>
+          {activeTab === "historique" && (
+            <ExportDialog sorties={sorties} />
+          )}
+        </div>
         
         <TabsContent value="nouvelle" className="space-y-4">
           <SortieTable
