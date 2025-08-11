@@ -29,6 +29,7 @@ const navigation = [
   { name: "Facturation", href: "/facturation", icon: CreditCard },
   { name: "Opérations", href: "/operations", icon: FileText },
   { name: "Ordres", href: "/ordres", icon: Archive },
+  { name: "Archives Base", href: "/archives-base", icon: Archive },
   { name: "Utilisateurs", href: "/utilisateurs", icon: Users },
   { name: "Notifications", href: "/notifications", icon: Bell },
   { name: "E-mails", href: "/emails", icon: Mail },

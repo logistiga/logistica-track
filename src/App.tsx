@@ -16,6 +16,7 @@ import Operations from "./pages/Operations";
 import Ordre from "./pages/Ordre";
 import Notifications from "./pages/Notifications";
 import Emails from "./pages/Emails";
+import ArchivesBase from "./pages/ArchivesBase";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -40,6 +41,7 @@ const App = () => (
             <Route path="/ordres" element={<Ordre />} />
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/emails" element={<Emails />} />
+            <Route path="/archives-base" element={<ArchivesBase />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
