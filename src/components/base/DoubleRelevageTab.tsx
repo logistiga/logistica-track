@@ -5,70 +5,131 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { RefreshCw, Plus, Search, Eye } from "lucide-react";
+import { RefreshCw, Plus, Search, Edit, Trash2, CheckCircle } from "lucide-react";
 import { DoubleRelevageForm } from "./DoubleRelevageForm";
 import { DoubleRelevageStats } from "./DoubleRelevageStats";
 import { toast } from "@/hooks/use-toast";
 
 interface DoubleRelevageItem {
   id: string;
+  nomClient: string;
   numeroConteneur: string;
-  dateOperation: string;
-  typeOperation: "entree" | "sortie";
-  motif: string;
-  statut: "en_attente" | "termine" | "annule";
+  provenance: string;
+  camionAmeneur: {
+    proprietaire: boolean;
+    plaque: string;
+    plaqueRemorque: string;
+  };
+  camionRecuperateur: {
+    proprietaire: boolean;
+    plaque: string;
+    plaqueRemorque: string;
+  };
+  montantOperation: number;
+  statut: "en_attente" | "confirme";
+  dateCreation: string;
 }
 
 export function DoubleRelevageTab() {
   const [operations, setOperations] = useState<DoubleRelevageItem[]>([
     {
       id: "1",
+      nomClient: "Client XYZ",
       numeroConteneur: "TCLU5678901",
-      dateOperation: "2024-01-15",
-      typeOperation: "entree",
-      motif: "Repositionnement",
-      statut: "termine"
+      provenance: "Port de Douala",
+      camionAmeneur: {
+        proprietaire: true,
+        plaque: "TR 37",
+        plaqueRemorque: "R 01"
+      },
+      camionRecuperateur: {
+        proprietaire: false,
+        plaque: "CE 789 EF",
+        plaqueRemorque: "CE 012 GH"
+      },
+      montantOperation: 75000,
+      statut: "en_attente",
+      dateCreation: "2024-01-15"
     }
   ]);
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
+  // Mock data for vehicles from parc
+  const camionsParc = [
+    { id: "1", numeroParc: "TR 37" },
+    { id: "2", numeroParc: "tr 07" },
+    { id: "3", numeroParc: "tr 08" },
+    { id: "4", numeroParc: "TR 41" }
+  ];
+
+  const remorquesParc = [
+    { id: "1", numeroParc: "R 01" },
+    { id: "2", numeroParc: "R 02" },
+    { id: "3", numeroParc: "R 03" }
+  ];
+
   const filteredOperations = operations.filter(item =>
     item.numeroConteneur.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.motif.toLowerCase().includes(searchTerm.toLowerCase())
+    item.nomClient.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.provenance.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const getStatusBadge = (statut: string) => {
     switch (statut) {
       case "en_attente":
         return <Badge className="bg-warning text-warning-foreground">En Attente</Badge>;
-      case "termine":
-        return <Badge className="bg-success text-success-foreground">Terminé</Badge>;
-      case "annule":
-        return <Badge className="bg-destructive text-destructive-foreground">Annulé</Badge>;
+      case "confirme":
+        return <Badge className="bg-success text-success-foreground">Confirmé</Badge>;
       default:
         return <Badge variant="secondary">{statut}</Badge>;
     }
   };
 
-  const getTypeBadge = (type: string) => {
-    return type === "entree" 
-      ? <Badge className="bg-info text-info-foreground">Entrée</Badge>
-      : <Badge className="bg-primary text-primary-foreground">Sortie</Badge>;
-  };
-
-  const handleAddOperation = (data: Omit<DoubleRelevageItem, "id">) => {
+  const handleAddOperation = (data: any) => {
     const newOperation: DoubleRelevageItem = {
       id: Date.now().toString(),
-      ...data
+      nomClient: data.nomClient,
+      numeroConteneur: data.numeroConteneur,
+      provenance: data.provenance,
+      camionAmeneur: data.camionAmeneur,
+      camionRecuperateur: data.camionRecuperateur,
+      montantOperation: data.montantOperation,
+      statut: "en_attente",
+      dateCreation: new Date().toISOString().split('T')[0]
     };
     setOperations([...operations, newOperation]);
     setIsAddDialogOpen(false);
     toast({
       title: "Succès",
-      description: "Opération de double relevage ajoutée"
+      description: "Opération de double relevage enregistrée"
     });
+  };
+
+  const handleConfirmOperation = (id: string) => {
+    // Remove from operations (move to archives)
+    setOperations(operations.filter(o => o.id !== id));
+    toast({
+      title: "Opération confirmée",
+      description: "L'opération de double relevage a été confirmée et archivée"
+    });
+  };
+
+  const handleDeleteOperation = (id: string) => {
+    setOperations(operations.filter(o => o.id !== id));
+    toast({
+      title: "Supprimé",
+      description: "Opération supprimée"
+    });
+  };
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('fr-FR', {
+      style: 'currency',
+      currency: 'XOF',
+      minimumFractionDigits: 0,
+    }).format(amount);
   };
 
   return (
@@ -93,11 +154,15 @@ export function DoubleRelevageTab() {
               Nouvelle Opération
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Nouvelle opération de double relevage</DialogTitle>
             </DialogHeader>
-            <DoubleRelevageForm onSubmit={handleAddOperation} />
+            <DoubleRelevageForm 
+              onSubmit={handleAddOperation}
+              camionsParc={camionsParc}
+              remorquesParc={remorquesParc}
+            />
           </DialogContent>
         </Dialog>
       </div>
@@ -113,26 +178,60 @@ export function DoubleRelevageTab() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead>Client</TableHead>
                 <TableHead>Numéro Conteneur</TableHead>
-                <TableHead>Date Opération</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Motif</TableHead>
+                <TableHead>Provenance</TableHead>
+                <TableHead>Camion Ameneur</TableHead>
+                <TableHead>Camion Récupérateur</TableHead>
+                <TableHead>Montant</TableHead>
                 <TableHead>Statut</TableHead>
-                <TableHead className="w-24">Actions</TableHead>
+                <TableHead className="w-32">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredOperations.map((item) => (
                 <TableRow key={item.id}>
-                  <TableCell className="font-medium">{item.numeroConteneur}</TableCell>
-                  <TableCell>{item.dateOperation}</TableCell>
-                  <TableCell>{getTypeBadge(item.typeOperation)}</TableCell>
-                  <TableCell>{item.motif}</TableCell>
+                  <TableCell className="font-medium">{item.nomClient}</TableCell>
+                  <TableCell>{item.numeroConteneur}</TableCell>
+                  <TableCell>{item.provenance}</TableCell>
+                  <TableCell>
+                    <div className="text-xs">
+                      <div>C: {item.camionAmeneur.plaque}</div>
+                      <div>R: {item.camionAmeneur.plaqueRemorque}</div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="text-xs">
+                      <div>C: {item.camionRecuperateur.plaque}</div>
+                      <div>R: {item.camionRecuperateur.plaqueRemorque}</div>
+                    </div>
+                  </TableCell>
+                  <TableCell className="font-medium">{formatCurrency(item.montantOperation)}</TableCell>
                   <TableCell>{getStatusBadge(item.statut)}</TableCell>
                   <TableCell>
-                    <Button variant="outline" size="sm">
-                      <Eye className="w-3 h-3" />
-                    </Button>
+                    <div className="flex space-x-1">
+                      <Button variant="outline" size="sm">
+                        <Edit className="w-3 h-3" />
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleDeleteOperation(item.id)}
+                        className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </Button>
+                      {item.statut === "en_attente" && (
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleConfirmOperation(item.id)}
+                          className="text-success hover:bg-success hover:text-success-foreground"
+                        >
+                          <CheckCircle className="w-3 h-3" />
+                        </Button>
+                      )}
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}

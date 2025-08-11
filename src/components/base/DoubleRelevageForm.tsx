@@ -3,27 +3,47 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface DoubleRelevageFormData {
+  nomClient: string;
   numeroConteneur: string;
-  dateOperation: string;
-  typeOperation: "entree" | "sortie";
-  motif: string;
-  statut: "en_attente" | "termine" | "annule";
+  provenance: string;
+  camionAmeneur: {
+    proprietaire: boolean;
+    plaque: string;
+    plaqueRemorque: string;
+  };
+  camionRecuperateur: {
+    proprietaire: boolean;
+    plaque: string;
+    plaqueRemorque: string;
+  };
+  montantOperation: number;
 }
 
 interface DoubleRelevageFormProps {
   onSubmit: (data: DoubleRelevageFormData) => void;
+  camionsParc?: Array<{id: string, numeroParc: string}>;
+  remorquesParc?: Array<{id: string, numeroParc: string}>;
 }
 
-export function DoubleRelevageForm({ onSubmit }: DoubleRelevageFormProps) {
+export function DoubleRelevageForm({ onSubmit, camionsParc = [], remorquesParc = [] }: DoubleRelevageFormProps) {
   const [formData, setFormData] = useState<DoubleRelevageFormData>({
+    nomClient: "",
     numeroConteneur: "",
-    dateOperation: new Date().toISOString().split('T')[0],
-    typeOperation: "entree",
-    motif: "",
-    statut: "en_attente"
+    provenance: "",
+    camionAmeneur: {
+      proprietaire: true,
+      plaque: "",
+      plaqueRemorque: ""
+    },
+    camionRecuperateur: {
+      proprietaire: true,
+      plaque: "",
+      plaqueRemorque: ""
+    },
+    montantOperation: 0
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -31,8 +51,95 @@ export function DoubleRelevageForm({ onSubmit }: DoubleRelevageFormProps) {
     onSubmit(formData);
   };
 
+  const CamionSection = ({ 
+    title, 
+    camionData, 
+    onUpdate 
+  }: { 
+    title: string; 
+    camionData: typeof formData.camionAmeneur; 
+    onUpdate: (data: typeof formData.camionAmeneur) => void;
+  }) => (
+    <div className="bg-muted/50 p-4 rounded-lg space-y-4">
+      <h4 className="font-medium">{title}</h4>
+      
+      <div className="flex items-center space-x-2">
+        <Checkbox
+          checked={camionData.proprietaire}
+          onCheckedChange={(checked) => onUpdate({ ...camionData, proprietaire: checked as boolean })}
+        />
+        <Label>Camion appartenant à notre parc ?</Label>
+      </div>
+
+      {camionData.proprietaire ? (
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <Label>Plaque du camion</Label>
+            <Select value={camionData.plaque} onValueChange={(value) => onUpdate({ ...camionData, plaque: value })}>
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionner un camion" />
+              </SelectTrigger>
+              <SelectContent>
+                {camionsParc.map((camion) => (
+                  <SelectItem key={camion.id} value={camion.numeroParc}>
+                    {camion.numeroParc}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label>Plaque de la remorque</Label>
+            <Select value={camionData.plaqueRemorque} onValueChange={(value) => onUpdate({ ...camionData, plaqueRemorque: value })}>
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionner une remorque" />
+              </SelectTrigger>
+              <SelectContent>
+                {remorquesParc.map((remorque) => (
+                  <SelectItem key={remorque.id} value={remorque.numeroParc}>
+                    {remorque.numeroParc}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <Label>Plaque du camion</Label>
+            <Input
+              value={camionData.plaque}
+              onChange={(e) => onUpdate({ ...camionData, plaque: e.target.value })}
+              placeholder="Ex: CE 123 AB"
+            />
+          </div>
+          <div>
+            <Label>Plaque de la remorque</Label>
+            <Input
+              value={camionData.plaqueRemorque}
+              onChange={(e) => onUpdate({ ...camionData, plaqueRemorque: e.target.value })}
+              placeholder="Ex: CE 456 CD"
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <Label htmlFor="nomClient">Nom du Client *</Label>
+        <Input
+          id="nomClient"
+          value={formData.nomClient}
+          onChange={(e) => setFormData({ ...formData, nomClient: e.target.value })}
+          placeholder="Ex: Client ABC"
+          required
+        />
+      </div>
+
       <div>
         <Label htmlFor="numeroConteneur">Numéro de Conteneur *</Label>
         <Input
@@ -45,52 +152,37 @@ export function DoubleRelevageForm({ onSubmit }: DoubleRelevageFormProps) {
       </div>
 
       <div>
-        <Label htmlFor="dateOperation">Date d'Opération *</Label>
+        <Label htmlFor="provenance">Provenance *</Label>
         <Input
-          id="dateOperation"
-          type="date"
-          value={formData.dateOperation}
-          onChange={(e) => setFormData({ ...formData, dateOperation: e.target.value })}
+          id="provenance"
+          value={formData.provenance}
+          onChange={(e) => setFormData({ ...formData, provenance: e.target.value })}
+          placeholder="Ex: Port de Douala"
           required
         />
       </div>
 
-      <div>
-        <Label htmlFor="typeOperation">Type d'Opération *</Label>
-        <Select value={formData.typeOperation} onValueChange={(value: any) => setFormData({ ...formData, typeOperation: value })}>
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="entree">Entrée</SelectItem>
-            <SelectItem value="sortie">Sortie</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      <CamionSection
+        title="Camion qui amène le conteneur"
+        camionData={formData.camionAmeneur}
+        onUpdate={(data) => setFormData({ ...formData, camionAmeneur: data })}
+      />
 
-      <div>
-        <Label htmlFor="motif">Motif de l'Opération *</Label>
-        <Textarea
-          id="motif"
-          value={formData.motif}
-          onChange={(e) => setFormData({ ...formData, motif: e.target.value })}
-          placeholder="Ex: Repositionnement, Réparation..."
-          required
+      <CamionSection
+        title="Camion qui va récupérer le conteneur"
+        camionData={formData.camionRecuperateur}
+        onUpdate={(data) => setFormData({ ...formData, camionRecuperateur: data })}
+      />
+
+      <div className="bg-muted/50 p-4 rounded-lg">
+        <Label htmlFor="montantOperation">Montant de l'opération (FCFA)</Label>
+        <Input
+          id="montantOperation"
+          type="number"
+          value={formData.montantOperation}
+          onChange={(e) => setFormData({ ...formData, montantOperation: parseInt(e.target.value) || 0 })}
+          placeholder="Ex: 50000"
         />
-      </div>
-
-      <div>
-        <Label htmlFor="statut">Statut</Label>
-        <Select value={formData.statut} onValueChange={(value: any) => setFormData({ ...formData, statut: value })}>
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="en_attente">En Attente</SelectItem>
-            <SelectItem value="termine">Terminé</SelectItem>
-            <SelectItem value="annule">Annulé</SelectItem>
-          </SelectContent>
-        </Select>
       </div>
 
       <div className="flex justify-end space-x-2">
@@ -98,7 +190,7 @@ export function DoubleRelevageForm({ onSubmit }: DoubleRelevageFormProps) {
           Annuler
         </Button>
         <Button type="submit">
-          Ajouter
+          Enregistrer l'Opération
         </Button>
       </div>
     </form>

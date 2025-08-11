@@ -3,11 +3,16 @@ import { Package, Clock, CheckCircle, AlertCircle } from "lucide-react";
 
 interface StockageItem {
   id: string;
+  nomClient: string;
   numeroConteneur: string;
-  dateEntree: string;
-  position: string;
-  statut: "stocke" | "en_cours" | "sorti";
-  clientOrigine: string;
+  provenance: string;
+  dateArrivee: string;
+  camionProprietaire: boolean;
+  plaqueCamion: string;
+  plaqueRemorque: string;
+  joursGratuits: number;
+  prixParJour: number;
+  statut: "stocke" | "en_attente_sortie";
 }
 
 interface StockageStatsProps {
@@ -16,8 +21,7 @@ interface StockageStatsProps {
 
 export function StockageStats({ stockages }: StockageStatsProps) {
   const totalStockes = stockages.filter(s => s.statut === "stocke").length;
-  const enCours = stockages.filter(s => s.statut === "en_cours").length;
-  const sortis = stockages.filter(s => s.statut === "sorti").length;
+  const enAttenteShortie = stockages.filter(s => s.statut === "en_attente_sortie").length;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -53,8 +57,8 @@ export function StockageStats({ stockages }: StockageStatsProps) {
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-muted-foreground">En Cours</p>
-              <p className="text-3xl font-bold text-warning">{enCours}</p>
+              <p className="text-sm font-medium text-muted-foreground">En Attente Sortie</p>
+              <p className="text-3xl font-bold text-warning">{enAttenteShortie}</p>
             </div>
             <div className="p-3 bg-warning-light rounded-xl">
               <Clock className="w-6 h-6 text-warning" />
@@ -67,8 +71,8 @@ export function StockageStats({ stockages }: StockageStatsProps) {
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Sortis</p>
-              <p className="text-3xl font-bold text-info">{sortis}</p>
+              <p className="text-sm font-medium text-muted-foreground">Capacité Utilisée</p>
+              <p className="text-3xl font-bold text-info">{Math.round((stockages.length / 100) * 100)}%</p>
             </div>
             <div className="p-3 bg-info-light rounded-xl">
               <AlertCircle className="w-6 h-6 text-info" />

@@ -3,11 +3,22 @@ import { RefreshCw, Clock, CheckCircle, XCircle } from "lucide-react";
 
 interface DoubleRelevageItem {
   id: string;
+  nomClient: string;
   numeroConteneur: string;
-  dateOperation: string;
-  typeOperation: "entree" | "sortie";
-  motif: string;
-  statut: "en_attente" | "termine" | "annule";
+  provenance: string;
+  camionAmeneur: {
+    proprietaire: boolean;
+    plaque: string;
+    plaqueRemorque: string;
+  };
+  camionRecuperateur: {
+    proprietaire: boolean;
+    plaque: string;
+    plaqueRemorque: string;
+  };
+  montantOperation: number;
+  statut: "en_attente" | "confirme";
+  dateCreation: string;
 }
 
 interface DoubleRelevageStatsProps {
@@ -16,8 +27,8 @@ interface DoubleRelevageStatsProps {
 
 export function DoubleRelevageStats({ operations }: DoubleRelevageStatsProps) {
   const enAttente = operations.filter(o => o.statut === "en_attente").length;
-  const terminees = operations.filter(o => o.statut === "termine").length;
-  const annulees = operations.filter(o => o.statut === "annule").length;
+  const confirmees = operations.filter(o => o.statut === "confirme").length;
+  const totalMontant = operations.reduce((acc, o) => acc + o.montantOperation, 0);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -53,8 +64,8 @@ export function DoubleRelevageStats({ operations }: DoubleRelevageStatsProps) {
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Terminées</p>
-              <p className="text-3xl font-bold text-success">{terminees}</p>
+              <p className="text-sm font-medium text-muted-foreground">Confirmées</p>
+              <p className="text-3xl font-bold text-success">{confirmees}</p>
             </div>
             <div className="p-3 bg-success-light rounded-xl">
               <CheckCircle className="w-6 h-6 text-success" />
@@ -67,11 +78,11 @@ export function DoubleRelevageStats({ operations }: DoubleRelevageStatsProps) {
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Annulées</p>
-              <p className="text-3xl font-bold text-destructive">{annulees}</p>
+              <p className="text-sm font-medium text-muted-foreground">Montant Total</p>
+              <p className="text-3xl font-bold text-primary">{new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF', minimumFractionDigits: 0 }).format(totalMontant)}</p>
             </div>
-            <div className="p-3 bg-destructive/10 rounded-xl">
-              <XCircle className="w-6 h-6 text-destructive" />
+            <div className="p-3 bg-primary-light rounded-xl">
+              <RefreshCw className="w-6 h-6 text-primary" />
             </div>
           </div>
         </CardContent>
