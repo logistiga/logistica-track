@@ -344,6 +344,36 @@ const SortieConteneur = () => {
                       </div>
                     </div>
                   )}
+
+                  {/* Récapitulatif de la détention */}
+                  {formData.typeDestination && (
+                    <Card className="bg-muted/50">
+                      <CardHeader>
+                        <CardTitle className="text-sm">Récapitulatif de la détention</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-2">
+                        {formData.typeDestination === "bat" ? (
+                          <div className="space-y-1">
+                            <p className="text-sm"><strong>Type:</strong> BAT (Bon à Transférer)</p>
+                            {formData.joursBAT && (
+                              <p className="text-sm"><strong>Jours autorisés:</strong> {formData.joursBAT} jours</p>
+                            )}
+                            {formData.dateFinFranchise && (
+                              <p className="text-sm"><strong>Fin de franchise:</strong> {new Date(formData.dateFinFranchise).toLocaleDateString('fr-FR')}</p>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="space-y-1">
+                            <p className="text-sm"><strong>Type:</strong> Détention fixe</p>
+                            <p className="text-sm text-muted-foreground">Les informations de franchise seront chargées depuis l'armateur sélectionné</p>
+                            {formData.codeArmateur && (
+                              <p className="text-sm"><strong>Armateur:</strong> {formData.codeArmateur}</p>
+                            )}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  )}
                 </CardContent>
               </Card>
 
