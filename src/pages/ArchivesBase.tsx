@@ -104,25 +104,20 @@ export default function ArchivesBase() {
         </p>
       </div>
 
+      <ArchiveFiltersCard
+        filters={filters}
+        onFiltersChange={setFilters}
+        onExport={handleExport}
+        clients={clients}
+      />
+
       <ArchiveStats archives={filteredArchives} />
 
-      <div className="grid gap-6 lg:grid-cols-4">
-        <div>
-          <ArchiveFiltersCard
-            filters={filters}
-            onFiltersChange={setFilters}
-            onExport={handleExport}
-            clients={clients}
-          />
-        </div>
-        <div className="lg:col-span-3">
-          <ArchiveTable
-            archives={filteredArchives}
-            onViewInvoice={handleViewInvoice}
-            onViewDetails={handleViewDetails}
-          />
-        </div>
-      </div>
+      <ArchiveTable
+        archives={filteredArchives}
+        onViewInvoice={handleViewInvoice}
+        onViewDetails={handleViewDetails}
+      />
     </div>
   );
 }

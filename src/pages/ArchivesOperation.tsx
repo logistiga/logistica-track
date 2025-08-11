@@ -113,25 +113,20 @@ export default function ArchivesOperation() {
         </p>
       </div>
 
+      <ArchiveOperationFiltersCard
+        filters={filters}
+        onFiltersChange={setFilters}
+        onExport={handleExport}
+        clients={clients}
+      />
+
       <ArchiveOperationStats archives={filteredArchives} />
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        <div className="lg:col-span-1">
-          <ArchiveOperationFiltersCard
-            filters={filters}
-            onFiltersChange={setFilters}
-            onExport={handleExport}
-            clients={clients}
-          />
-        </div>
-        <div className="lg:col-span-3">
-          <ArchiveOperationTable
-            archives={filteredArchives}
-            onViewInvoice={handleViewInvoice}
-            onViewDetails={handleViewDetails}
-          />
-        </div>
-      </div>
+      <ArchiveOperationTable
+        archives={filteredArchives}
+        onViewInvoice={handleViewInvoice}
+        onViewDetails={handleViewDetails}
+      />
     </div>
   );
 }

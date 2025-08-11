@@ -133,26 +133,21 @@ export default function ArchivesSortie() {
         </p>
       </div>
 
+      <ArchiveSortieFiltersCard
+        filters={filters}
+        onFiltersChange={setFilters}
+        onExport={handleExport}
+        armateurs={armateurs}
+        clients={clients}
+      />
+
       <ArchiveSortieStats archives={filteredArchives} />
 
-      <div className="grid gap-6 lg:grid-cols-4">
-        <div>
-          <ArchiveSortieFiltersCard
-            filters={filters}
-            onFiltersChange={setFilters}
-            onExport={handleExport}
-            armateurs={armateurs}
-            clients={clients}
-          />
-        </div>
-        <div className="lg:col-span-3">
-          <ArchiveSortieTable
-            archives={filteredArchives}
-            onViewInvoice={handleViewInvoice}
-            onViewDetails={handleViewDetails}
-          />
-        </div>
-      </div>
+      <ArchiveSortieTable
+        archives={filteredArchives}
+        onViewInvoice={handleViewInvoice}
+        onViewDetails={handleViewDetails}
+      />
     </div>
   );
 }
