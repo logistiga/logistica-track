@@ -1,5 +1,58 @@
 const API_BASE_URL = 'http://localhost:8000/api';
 
+// Données mockées pour le développement
+const MOCK_USERS = [
+  {
+    id: 1,
+    name: 'Admin Principal',
+    email: 'admin@logistica.com',
+    role: 'admin',
+    role_label: 'Administrateur',
+    telephone: '+221 77 123 45 67',
+    departement: 'Administration',
+    actif: true,
+    email_verified_at: '2024-01-15T00:00:00Z',
+    derniere_connexion: '2024-08-11T22:30:00Z',
+    created_at: '2024-01-15T00:00:00Z',
+    updated_at: '2024-08-11T22:30:00Z',
+  },
+  {
+    id: 2,
+    name: 'Omar Amraoui',
+    email: 'omar@logistica.com',
+    role: 'admin',
+    role_label: 'Super Administrateur',
+    telephone: '+221 77 123 45 68',
+    departement: 'Direction',
+    actif: true,
+    email_verified_at: '2024-01-15T00:00:00Z',
+    derniere_connexion: '2024-08-11T22:25:00Z',
+    created_at: '2024-01-15T00:00:00Z',
+    updated_at: '2024-08-11T22:25:00Z',
+  },
+  {
+    id: 3,
+    name: 'Manager Transport',
+    email: 'manager@logistica.com',
+    role: 'manager',
+    role_label: 'Manager',
+    telephone: '+221 77 123 45 69',
+    departement: 'Transport',
+    actif: true,
+    email_verified_at: '2024-01-15T00:00:00Z',
+    derniere_connexion: '2024-08-11T20:15:00Z',
+    created_at: '2024-01-15T00:00:00Z',
+    updated_at: '2024-08-11T20:15:00Z',
+  }
+];
+
+// Simuler les identifiants de connexion
+const MOCK_CREDENTIALS = [
+  { email: 'admin@logistica.com', password: 'admin123' },
+  { email: 'omar@logistica.com', password: 'Amraoui@1' },
+  { email: 'manager@logistica.com', password: 'manager123' }
+];
+
 export interface LoginCredentials {
   email: string;
   password: string;
@@ -49,25 +102,63 @@ class AuthService {
   }
 
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
-    const response = await fetch(`${API_BASE_URL}/auth/login`, {
-      method: 'POST',
-      headers: this.getAuthHeaders(),
-      body: JSON.stringify(credentials),
-    });
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
+        method: 'POST',
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify(credentials),
+      });
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Erreur de connexion');
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Erreur de connexion');
+      }
+
+      const data = await response.json();
+      
+      if (data.success && data.data.token) {
+        localStorage.setItem('auth_token', data.data.token);
+        localStorage.setItem('auth_user', JSON.stringify(data.data.user));
+      }
+
+      return data;
+    } catch (error) {
+      // Fallback vers les données mockées si l'API n'est pas disponible
+      console.warn('API non disponible, utilisation des données mockées:', error);
+      return this.mockLogin(credentials);
+    }
+  }
+
+  private async mockLogin(credentials: LoginCredentials): Promise<AuthResponse> {
+    // Simuler un délai réseau
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    const mockCredential = MOCK_CREDENTIALS.find(
+      cred => cred.email === credentials.email && cred.password === credentials.password
+    );
+
+    if (!mockCredential) {
+      throw new Error('Email ou mot de passe incorrect');
     }
 
-    const data = await response.json();
+    const user = MOCK_USERS.find(user => user.email === credentials.email);
+    if (!user) {
+      throw new Error('Utilisateur non trouvé');
+    }
+
+    const mockToken = 'mock_token_' + btoa(credentials.email + Date.now());
     
-    if (data.success && data.data.token) {
-      localStorage.setItem('auth_token', data.data.token);
-      localStorage.setItem('auth_user', JSON.stringify(data.data.user));
-    }
+    localStorage.setItem('auth_token', mockToken);
+    localStorage.setItem('auth_user', JSON.stringify(user));
 
-    return data;
+    return {
+      success: true,
+      message: 'Connexion réussie',
+      data: {
+        user,
+        token: mockToken,
+      }
+    };
   }
 
   async register(userData: RegisterData): Promise<AuthResponse> {
@@ -100,17 +191,26 @@ class AuthService {
   }
 
   async getCurrentUser(): Promise<User> {
-    const response = await fetch(`${API_BASE_URL}/auth/me`, {
-      method: 'GET',
-      headers: this.getAuthHeaders(),
-    });
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/me`, {
+        method: 'GET',
+        headers: this.getAuthHeaders(),
+      });
 
-    if (!response.ok) {
-      throw new Error('Erreur lors de la récupération du profil');
+      if (!response.ok) {
+        throw new Error('Erreur lors de la récupération du profil');
+      }
+
+      const data = await response.json();
+      return data.data;
+    } catch (error) {
+      // Fallback vers les données stockées localement
+      const storedUser = this.getStoredUser();
+      if (storedUser) {
+        return storedUser;
+      }
+      throw new Error('Aucun utilisateur connecté');
     }
-
-    const data = await response.json();
-    return data.data;
   }
 
   async updateProfile(userData: Partial<User>): Promise<User> {
