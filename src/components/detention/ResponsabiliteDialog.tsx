@@ -1,10 +1,9 @@
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DetentionContainer } from "@/types/detention";
+import { ResponsabiliteSelector } from "./ResponsabiliteSelector";
+import { ResponsabiliteForm } from "./ResponsabiliteForm";
 
 interface ResponsabiliteDialogProps {
   isOpen: boolean;
@@ -43,7 +42,6 @@ export const ResponsabiliteDialog = ({
         return;
       }
     }
-
     onConfirm(formData);
   };
 
@@ -68,59 +66,16 @@ export const ResponsabiliteDialog = ({
         </DialogHeader>
         
         <div className="space-y-4">
-          <div className="space-y-2">
-            <Label>Conteneur: {selectedContainer.numeroConteneur}</Label>
-            <Label>Jours de dépassement: {selectedContainer.joursDepassement}</Label>
-          </div>
+          <ResponsabiliteSelector 
+            value={formData.responsabilite}
+            onChange={handleResponsabiliteChange}
+          />
 
-          <div className="space-y-2">
-            <Label htmlFor="responsabilite">Responsabilité</Label>
-            <Select value={formData.responsabilite} onValueChange={handleResponsabiliteChange}>
-              <SelectTrigger>
-                <SelectValue placeholder="Sélectionner la responsabilité" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="client">Client</SelectItem>
-                <SelectItem value="logistica">Société Logistica</SelectItem>
-                <SelectItem value="partagee">Partagée</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {formData.responsabilite === "partagee" && (
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="joursClient">Jours Client</Label>
-                <Input
-                  id="joursClient"
-                  type="number"
-                  min="0"
-                  max={selectedContainer.joursDepassement}
-                  value={formData.joursClient}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    joursClient: parseInt(e.target.value) || 0,
-                    joursLogistica: selectedContainer.joursDepassement - (parseInt(e.target.value) || 0)
-                  }))}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="joursLogistica">Jours Logistica</Label>
-                <Input
-                  id="joursLogistica"
-                  type="number"
-                  min="0"
-                  max={selectedContainer.joursDepassement}
-                  value={formData.joursLogistica}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    joursLogistica: parseInt(e.target.value) || 0,
-                    joursClient: selectedContainer.joursDepassement - (parseInt(e.target.value) || 0)
-                  }))}
-                />
-              </div>
-            </div>
-          )}
+          <ResponsabiliteForm
+            selectedContainer={selectedContainer}
+            formData={formData}
+            onFormDataChange={setFormData}
+          />
 
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={() => onOpenChange(false)}>

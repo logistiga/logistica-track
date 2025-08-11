@@ -4,7 +4,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Download, Filter } from "lucide-react";
-import { ArchiveSortieFilters, EXPORT_FORMATS } from "@/types/archivesSortie";
+import { ArchiveSortieFilters } from "@/types/archivesSortie";
+import { DateRangeFilter, ResetButton } from "@/components/shared/FilterComponents";
 
 interface ArchiveSortieFiltersCardProps {
   filters: ArchiveSortieFilters;
@@ -46,26 +47,12 @@ export function ArchiveSortieFiltersCard({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="dateDebut">Date début</Label>
-            <Input
-              id="dateDebut"
-              type="date"
-              value={filters.dateDebut}
-              onChange={(e) => updateFilter("dateDebut", e.target.value)}
-            />
-          </div>
-          <div>
-            <Label htmlFor="dateFin">Date fin</Label>
-            <Input
-              id="dateFin"
-              type="date"
-              value={filters.dateFin}
-              onChange={(e) => updateFilter("dateFin", e.target.value)}
-            />
-          </div>
-        </div>
+        <DateRangeFilter
+          dateDebut={filters.dateDebut}
+          dateFin={filters.dateFin}
+          onDateDebutChange={(date) => updateFilter("dateDebut", date)}
+          onDateFinChange={(date) => updateFilter("dateFin", date)}
+        />
 
         <div>
           <Label htmlFor="armateur">Armateur</Label>
@@ -125,11 +112,7 @@ export function ArchiveSortieFiltersCard({
           </Select>
         </div>
 
-        <div className="flex gap-2">
-          <Button onClick={resetFilters} variant="outline" className="flex-1">
-            Réinitialiser
-          </Button>
-        </div>
+        <ResetButton onReset={resetFilters} />
 
         <div className="border-t pt-4">
           <Label>Exporter les données</Label>

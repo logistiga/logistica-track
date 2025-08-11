@@ -1,10 +1,8 @@
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Edit, Trash2, CheckCircle } from "lucide-react";
 import { OrdreSortieStandard, UpdateOrdreSortieData } from "@/types/ordre";
+import { OrdreSortieRow } from "./OrdreSortieRow";
 
 interface OrdreSortiesTabProps {
   sorties: OrdreSortieStandard[];
@@ -53,10 +51,6 @@ export function OrdreSortiesTab({
     setFormData({ pvSortie: "", pvRentreePort: "", numeroOrdre: "" });
   };
 
-  const isComplete = (sortie: OrdreSortieStandard) => {
-    return sortie.pvSortie && sortie.pvRentreePort && sortie.numeroOrdre;
-  };
-
   return (
     <Card>
       <CardHeader>
@@ -79,85 +73,18 @@ export function OrdreSortiesTab({
           </TableHeader>
           <TableBody>
             {sorties.map((sortie) => (
-              <TableRow key={sortie.id}>
-                <TableCell className="font-medium">{sortie.numeroConteneur}</TableCell>
-                <TableCell>{sortie.typeConteneur}</TableCell>
-                <TableCell>{sortie.codeArmateur}</TableCell>
-                <TableCell>{sortie.nomClient}</TableCell>
-                <TableCell>{sortie.destination}</TableCell>
-                <TableCell>
-                  {editingId === sortie.id ? (
-                    <Input
-                      value={formData.pvSortie}
-                      onChange={(e) => setFormData(prev => ({ ...prev, pvSortie: e.target.value }))}
-                      placeholder="PV Sortie"
-                      className="w-24"
-                    />
-                  ) : (
-                    sortie.pvSortie || "Non défini"
-                  )}
-                </TableCell>
-                <TableCell>
-                  {editingId === sortie.id ? (
-                    <Input
-                      value={formData.pvRentreePort}
-                      onChange={(e) => setFormData(prev => ({ ...prev, pvRentreePort: e.target.value }))}
-                      placeholder="PV Rentrée"
-                      className="w-24"
-                    />
-                  ) : (
-                    sortie.pvRentreePort || "Non défini"
-                  )}
-                </TableCell>
-                <TableCell>
-                  {editingId === sortie.id ? (
-                    <div className="flex gap-2">
-                      <Input
-                        value={formData.numeroOrdre}
-                        onChange={(e) => setFormData(prev => ({ ...prev, numeroOrdre: e.target.value }))}
-                        placeholder="N° Ordre"
-                        className="w-24"
-                      />
-                      <Button size="sm" onClick={() => handleSave(sortie.id)}>
-                        OK
-                      </Button>
-                      <Button size="sm" variant="outline" onClick={handleCancel}>
-                        Annuler
-                      </Button>
-                    </div>
-                  ) : (
-                    sortie.numeroOrdre || "Non défini"
-                  )}
-                </TableCell>
-                <TableCell>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleEdit(sortie)}
-                      disabled={editingId === sortie.id}
-                    >
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => onDelete(sortie)}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                    {isComplete(sortie) && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => onConfirm(sortie)}
-                      >
-                        <CheckCircle className="w-4 h-4" />
-                      </Button>
-                    )}
-                  </div>
-                </TableCell>
-              </TableRow>
+              <OrdreSortieRow
+                key={sortie.id}
+                sortie={sortie}
+                editingId={editingId}
+                formData={formData}
+                onFormDataChange={setFormData}
+                onEdit={handleEdit}
+                onSave={handleSave}
+                onCancel={handleCancel}
+                onDelete={onDelete}
+                onConfirm={onConfirm}
+              />
             ))}
           </TableBody>
         </Table>
