@@ -30,7 +30,12 @@ interface DoubleRelevageItem {
   dateCreation: string;
 }
 
-export function DoubleRelevageTab() {
+interface DoubleRelevageTabProps {
+  camions: Array<{id: string, numeroParc: string, immatriculation: string, statut: string}>;
+  remorques: Array<{id: string, numeroParc: string, immatriculation: string, statut: string}>;
+}
+
+export function DoubleRelevageTab({ camions, remorques }: DoubleRelevageTabProps) {
   const [operations, setOperations] = useState<DoubleRelevageItem[]>([
     {
       id: "1",
@@ -56,19 +61,9 @@ export function DoubleRelevageTab() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Mock data for vehicles from parc
-  const camionsParc = [
-    { id: "1", numeroParc: "TR 37" },
-    { id: "2", numeroParc: "tr 07" },
-    { id: "3", numeroParc: "tr 08" },
-    { id: "4", numeroParc: "TR 41" }
-  ];
-
-  const remorquesParc = [
-    { id: "1", numeroParc: "R 01" },
-    { id: "2", numeroParc: "R 02" },
-    { id: "3", numeroParc: "R 03" }
-  ];
+  // Transform data for forms
+  const camionsParc = camions.map(c => ({ id: c.id, numeroParc: c.numeroParc }));
+  const remorquesParc = remorques.map(r => ({ id: r.id, numeroParc: r.numeroParc }));
 
   const filteredOperations = operations.filter(item =>
     item.numeroConteneur.toLowerCase().includes(searchTerm.toLowerCase()) ||

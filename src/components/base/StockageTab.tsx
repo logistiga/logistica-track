@@ -25,7 +25,12 @@ interface StockageItem {
   statut: "stocke" | "en_attente_sortie";
 }
 
-export function StockageTab() {
+interface StockageTabProps {
+  camions: Array<{id: string, numeroParc: string, immatriculation: string, statut: string}>;
+  remorques: Array<{id: string, numeroParc: string, immatriculation: string, statut: string}>;
+}
+
+export function StockageTab({ camions, remorques }: StockageTabProps) {
   const [stockages, setStockages] = useState<StockageItem[]>([
     {
       id: "1",
@@ -47,19 +52,9 @@ export function StockageTab() {
   const [selectedStockage, setSelectedStockage] = useState<StockageItem | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Mock data for vehicles from parc
-  const camionsParc = [
-    { id: "1", numeroParc: "TR 37" },
-    { id: "2", numeroParc: "tr 07" },
-    { id: "3", numeroParc: "tr 08" },
-    { id: "4", numeroParc: "TR 41" }
-  ];
-
-  const remorquesParc = [
-    { id: "1", numeroParc: "R 01" },
-    { id: "2", numeroParc: "R 02" },
-    { id: "3", numeroParc: "R 03" }
-  ];
+  // Transform data for forms
+  const camionsParc = camions.map(c => ({ id: c.id, numeroParc: c.numeroParc }));
+  const remorquesParc = remorques.map(r => ({ id: r.id, numeroParc: r.numeroParc }));
 
   const filteredStockages = stockages.filter(item =>
     item.numeroConteneur.toLowerCase().includes(searchTerm.toLowerCase()) ||

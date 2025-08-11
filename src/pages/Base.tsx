@@ -1,9 +1,24 @@
+import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Building2 } from "lucide-react";
 import { StockageTab } from "@/components/base/StockageTab";
 import { DoubleRelevageTab } from "@/components/base/DoubleRelevageTab";
 
 export default function Base() {
+  // Mock data for vehicles from Matériel page - En production, ceci viendrait d'une API ou d'un contexte partagé
+  const [camions] = useState([
+    { id: "1", numeroParc: "TR 37", immatriculation: "TR 37", statut: "disponible" },
+    { id: "2", numeroParc: "tr 07", immatriculation: "tr 07", statut: "en_mission" },
+    { id: "3", numeroParc: "tr 08", immatriculation: "tr 08", statut: "disponible" },
+    { id: "4", numeroParc: "TR 41", immatriculation: "TR 41", statut: "disponible" },
+  ]);
+
+  const [remorques] = useState([
+    { id: "1", numeroParc: "R 01", immatriculation: "R01", statut: "disponible" },
+    { id: "2", numeroParc: "R 02", immatriculation: "R02", statut: "disponible" },
+    { id: "3", numeroParc: "R 03", immatriculation: "R03", statut: "en_mission" },
+  ]);
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -25,11 +40,11 @@ export default function Base() {
         </TabsList>
         
         <TabsContent value="stockage">
-          <StockageTab />
+          <StockageTab camions={camions} remorques={remorques} />
         </TabsContent>
 
         <TabsContent value="double-relevage">
-          <DoubleRelevageTab />
+          <DoubleRelevageTab camions={camions} remorques={remorques} />
         </TabsContent>
       </Tabs>
     </div>

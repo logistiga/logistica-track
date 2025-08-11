@@ -76,12 +76,12 @@ export function DoubleRelevageForm({ onSubmit, camionsParc = [], remorquesParc =
           <div>
             <Label>Plaque du camion</Label>
             <Select value={camionData.plaque} onValueChange={(value) => onUpdate({ ...camionData, plaque: value })}>
-              <SelectTrigger>
+              <SelectTrigger className="bg-background border border-input">
                 <SelectValue placeholder="Sélectionner un camion" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-background border border-input z-50">
                 {camionsParc.map((camion) => (
-                  <SelectItem key={camion.id} value={camion.numeroParc}>
+                  <SelectItem key={camion.id} value={camion.numeroParc} className="hover:bg-muted">
                     {camion.numeroParc}
                   </SelectItem>
                 ))}
@@ -91,12 +91,12 @@ export function DoubleRelevageForm({ onSubmit, camionsParc = [], remorquesParc =
           <div>
             <Label>Plaque de la remorque</Label>
             <Select value={camionData.plaqueRemorque} onValueChange={(value) => onUpdate({ ...camionData, plaqueRemorque: value })}>
-              <SelectTrigger>
+              <SelectTrigger className="bg-background border border-input">
                 <SelectValue placeholder="Sélectionner une remorque" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-background border border-input z-50">
                 {remorquesParc.map((remorque) => (
-                  <SelectItem key={remorque.id} value={remorque.numeroParc}>
+                  <SelectItem key={remorque.id} value={remorque.numeroParc} className="hover:bg-muted">
                     {remorque.numeroParc}
                   </SelectItem>
                 ))}

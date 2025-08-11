@@ -104,12 +104,12 @@ export function StockageForm({ onSubmit, camionsParc = [], remorquesParc = [] }:
             <div>
               <Label htmlFor="camionParc">Plaque du camion</Label>
               <Select value={formData.plaqueCamion} onValueChange={(value) => setFormData({ ...formData, plaqueCamion: value })}>
-                <SelectTrigger>
+                <SelectTrigger className="bg-background border border-input">
                   <SelectValue placeholder="Sélectionner un camion" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-background border border-input z-50">
                   {camionsParc.map((camion) => (
-                    <SelectItem key={camion.id} value={camion.numeroParc}>
+                    <SelectItem key={camion.id} value={camion.numeroParc} className="hover:bg-muted">
                       {camion.numeroParc}
                     </SelectItem>
                   ))}
@@ -119,12 +119,12 @@ export function StockageForm({ onSubmit, camionsParc = [], remorquesParc = [] }:
             <div>
               <Label htmlFor="remorqueParc">Plaque de la remorque</Label>
               <Select value={formData.plaqueRemorque} onValueChange={(value) => setFormData({ ...formData, plaqueRemorque: value })}>
-                <SelectTrigger>
+                <SelectTrigger className="bg-background border border-input">
                   <SelectValue placeholder="Sélectionner une remorque" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-background border border-input z-50">
                   {remorquesParc.map((remorque) => (
-                    <SelectItem key={remorque.id} value={remorque.numeroParc}>
+                    <SelectItem key={remorque.id} value={remorque.numeroParc} className="hover:bg-muted">
                       {remorque.numeroParc}
                     </SelectItem>
                   ))}
