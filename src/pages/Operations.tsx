@@ -4,9 +4,12 @@ import { OperationStats } from "@/components/operations/OperationStats";
 import { OperationDialog } from "@/components/operations/OperationDialog";
 import { OperationTable } from "@/components/operations/OperationTable";
 import { useOperations } from "@/hooks/useOperations";
+import { useDataFlow } from "@/hooks/useDataFlow";
+import { DataFlowIndicator } from "@/components/shared/DataFlowIndicator";
 
 export default function Operations() {
   const { camions, remorques, clients, createOperation, showToast } = useOperations();
+  const { transferToFacturation } = useDataFlow();
   const [operations, setOperations] = useState<Operation[]>([
     {
       id: "1",
@@ -53,11 +56,24 @@ export default function Operations() {
     setOperations(prev => prev.map(op =>
       op.id === operation.id ? { ...op, statut: "confirmee" as const } : op
     ));
-    showToast("Opération confirmée", "L'opération a été transférée vers la facturation.");
+    transferToFacturation(operation, "Opérations");
+  };
+
+  const handleTransfer = (destination: string) => {
+    const confirmedOperations = operations.filter(op => op.statut === "confirmee");
+    if (confirmedOperations.length > 0) {
+      transferToFacturation(confirmedOperations, "Opérations");
+    }
   };
 
   return (
     <div className="space-y-6">
+      <DataFlowIndicator 
+        currentPage="Operations" 
+        showTransferButtons={operations.some(op => op.statut === "confirmee")}
+        onTransfer={handleTransfer}
+      />
+      
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Opérations</h1>

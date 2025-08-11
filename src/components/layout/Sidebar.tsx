@@ -31,6 +31,7 @@ const navigation = [
   { name: "Ordres", href: "/ordres", icon: Archive },
   { name: "Archives Base", href: "/archives-base", icon: Archive },
   { name: "Archives Sortie", href: "/archives-sortie", icon: Archive },
+  { name: "Archives Opération", href: "/archives-operation", icon: Archive },
   { name: "Utilisateurs", href: "/utilisateurs", icon: Users },
   { name: "Notifications", href: "/notifications", icon: Bell },
   { name: "E-mails", href: "/emails", icon: Mail },
