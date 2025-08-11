@@ -21,6 +21,7 @@ import ArchivesBase from "./pages/ArchivesBase";
 import ArchivesSortie from "./pages/ArchivesSortie";
 import ArchivesOperation from "./pages/ArchivesOperation";
 import NotFound from "./pages/NotFound";
+import Login from "./pages/Login";
 
 const queryClient = new QueryClient();
 
@@ -48,6 +49,7 @@ const App = () => (
             <Route path="/archives-base" element={<ArchivesBase />} />
             <Route path="/archives-sortie" element={<ArchivesSortie />} />
             <Route path="/archives-operation" element={<ArchivesOperation />} />
+            <Route path="/login" element={<Login />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
