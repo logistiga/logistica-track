@@ -31,10 +31,10 @@ export function ArchiveSortieFiltersCard({
     onFiltersChange({
       dateDebut: "",
       dateFin: "",
-      armateur: "",
-      client: "",
+      armateur: "all",
+      client: "all",
       numeroConteneur: "",
-      statutPaiement: ""
+      statutPaiement: "all"
     });
   };
 
@@ -61,7 +61,7 @@ export function ArchiveSortieFiltersCard({
               <SelectValue placeholder="Tous les armateurs" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Tous les armateurs</SelectItem>
+              <SelectItem value="all">Tous les armateurs</SelectItem>
               {armateurs.map((armateur) => (
                 <SelectItem key={armateur} value={armateur}>
                   {armateur}
@@ -78,7 +78,7 @@ export function ArchiveSortieFiltersCard({
               <SelectValue placeholder="Tous les clients" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Tous les clients</SelectItem>
+              <SelectItem value="all">Tous les clients</SelectItem>
               {clients.map((client) => (
                 <SelectItem key={client} value={client}>
                   {client}
@@ -105,7 +105,7 @@ export function ArchiveSortieFiltersCard({
               <SelectValue placeholder="Tous les statuts" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Tous les statuts</SelectItem>
+              <SelectItem value="all">Tous les statuts</SelectItem>
               <SelectItem value="paye">Payé</SelectItem>
               <SelectItem value="sans-frais">Sans frais</SelectItem>
             </SelectContent>

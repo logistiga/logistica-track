@@ -59,10 +59,10 @@ export default function ArchivesOperation() {
   const [filters, setFilters] = useState<ArchiveOperationFilters>({
     dateDebut: "",
     dateFin: "",
-    typeOperation: "",
-    client: "",
+    typeOperation: "all",
+    client: "all",
     numeroOperation: "",
-    statutPaiement: ""
+    statutPaiement: "all"
   });
 
   const clients = useMemo(() => {
@@ -73,11 +73,11 @@ export default function ArchivesOperation() {
     return archives.filter(archive => {
       const matchesDateRange = (!filters.dateDebut || archive.dateExecution >= filters.dateDebut) &&
                               (!filters.dateFin || archive.dateExecution <= filters.dateFin);
-      const matchesType = !filters.typeOperation || archive.typeOperation === filters.typeOperation;
-      const matchesClient = !filters.client || archive.client === filters.client;
+      const matchesType = !filters.typeOperation || filters.typeOperation === "all" || archive.typeOperation === filters.typeOperation;
+      const matchesClient = !filters.client || filters.client === "all" || archive.client === filters.client;
       const matchesNumero = !filters.numeroOperation || 
                            archive.numeroOperation.toLowerCase().includes(filters.numeroOperation.toLowerCase());
-      const matchesStatut = !filters.statutPaiement || archive.statutPaiement === filters.statutPaiement;
+      const matchesStatut = !filters.statutPaiement || filters.statutPaiement === "all" || archive.statutPaiement === filters.statutPaiement;
 
       return matchesDateRange && matchesType && matchesClient && matchesNumero && matchesStatut;
     });

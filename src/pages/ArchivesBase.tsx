@@ -50,10 +50,10 @@ export default function ArchivesBase() {
   const [filters, setFilters] = useState<ArchiveFilters>({
     dateDebut: "",
     dateFin: "",
-    typeOperation: "",
-    client: "",
+    typeOperation: "all",
+    client: "all",
     numeroConteneur: "",
-    statutPaiement: ""
+    statutPaiement: "all"
   });
 
   const clients = useMemo(() => {
@@ -62,12 +62,15 @@ export default function ArchivesBase() {
 
   const filteredArchives = useMemo(() => {
     return archives.filter(archive => {
-      if (filters.dateDebut && archive.dateArriveeBase < filters.dateDebut) return false;
-      if (filters.dateFin && archive.dateArriveeBase > filters.dateFin) return false;
-      if (filters.typeOperation && archive.typeOperation !== filters.typeOperation) return false;
-      if (filters.client && archive.nomClient !== filters.client) return false;
-      if (filters.numeroConteneur && !archive.numeroConteneur.includes(filters.numeroConteneur)) return false;
-      return true;
+      const matchesDateRange = (!filters.dateDebut || archive.dateArriveeBase >= filters.dateDebut) &&
+                              (!filters.dateFin || archive.dateArriveeBase <= filters.dateFin);
+      const matchesType = filters.typeOperation === "all" || archive.typeOperation === filters.typeOperation;
+      const matchesClient = filters.client === "all" || archive.nomClient === filters.client;
+      const matchesConteneur = !filters.numeroConteneur || 
+                              archive.numeroConteneur.toLowerCase().includes(filters.numeroConteneur.toLowerCase());
+      const matchesStatut = filters.statutPaiement === "all" || archive.statutPaiement === filters.statutPaiement;
+
+      return matchesDateRange && matchesType && matchesClient && matchesConteneur && matchesStatut;
     });
   }, [archives, filters]);
 

@@ -75,10 +75,10 @@ export default function ArchivesSortie() {
   const [filters, setFilters] = useState<ArchiveSortieFilters>({
     dateDebut: "",
     dateFin: "",
-    armateur: "",
-    client: "",
+    armateur: "all",
+    client: "all",
     numeroConteneur: "",
-    statutPaiement: ""
+    statutPaiement: "all"
   });
 
   const armateurs = useMemo(() => {
@@ -91,13 +91,15 @@ export default function ArchivesSortie() {
 
   const filteredArchives = useMemo(() => {
     return archives.filter(archive => {
-      if (filters.dateDebut && archive.dateSortiePort < filters.dateDebut) return false;
-      if (filters.dateFin && archive.dateSortiePort > filters.dateFin) return false;
-      if (filters.armateur && archive.codeArmateur !== filters.armateur) return false;
-      if (filters.client && archive.nomClient !== filters.client) return false;
-      if (filters.numeroConteneur && !archive.numeroConteneur.includes(filters.numeroConteneur)) return false;
-      if (filters.statutPaiement && archive.statutPaiement !== filters.statutPaiement) return false;
-      return true;
+      const matchesDateRange = (!filters.dateDebut || archive.dateSortiePort >= filters.dateDebut) &&
+                              (!filters.dateFin || archive.dateSortiePort <= filters.dateFin);
+      const matchesArmateur = filters.armateur === "all" || archive.codeArmateur === filters.armateur;
+      const matchesClient = filters.client === "all" || archive.nomClient === filters.client;
+      const matchesConteneur = !filters.numeroConteneur || 
+                              archive.numeroConteneur.toLowerCase().includes(filters.numeroConteneur.toLowerCase());
+      const matchesStatut = filters.statutPaiement === "all" || archive.statutPaiement === filters.statutPaiement;
+
+      return matchesDateRange && matchesArmateur && matchesClient && matchesConteneur && matchesStatut;
     });
   }, [archives, filters]);
 

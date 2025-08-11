@@ -28,10 +28,10 @@ export function ArchiveOperationFiltersCard({
     onFiltersChange({
       dateDebut: "",
       dateFin: "",
-      typeOperation: "",
-      client: "",
+      typeOperation: "all",
+      client: "all",
       numeroOperation: "",
-      statutPaiement: ""
+      statutPaiement: "all"
     });
   };
 
@@ -56,7 +56,7 @@ export function ArchiveOperationFiltersCard({
                 <SelectValue placeholder="Tous les types" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Tous les types</SelectItem>
+                <SelectItem value="all">Tous les types</SelectItem>
                 <SelectItem value="location">Location</SelectItem>
                 <SelectItem value="transport">Transport</SelectItem>
                 <SelectItem value="double-relevage">Double relevage</SelectItem>
@@ -72,7 +72,7 @@ export function ArchiveOperationFiltersCard({
                 <SelectValue placeholder="Tous les clients" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Tous les clients</SelectItem>
+                <SelectItem value="all">Tous les clients</SelectItem>
                 {clients.map((client) => (
                   <SelectItem key={client} value={client}>
                     {client}
