@@ -191,65 +191,63 @@ const SortieConteneurPage = () => {
             Gérez les sorties et le suivi des conteneurs
           </p>
         </div>
-        <Dialog open={isAddDialogOpen} onOpenChange={(open) => {
-          setIsAddDialogOpen(open);
-          if (!open) {
-            setEditingSortie(null);
-            setFormData({
-              numeroConteneur: "",
-              numeroBL: "",
-              codeArmateur: "",
-              camion: "",
-              remorque: "",
-              primeChauffeur: "",
-              nomClient: "",
-              destination: "",
-              adresseClient: "",
-              typeDestination: "",
-              joursBAD: "",
-              dateFinFranchise: "",
-              nomTransitaire: ""
-            });
-          }
-        }}>
-          <DialogTrigger asChild>
-            <Button className="gap-2">
-              <Plus className="w-4 h-4" />
-              Ajouter une nouvelle sortie
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>
-                {editingSortie ? "Modifier la sortie de conteneur" : "Nouvelle sortie de conteneur"}
-              </DialogTitle>
-              <DialogDescription>
-                {editingSortie 
-                  ? "Modifiez les informations de la sortie de conteneur"
-                  : "Enregistrez une nouvelle sortie de conteneur du port"
-                }
-              </DialogDescription>
-            </DialogHeader>
-            <SortieForm
-              formData={formData}
-              setFormData={setFormData}
-              onSubmit={handleSubmit}
-              onCancel={() => setIsAddDialogOpen(false)}
-            />
-          </DialogContent>
-        </Dialog>
+        <div className="flex gap-3">
+          <ExportDialog sorties={sorties} />
+          <Dialog open={isAddDialogOpen} onOpenChange={(open) => {
+            setIsAddDialogOpen(open);
+            if (!open) {
+              setEditingSortie(null);
+              setFormData({
+                numeroConteneur: "",
+                numeroBL: "",
+                codeArmateur: "",
+                camion: "",
+                remorque: "",
+                primeChauffeur: "",
+                nomClient: "",
+                destination: "",
+                adresseClient: "",
+                typeDestination: "",
+                joursBAD: "",
+                dateFinFranchise: "",
+                nomTransitaire: ""
+              });
+            }
+          }}>
+            <DialogTrigger asChild>
+              <Button className="gap-2">
+                <Plus className="w-4 h-4" />
+                Ajouter une nouvelle sortie
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>
+                  {editingSortie ? "Modifier la sortie de conteneur" : "Nouvelle sortie de conteneur"}
+                </DialogTitle>
+                <DialogDescription>
+                  {editingSortie 
+                    ? "Modifiez les informations de la sortie de conteneur"
+                    : "Enregistrez une nouvelle sortie de conteneur du port"
+                  }
+                </DialogDescription>
+              </DialogHeader>
+              <SortieForm
+                formData={formData}
+                setFormData={setFormData}
+                onSubmit={handleSubmit}
+                onCancel={() => setIsAddDialogOpen(false)}
+              />
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <div className="flex items-center justify-between">
-          <TabsList className="grid w-full max-w-md grid-cols-2">
-            <TabsTrigger value="nouvelle">Sorties en cours</TabsTrigger>
-            <TabsTrigger value="historique">Historique</TabsTrigger>
-          </TabsList>
-          {activeTab === "historique" && (
-            <ExportDialog sorties={sorties} />
-          )}
-        </div>
+        <TabsList className="grid w-full max-w-md grid-cols-2">
+          <TabsTrigger value="nouvelle">Sorties en cours</TabsTrigger>
+          <TabsTrigger value="historique">Historique</TabsTrigger>
+        </TabsList>
         
         <TabsContent value="nouvelle" className="space-y-4">
           <SortieTable
