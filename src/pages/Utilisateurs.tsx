@@ -4,11 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, Plus, Edit, Trash2, Search, Shield, UserPlus } from "lucide-react";
+import { Users, Plus, Search, Shield, UserPlus } from "lucide-react";
+import { UserTable } from "@/components/user/UserTable";
+import { RoleTable } from "@/components/user/RoleTable";
 import { toast } from "@/hooks/use-toast";
 
 interface User {
@@ -131,36 +131,6 @@ export default function Utilisateurs() {
     role.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const getRoleBadge = (roleName: string) => {
-    const role = roles.find(r => r.nom === roleName);
-    if (!role) return <Badge variant="secondary">{roleName}</Badge>;
-    
-    const colorClasses = {
-      violet: "bg-violet-500 text-white",
-      orange: "bg-orange-500 text-white",
-      gray: "bg-gray-500 text-white",
-      blue: "bg-blue-500 text-white",
-      yellow: "bg-yellow-500 text-black",
-      purple: "bg-purple-500 text-white",
-    };
-
-    return (
-      <Badge className={colorClasses[role.couleur as keyof typeof colorClasses] || "bg-gray-500 text-white"}>
-        {roleName}
-      </Badge>
-    );
-  };
-
-  const getRiskBadge = (permissions: number) => {
-    if (permissions >= 30) {
-      return <Badge className="bg-red-500 text-white">2 critiques</Badge>;
-    } else if (permissions >= 15) {
-      return <Badge className="bg-orange-500 text-white">Moyen</Badge>;
-    } else {
-      return <Badge className="bg-green-500 text-white">Faible</Badge>;
-    }
-  };
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -277,42 +247,11 @@ export default function Utilisateurs() {
               <CardTitle>Liste des Utilisateurs</CardTitle>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Nom</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Rôle</TableHead>
-                    <TableHead>Date de création</TableHead>
-                    <TableHead className="w-24">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredUsers.map((user) => (
-                    <TableRow key={user.id}>
-                      <TableCell className="font-medium">{user.nom}</TableCell>
-                      <TableCell>{user.email}</TableCell>
-                      <TableCell>{getRoleBadge(user.role)}</TableCell>
-                      <TableCell>{user.dateCreation}</TableCell>
-                      <TableCell>
-                        <div className="flex space-x-2">
-                          <Button variant="outline" size="sm">
-                            <Edit className="w-3 h-3" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleDeleteUser(user.id)}
-                            className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
-                          >
-                            <Trash2 className="w-3 h-3" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+              <UserTable 
+                users={filteredUsers} 
+                roles={roles} 
+                onDeleteUser={handleDeleteUser} 
+              />
             </CardContent>
           </Card>
         </TabsContent>
@@ -449,50 +388,16 @@ export default function Utilisateurs() {
             </Dialog>
           </div>
 
-          {/* Roles List */}
+          {/* Roles Table */}
           <Card className="shadow-lg">
             <CardHeader>
               <CardTitle>Liste des Rôles</CardTitle>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Rôle</TableHead>
-                    <TableHead>Description</TableHead>
-                    <TableHead>Permissions</TableHead>
-                    <TableHead>Risque</TableHead>
-                    <TableHead>Couleur</TableHead>
-                    <TableHead className="w-24">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredRoles.map((role) => (
-                    <TableRow key={role.id}>
-                      <TableCell className="font-medium">{role.nom}</TableCell>
-                      <TableCell>{role.description}</TableCell>
-                      <TableCell>{role.permissions} permissions</TableCell>
-                      <TableCell>{getRiskBadge(role.permissions)}</TableCell>
-                      <TableCell>
-                        <div className={`w-4 h-4 rounded-full bg-${role.couleur}-500`}></div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex space-x-2">
-                          <Button variant="outline" size="sm">
-                            <Edit className="w-3 h-3" />
-                          </Button>
-                          <Button variant="outline" size="sm">
-                            <Trash2 className="w-3 h-3" />
-                          </Button>
-                          <Button variant="outline" size="sm" className="text-xs">
-                            Supprimer
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+              <RoleTable 
+                roles={filteredRoles} 
+                onDeleteRole={handleDeleteRole} 
+              />
             </CardContent>
           </Card>
         </TabsContent>
