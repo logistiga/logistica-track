@@ -13,6 +13,12 @@ import { useSortieConteneur } from "@/hooks/useSortieConteneur";
 const SortieConteneurPage = () => {
   const [activeTab, setActiveTab] = useState("nouvelle");
   
+  const hookResult = useSortieConteneur();
+  
+  // Debug: Log pour vérifier que le hook retourne bien setIsReturnDialogOpen
+  console.log('Hook result keys:', Object.keys(hookResult));
+  console.log('setIsReturnDialogOpen exists:', 'setIsReturnDialogOpen' in hookResult);
+  
   const {
     // État
     sorties,
@@ -41,7 +47,7 @@ const SortieConteneurPage = () => {
     // Getters
     getSortiesEnCours,
     getHistorique
-  } = useSortieConteneur();
+  } = hookResult;
 
   if (loading) {
     return (
