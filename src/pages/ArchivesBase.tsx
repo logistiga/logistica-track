@@ -6,6 +6,7 @@ import { ArchiveTable } from "@/components/archives/ArchiveTable";
 import { useToast } from "@/hooks/use-toast";
 
 export default function ArchivesBase() {
+  console.log("ArchivesBase component is rendering");
   const { toast } = useToast();
   
   const [archives] = useState<ArchiveBase[]>([
