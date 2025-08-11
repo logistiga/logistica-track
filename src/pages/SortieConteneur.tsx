@@ -1,37 +1,15 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, CheckCircle, Trash2, Package, Truck, Ship, CalendarDays } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { SortieConteneur, SortieFormData, ReturnData } from "@/types/sortie-conteneur";
+import { SortieForm } from "@/components/sortie-conteneur/SortieForm";
+import { SortieTable } from "@/components/sortie-conteneur/SortieTable";
+import { ReturnDialog } from "@/components/sortie-conteneur/ReturnDialog";
 
-interface SortieConteneur {
-  id: string;
-  numeroConteneur: string;
-  numeroVL: string;
-  codeArmateur: string;
-  camion: string;
-  remorque: string;
-  nomClient: string;
-  destination: "base" | "client";
-  adresseClient?: string;
-  typeDestination: "bat" | "detention";
-  joursBAT?: number;
-  dateFinFranchise?: string;
-  nomTransitaire: string;
-  dateSortie: string;
-  dateRetour?: string;
-  statut: "en_cours" | "livre_client" | "a_la_base" | "retourne_port";
-}
-
-const SortieConteneur = () => {
+const SortieConteneurPage = () => {
   const { toast } = useToast();
   const [sorties, setSorties] = useState<SortieConteneur[]>([
     {
@@ -50,12 +28,13 @@ const SortieConteneur = () => {
       statut: "en_cours"
     }
   ]);
+  
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isReturnDialogOpen, setIsReturnDialogOpen] = useState(false);
   const [selectedSortie, setSelectedSortie] = useState<SortieConteneur | null>(null);
   const [activeTab, setActiveTab] = useState("nouvelle");
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<SortieFormData>({
     numeroConteneur: "",
     numeroVL: "",
     codeArmateur: "",
@@ -70,7 +49,7 @@ const SortieConteneur = () => {
     nomTransitaire: ""
   });
 
-  const [returnData, setReturnData] = useState({
+  const [returnData, setReturnData] = useState<ReturnData>({
     dateRetour: "",
     camionRetour: "",
     remorqueRetour: ""
@@ -138,28 +117,6 @@ const SortieConteneur = () => {
     }
   };
 
-  const getStatutBadge = (statut: string) => {
-    const variants = {
-      en_cours: "default",
-      livre_client: "secondary", 
-      a_la_base: "outline",
-      retourne_port: "destructive"
-    };
-    
-    const labels = {
-      en_cours: "En cours",
-      livre_client: "Livré au client",
-      a_la_base: "À la base", 
-      retourne_port: "Retourné au port"
-    };
-
-    return (
-      <Badge variant={variants[statut as keyof typeof variants] as any}>
-        {labels[statut as keyof typeof labels]}
-      </Badge>
-    );
-  };
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -183,227 +140,12 @@ const SortieConteneur = () => {
                 Enregistrez une nouvelle sortie de conteneur du port
               </DialogDescription>
             </DialogHeader>
-
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Informations conteneur */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Package className="w-5 h-5" />
-                    Informations sur le conteneur
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="grid grid-cols-3 gap-4">
-                  <div>
-                    <Label htmlFor="numeroConteneur">Numéro de conteneur</Label>
-                    <Input
-                      id="numeroConteneur"
-                      value={formData.numeroConteneur}
-                      onChange={(e) => setFormData({ ...formData, numeroConteneur: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="numeroVL">Numéro de VL</Label>
-                    <Input
-                      id="numeroVL"
-                      value={formData.numeroVL}
-                      onChange={(e) => setFormData({ ...formData, numeroVL: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="codeArmateur">Code armateur</Label>
-                    <Select value={formData.codeArmateur} onValueChange={(value) => setFormData({ ...formData, codeArmateur: value })}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Sélectionner" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="ARM001">ARM001 - CMA CGM</SelectItem>
-                        <SelectItem value="ARM002">ARM002 - MSC</SelectItem>
-                        <SelectItem value="ARM003">ARM003 - Maersk</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Transport et destination */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Truck className="w-5 h-5" />
-                    Transport et destination
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-3 gap-4">
-                    <div>
-                      <Label htmlFor="camion">Numéro de camion</Label>
-                      <Select value={formData.camion} onValueChange={(value) => setFormData({ ...formData, camion: value })}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Sélectionner" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="CAM001">CAM001 - AB123CD</SelectItem>
-                          <SelectItem value="CAM002">CAM002 - EF456GH</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label htmlFor="remorque">Numéro de remorque</Label>
-                      <Select value={formData.remorque} onValueChange={(value) => setFormData({ ...formData, remorque: value })}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Sélectionner" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="REM001">REM001 - IJ789KL</SelectItem>
-                          <SelectItem value="REM002">REM002 - MN012OP</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label htmlFor="nomClient">Nom du client</Label>
-                      <Input
-                        id="nomClient"
-                        value={formData.nomClient}
-                        onChange={(e) => setFormData({ ...formData, nomClient: e.target.value })}
-                        required
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="destination">Destination</Label>
-                      <Select value={formData.destination} onValueChange={(value) => setFormData({ ...formData, destination: value })}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Sélectionner" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="base">La base</SelectItem>
-                          <SelectItem value="client">Client</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    {formData.destination === "client" && (
-                      <div>
-                        <Label htmlFor="adresseClient">Adresse du client</Label>
-                        <Input
-                          id="adresseClient"
-                          value={formData.adresseClient}
-                          onChange={(e) => setFormData({ ...formData, adresseClient: e.target.value })}
-                        />
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Type de destination */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <CalendarDays className="w-5 h-5" />
-                    Type de destination
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <Label htmlFor="typeDestination">Type</Label>
-                    <Select value={formData.typeDestination} onValueChange={(value) => setFormData({ ...formData, typeDestination: value })}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Sélectionner" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="bat">BAT (Bon à Transférer)</SelectItem>
-                        <SelectItem value="detention">Détention fixe</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  {formData.typeDestination === "bat" && (
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="joursBAT">Nombre de jours BAT</Label>
-                        <Input
-                          id="joursBAT"
-                          type="number"
-                          value={formData.joursBAT}
-                          onChange={(e) => setFormData({ ...formData, joursBAT: e.target.value })}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="dateFinFranchise">Date de fin de franchise</Label>
-                        <Input
-                          id="dateFinFranchise"
-                          type="date"
-                          value={formData.dateFinFranchise}
-                          onChange={(e) => setFormData({ ...formData, dateFinFranchise: e.target.value })}
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Récapitulatif de la détention */}
-                  {formData.typeDestination && (
-                    <Card className="bg-muted/50">
-                      <CardHeader>
-                        <CardTitle className="text-sm">Récapitulatif de la détention</CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-2">
-                        {formData.typeDestination === "bat" ? (
-                          <div className="space-y-1">
-                            <p className="text-sm"><strong>Type:</strong> BAT (Bon à Transférer)</p>
-                            {formData.joursBAT && (
-                              <p className="text-sm"><strong>Jours autorisés:</strong> {formData.joursBAT} jours</p>
-                            )}
-                            {formData.dateFinFranchise && (
-                              <p className="text-sm"><strong>Fin de franchise:</strong> {new Date(formData.dateFinFranchise).toLocaleDateString('fr-FR')}</p>
-                            )}
-                          </div>
-                        ) : (
-                          <div className="space-y-1">
-                            <p className="text-sm"><strong>Type:</strong> Détention fixe</p>
-                            <p className="text-sm text-muted-foreground">Les informations de franchise seront chargées depuis l'armateur sélectionné</p>
-                            {formData.codeArmateur && (
-                              <p className="text-sm"><strong>Armateur:</strong> {formData.codeArmateur}</p>
-                            )}
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Autres informations */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Autres informations</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div>
-                    <Label htmlFor="nomTransitaire">Nom du transitaire</Label>
-                    <Input
-                      id="nomTransitaire"
-                      value={formData.nomTransitaire}
-                      onChange={(e) => setFormData({ ...formData, nomTransitaire: e.target.value })}
-                      required
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-
-              <div className="flex justify-end gap-3">
-                <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-                  Annuler
-                </Button>
-                <Button type="submit">
-                  Enregistrer la sortie
-                </Button>
-              </div>
-            </form>
+            <SortieForm
+              formData={formData}
+              setFormData={setFormData}
+              onSubmit={handleSubmit}
+              onCancel={() => setIsAddDialogOpen(false)}
+            />
           </DialogContent>
         </Dialog>
       </div>
@@ -415,152 +157,31 @@ const SortieConteneur = () => {
         </TabsList>
         
         <TabsContent value="nouvelle" className="space-y-4">
-          <Card>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Conteneur</TableHead>
-                    <TableHead>VL</TableHead>
-                    <TableHead>Armateur</TableHead>
-                    <TableHead>Client</TableHead>
-                    <TableHead>Destination</TableHead>
-                    <TableHead>Date sortie</TableHead>
-                    <TableHead>Statut</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {sorties.filter(s => s.statut !== "retourne_port").map((sortie) => (
-                    <TableRow key={sortie.id}>
-                      <TableCell className="font-medium">{sortie.numeroConteneur}</TableCell>
-                      <TableCell>{sortie.numeroVL}</TableCell>
-                      <TableCell>{sortie.codeArmateur}</TableCell>
-                      <TableCell>{sortie.nomClient}</TableCell>
-                      <TableCell>{sortie.destination === "base" ? "Base" : "Client"}</TableCell>
-                      <TableCell>{sortie.dateSortie}</TableCell>
-                      <TableCell>{getStatutBadge(sortie.statut)}</TableCell>
-                      <TableCell>
-                        <div className="flex gap-2">
-                          <Button variant="outline" size="sm">
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => {
-                              setSelectedSortie(sortie);
-                              setIsReturnDialogOpen(true);
-                            }}
-                          >
-                            <CheckCircle className="w-4 h-4" />
-                          </Button>
-                          <Button variant="outline" size="sm">
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+          <SortieTable
+            sorties={sorties}
+            showHistory={false}
+            onReturnClick={(sortie) => {
+              setSelectedSortie(sortie);
+              setIsReturnDialogOpen(true);
+            }}
+          />
         </TabsContent>
 
         <TabsContent value="historique" className="space-y-4">
-          <Card>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Conteneur</TableHead>
-                    <TableHead>VL</TableHead>
-                    <TableHead>Armateur</TableHead>
-                    <TableHead>Client</TableHead>
-                    <TableHead>Date sortie</TableHead>
-                    <TableHead>Date retour</TableHead>
-                    <TableHead>Statut</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {sorties.map((sortie) => (
-                    <TableRow key={sortie.id}>
-                      <TableCell className="font-medium">{sortie.numeroConteneur}</TableCell>
-                      <TableCell>{sortie.numeroVL}</TableCell>
-                      <TableCell>{sortie.codeArmateur}</TableCell>
-                      <TableCell>{sortie.nomClient}</TableCell>
-                      <TableCell>{sortie.dateSortie}</TableCell>
-                      <TableCell>{sortie.dateRetour || "-"}</TableCell>
-                      <TableCell>{getStatutBadge(sortie.statut)}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+          <SortieTable sorties={sorties} showHistory={true} />
         </TabsContent>
       </Tabs>
 
-      {/* Dialog for return confirmation */}
-      <Dialog open={isReturnDialogOpen} onOpenChange={setIsReturnDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Confirmer le retour au port</DialogTitle>
-            <DialogDescription>
-              Enregistrez le retour du conteneur {selectedSortie?.numeroConteneur} au port
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="dateRetour">Date de retour</Label>
-              <Input
-                id="dateRetour"
-                type="date"
-                value={returnData.dateRetour}
-                onChange={(e) => setReturnData({ ...returnData, dateRetour: e.target.value })}
-                required
-              />
-            </div>
-            <div>
-              <Label htmlFor="camionRetour">Camion de retour</Label>
-              <Select value={returnData.camionRetour} onValueChange={(value) => setReturnData({ ...returnData, camionRetour: value })}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner un camion" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="CAM001">CAM001 - AB123CD</SelectItem>
-                  <SelectItem value="CAM002">CAM002 - EF456GH</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="remorqueRetour">Remorque de retour</Label>
-              <Select value={returnData.remorqueRetour} onValueChange={(value) => setReturnData({ ...returnData, remorqueRetour: value })}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner une remorque" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="REM001">REM001 - IJ789KL</SelectItem>
-                  <SelectItem value="REM002">REM002 - MN012OP</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          
-          <div className="flex justify-end gap-3">
-            <Button variant="outline" onClick={() => setIsReturnDialogOpen(false)}>
-              Annuler
-            </Button>
-            <Button onClick={handleConfirmReturn}>
-              Confirmer le retour
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <ReturnDialog
+        isOpen={isReturnDialogOpen}
+        onOpenChange={setIsReturnDialogOpen}
+        selectedSortie={selectedSortie}
+        returnData={returnData}
+        setReturnData={setReturnData}
+        onConfirmReturn={handleConfirmReturn}
+      />
     </div>
   );
 };
 
-export default SortieConteneur;
+export default SortieConteneurPage;
