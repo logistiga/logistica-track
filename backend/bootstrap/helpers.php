@@ -125,7 +125,7 @@ if (!function_exists('generateReference')) {
     }
 }
 
-if (!function_calls('isWorkingDay')) {
+if (!function_exists('isWorkingDay')) {
     /**
      * Check if a date is a working day (Monday to Friday)
      */
