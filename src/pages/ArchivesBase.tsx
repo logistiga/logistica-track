@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { ArchiveBase, ArchiveFilters } from "@/types/archives";
 import { ArchiveStats } from "@/components/archives/ArchiveStats";
-import { ArchiveFiltersCard } from "@/components/archives/ArchiveFiltersCard";
+import { ArchiveFiltersDialog } from "@/components/archives/ArchiveFiltersDialog";
 import { ArchiveTable } from "@/components/archives/ArchiveTable";
 import { useToast } from "@/hooks/use-toast";
 
@@ -104,12 +104,14 @@ export default function ArchivesBase() {
         </p>
       </div>
 
-      <ArchiveFiltersCard
-        filters={filters}
-        onFiltersChange={setFilters}
-        onExport={handleExport}
-        clients={clients}
-      />
+      <div className="flex justify-between items-center">
+        <ArchiveFiltersDialog
+          filters={filters}
+          onFiltersChange={setFilters}
+          onExport={handleExport}
+          clients={clients}
+        />
+      </div>
 
       <ArchiveStats archives={filteredArchives} />
 

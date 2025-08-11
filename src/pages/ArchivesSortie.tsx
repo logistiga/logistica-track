@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { ArchiveSortie, ArchiveSortieFilters } from "@/types/archivesSortie";
 import { ArchiveSortieStats } from "@/components/archivesSortie/ArchiveSortieStats";
-import { ArchiveSortieFiltersCard } from "@/components/archivesSortie/ArchiveSortieFiltersCard";
+import { ArchiveSortieFiltersDialog } from "@/components/archivesSortie/ArchiveSortieFiltersDialog";
 import { ArchiveSortieTable } from "@/components/archivesSortie/ArchiveSortieTable";
 import { useToast } from "@/hooks/use-toast";
 
@@ -133,13 +133,15 @@ export default function ArchivesSortie() {
         </p>
       </div>
 
-      <ArchiveSortieFiltersCard
-        filters={filters}
-        onFiltersChange={setFilters}
-        onExport={handleExport}
-        armateurs={armateurs}
-        clients={clients}
-      />
+      <div className="flex justify-between items-center">
+        <ArchiveSortieFiltersDialog
+          filters={filters}
+          onFiltersChange={setFilters}
+          onExport={handleExport}
+          armateurs={armateurs}
+          clients={clients}
+        />
+      </div>
 
       <ArchiveSortieStats archives={filteredArchives} />
 

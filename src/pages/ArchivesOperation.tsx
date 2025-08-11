@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { ArchiveOperation, ArchiveOperationFilters } from "@/types/archivesOperation";
 import { ArchiveOperationStats } from "@/components/archivesOperation/ArchiveOperationStats";
-import { ArchiveOperationFiltersCard } from "@/components/archivesOperation/ArchiveOperationFiltersCard";
+import { ArchiveOperationFiltersDialog } from "@/components/archivesOperation/ArchiveOperationFiltersDialog";
 import { ArchiveOperationTable } from "@/components/archivesOperation/ArchiveOperationTable";
 import { useToast } from "@/hooks/use-toast";
 
@@ -113,12 +113,14 @@ export default function ArchivesOperation() {
         </p>
       </div>
 
-      <ArchiveOperationFiltersCard
-        filters={filters}
-        onFiltersChange={setFilters}
-        onExport={handleExport}
-        clients={clients}
-      />
+      <div className="flex justify-between items-center">
+        <ArchiveOperationFiltersDialog
+          filters={filters}
+          onFiltersChange={setFilters}
+          onExport={handleExport}
+          clients={clients}
+        />
+      </div>
 
       <ArchiveOperationStats archives={filteredArchives} />
 
