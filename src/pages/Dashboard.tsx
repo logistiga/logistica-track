@@ -1,4 +1,5 @@
 import { StatsCard } from "@/components/dashboard/StatsCard";
+import { ActivityChart } from "@/components/dashboard/ActivityChart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { 
@@ -6,7 +7,6 @@ import {
   Truck, 
   AlertTriangle, 
   CreditCard,
-  TrendingUp,
   Users,
   Ship,
   Clock
@@ -66,23 +66,7 @@ export default function Dashboard() {
       {/* Charts and Recent Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Activity Chart */}
-        <Card className="shadow-lg">
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <TrendingUp className="w-5 h-5 mr-2 text-primary" />
-              Activité des 7 Derniers Jours
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-64 flex items-center justify-center text-muted-foreground">
-              <div className="text-center">
-                <BarChart3 className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                <p>Graphique des activités</p>
-                <p className="text-sm">Sorties, retours, détentions</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <ActivityChart />
 
         {/* Recent Operations */}
         <Card className="shadow-lg">
@@ -149,6 +133,3 @@ export default function Dashboard() {
     </div>
   );
 }
-
-// Import BarChart3 for the placeholder
-import { BarChart3 } from "lucide-react";
