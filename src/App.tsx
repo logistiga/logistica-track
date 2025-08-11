@@ -10,6 +10,7 @@ import Armateurs from "./pages/Armateurs";
 import Utilisateurs from "./pages/Utilisateurs";
 import SortieConteneur from "./pages/SortieConteneur";
 import Base from "./pages/Base";
+import Detention from "./pages/Detention";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +29,7 @@ const App = () => (
             <Route path="/utilisateurs" element={<Utilisateurs />} />
             <Route path="/sorties" element={<SortieConteneur />} />
             <Route path="/base" element={<Base />} />
+            <Route path="/detention" element={<Detention />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
