@@ -7,6 +7,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Package, Truck, CalendarDays, DollarSign, Building } from "lucide-react";
 import { SortieFormData } from "@/types/sortie-conteneur";
 import { useState, useEffect } from "react";
+import { useArmateurs } from "@/hooks/useArmateurs";
+import { useVehicules } from "@/hooks/useVehicules";
+import { calculateDaysFromDate } from "@/utils/sortieUtils";
 
 interface SortieFormProps {
   formData: SortieFormData;
@@ -15,47 +18,28 @@ interface SortieFormProps {
   onCancel: () => void;
 }
 
-// Mock data - ces données viendraient des autres pages
-const armateurs = [
-  { code: "CMA20", nom: "CMA-CGM", typeConteneur: "20' sec", joursGratuits: 2, prixParJour: 10000 },
-  { code: "CMA40", nom: "CMA-CGM", typeConteneur: "40' sec", joursGratuits: 2, prixParJour: 20000 },
-  { code: "MSK20", nom: "MAERSK", typeConteneur: "20' sec", joursGratuits: 5, prixParJour: 11800 },
-];
-
-const camions = [
-  { id: "1", numeroParc: "TR 37", immatriculation: "TR 37", statut: "disponible" },
-  { id: "2", numeroParc: "TR 41", immatriculation: "TR 41", statut: "disponible" },
-  { id: "3", numeroParc: "tr 08", immatriculation: "tr 08", statut: "disponible" },
-];
-
-const remorques = [
-  { id: "1", numeroParc: "R 01", immatriculation: "R01", statut: "disponible" },
-  { id: "2", numeroParc: "R 02", immatriculation: "R02", statut: "disponible" },
-];
-
 export const SortieForm = ({ formData, setFormData, onSubmit, onCancel }: SortieFormProps) => {
+  const { armateurs, getArmateurByCode, getArmateurOptions } = useArmateurs();
+  const { getCamionOptions, getRemorqueOptions } = useVehicules();
   const [selectedArmateur, setSelectedArmateur] = useState<any>(null);
   const [joursCalcules, setJoursCalcules] = useState<number>(0);
 
   // Calcul automatique des jours lors du changement de date
   useEffect(() => {
     if (formData.dateFinFranchise) {
-      const dateFin = new Date(formData.dateFinFranchise);
-      const dateAujourdhui = new Date();
-      const diffTime = dateFin.getTime() - dateAujourdhui.getTime();
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      setJoursCalcules(Math.max(0, diffDays));
+      const jours = calculateDaysFromDate(formData.dateFinFranchise);
+      setJoursCalcules(jours);
     }
   }, [formData.dateFinFranchise]);
 
   // Mise à jour des informations armateur
   useEffect(() => {
-    const armateur = armateurs.find(a => a.code === formData.codeArmateur);
+    const armateur = getArmateurByCode(formData.codeArmateur);
     setSelectedArmateur(armateur);
     if (armateur && formData.typeDestination === "detention") {
       setFormData({ ...formData, joursBAD: armateur.joursGratuits.toString() });
     }
-  }, [formData.codeArmateur, formData.typeDestination]);
+  }, [formData.codeArmateur, formData.typeDestination, getArmateurByCode]);
 
   return (
     <form onSubmit={onSubmit} className="space-y-6">
@@ -95,9 +79,9 @@ export const SortieForm = ({ formData, setFormData, onSubmit, onCancel }: Sortie
                 <SelectValue placeholder="Sélectionner un armateur" />
               </SelectTrigger>
               <SelectContent>
-                {armateurs.map((armateur) => (
-                  <SelectItem key={armateur.code} value={armateur.code}>
-                    {armateur.code} - {armateur.nom} ({armateur.typeConteneur})
+                {getArmateurOptions().map((armateur) => (
+                  <SelectItem key={armateur.value} value={armateur.value}>
+                    {armateur.label}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -123,9 +107,9 @@ export const SortieForm = ({ formData, setFormData, onSubmit, onCancel }: Sortie
                   <SelectValue placeholder="Sélectionner un camion" />
                 </SelectTrigger>
                 <SelectContent>
-                  {camions.filter(c => c.statut === "disponible").map((camion) => (
-                    <SelectItem key={camion.id} value={camion.id}>
-                      {camion.numeroParc} - {camion.immatriculation}
+                  {getCamionOptions().map((camion) => (
+                    <SelectItem key={camion.value} value={camion.value}>
+                      {camion.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -138,9 +122,9 @@ export const SortieForm = ({ formData, setFormData, onSubmit, onCancel }: Sortie
                   <SelectValue placeholder="Sélectionner une remorque" />
                 </SelectTrigger>
                 <SelectContent>
-                  {remorques.filter(r => r.statut === "disponible").map((remorque) => (
-                    <SelectItem key={remorque.id} value={remorque.id}>
-                      {remorque.numeroParc} - {remorque.immatriculation}
+                  {getRemorqueOptions().map((remorque) => (
+                    <SelectItem key={remorque.value} value={remorque.value}>
+                      {remorque.label}
                     </SelectItem>
                   ))}
                 </SelectContent>

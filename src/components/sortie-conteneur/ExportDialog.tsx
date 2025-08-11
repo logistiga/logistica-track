@@ -9,6 +9,9 @@ import { Separator } from "@/components/ui/separator";
 import { Download, FileSpreadsheet, FileText, Calendar, Filter } from "lucide-react";
 import { SortieConteneur } from "@/types/sortie-conteneur";
 import { useToast } from "@/hooks/use-toast";
+import { useArmateurs } from "@/hooks/useArmateurs";
+import { useVehicules } from "@/hooks/useVehicules";
+import { getStatutLabel, formatCurrency } from "@/utils/sortieUtils";
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -25,19 +28,6 @@ interface ExportFilters {
   camion: string;
 }
 
-// Mock data des armateurs et camions (normalement viendraient des autres pages)
-const armateurs = [
-  { code: "CMA20", nom: "CMA-CGM" },
-  { code: "CMA40", nom: "CMA-CGM" },
-  { code: "MSK20", nom: "MAERSK" },
-];
-
-const camions = [
-  { id: "1", numeroParc: "TR 37" },
-  { id: "2", numeroParc: "TR 41" },
-  { id: "3", numeroParc: "tr 08" },
-];
-
 const statutOptions = [
   { value: "tous", label: "Tous" },
   { value: "en_cours", label: "En cours" },
@@ -48,6 +38,9 @@ const statutOptions = [
 
 export const ExportDialog = ({ sorties }: ExportDialogProps) => {
   const { toast } = useToast();
+  const { getArmateurDisplay, getArmateurOptions } = useArmateurs();
+  const { getVehiculeDisplay, getCamionOptions } = useVehicules();
+  
   const [isOpen, setIsOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [filters, setFilters] = useState<ExportFilters>({
@@ -77,19 +70,12 @@ export const ExportDialog = ({ sorties }: ExportDialogProps) => {
     });
   };
 
-  const getStatutLabel = (statut: string) => {
-    const option = statutOptions.find(s => s.value === statut);
-    return option ? option.label : statut;
-  };
-
   const getCamionLabel = (camionId: string) => {
-    const camion = camions.find(c => c.id === camionId);
-    return camion ? camion.numeroParc : camionId;
+    return getVehiculeDisplay(camionId);
   };
 
-  const getArmateur = (code: string) => {
-    const armateur = armateurs.find(a => a.code === code);
-    return armateur ? `${armateur.code} - ${armateur.nom}` : code;
+  const getArmateurLabel = (code: string) => {
+    return getArmateurDisplay(code);
   };
 
   const exportToExcel = () => {
@@ -101,13 +87,9 @@ export const ExportDialog = ({ sorties }: ExportDialogProps) => {
       const data = filteredSorties.map(sortie => ({
         'Numéro de conteneur': sortie.numeroConteneur,
         'Numéro BL': sortie.numeroBL,
-        'Code armateur': getArmateur(sortie.codeArmateur),
+        'Code armateur': getArmateurLabel(sortie.codeArmateur),
         'Client': sortie.nomClient,
-        'Prime chauffeur': new Intl.NumberFormat('fr-FR', { 
-          style: 'currency', 
-          currency: 'XOF',
-          minimumFractionDigits: 0 
-        }).format(sortie.primeChauffeur),
+        'Prime chauffeur': formatCurrency(sortie.primeChauffeur),
         'Destination': sortie.destination === "base" ? "Base" : "Client",
         'Adresse client': sortie.adresseClient || "",
         'Type destination': sortie.typeDestination,
@@ -197,7 +179,7 @@ export const ExportDialog = ({ sorties }: ExportDialogProps) => {
         yPosition += 5;
       }
       if (filters.statut !== "tous") {
-        doc.text(`Statut: ${getStatutLabel(filters.statut)}`, 14, yPosition);
+        doc.text(`Statut: ${statutOptions.find(s => s.value === filters.statut)?.label || filters.statut}`, 14, yPosition);
         yPosition += 5;
       }
       
@@ -329,14 +311,14 @@ export const ExportDialog = ({ sorties }: ExportDialogProps) => {
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="tous">Tous les armateurs</SelectItem>
-                    {armateurs.map((armateur) => (
-                      <SelectItem key={armateur.code} value={armateur.code}>
-                        {armateur.code} - {armateur.nom}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
+              <SelectContent>
+                <SelectItem value="tous">Tous les armateurs</SelectItem>
+                {getArmateurOptions().map((armateur) => (
+                  <SelectItem key={armateur.value} value={armateur.value}>
+                    {armateur.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
                 </Select>
               </div>
 
@@ -347,14 +329,14 @@ export const ExportDialog = ({ sorties }: ExportDialogProps) => {
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="tous">Tous les camions</SelectItem>
-                    {camions.map((camion) => (
-                      <SelectItem key={camion.id} value={camion.id}>
-                        {camion.numeroParc}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
+              <SelectContent>
+                <SelectItem value="tous">Tous les camions</SelectItem>
+                {getCamionOptions().map((camion) => (
+                  <SelectItem key={camion.value} value={camion.value}>
+                    {camion.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
                 </Select>
               </div>
             </CardContent>
