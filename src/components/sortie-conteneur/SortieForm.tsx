@@ -53,7 +53,7 @@ export const SortieForm = ({ formData, setFormData, onSubmit, onCancel }: Sortie
     const armateur = armateurs.find(a => a.code === formData.codeArmateur);
     setSelectedArmateur(armateur);
     if (armateur && formData.typeDestination === "detention") {
-      setFormData({ ...formData, joursBAT: armateur.joursGratuits.toString() });
+      setFormData({ ...formData, joursBAD: armateur.joursGratuits.toString() });
     }
   }, [formData.codeArmateur, formData.typeDestination]);
 
@@ -214,21 +214,21 @@ export const SortieForm = ({ formData, setFormData, onSubmit, onCancel }: Sortie
                 <SelectValue placeholder="Sélectionner le type" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="bat">BAT (Bon à Transférer)</SelectItem>
+                <SelectItem value="bad">BAD (Bon À Délivrer)</SelectItem>
                 <SelectItem value="detention">Détention fixe</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          {formData.typeDestination === "bat" && (
+          {formData.typeDestination === "bad" && (
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="joursBAT">Nombre de jours BAT</Label>
+                <Label htmlFor="joursBAD">Nombre de jours BAD</Label>
                 <Input
-                  id="joursBAT"
+                  id="joursBAD"
                   type="number"
-                  value={formData.joursBAT}
-                  onChange={(e) => setFormData({ ...formData, joursBAT: e.target.value })}
+                  value={formData.joursBAD}
+                  onChange={(e) => setFormData({ ...formData, joursBAD: e.target.value })}
                   placeholder="Ex: 10"
                 />
               </div>

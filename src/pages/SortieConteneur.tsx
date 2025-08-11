@@ -47,7 +47,7 @@ const SortieConteneurPage = () => {
     destination: "",
     adresseClient: "",
     typeDestination: "",
-    joursBAT: "",
+    joursBAD: "",
     dateFinFranchise: "",
     nomTransitaire: ""
   });
@@ -74,8 +74,8 @@ const SortieConteneurPage = () => {
         nomClient: formData.nomClient,
         destination: formData.destination as "base" | "client",
         adresseClient: formData.adresseClient,
-        typeDestination: formData.typeDestination as "bat" | "detention",
-        joursBAT: formData.joursBAT ? parseInt(formData.joursBAT) : undefined,
+        typeDestination: formData.typeDestination as "bad" | "detention",
+        joursBAD: formData.joursBAD ? parseInt(formData.joursBAD) : undefined,
         dateFinFranchise: formData.dateFinFranchise,
         nomTransitaire: formData.nomTransitaire,
       };
@@ -100,8 +100,8 @@ const SortieConteneurPage = () => {
         nomClient: formData.nomClient,
         destination: formData.destination as "base" | "client",
         adresseClient: formData.adresseClient,
-        typeDestination: formData.typeDestination as "bat" | "detention",
-        joursBAT: formData.joursBAT ? parseInt(formData.joursBAT) : undefined,
+        typeDestination: formData.typeDestination as "bad" | "detention",
+        joursBAD: formData.joursBAD ? parseInt(formData.joursBAD) : undefined,
         dateFinFranchise: formData.dateFinFranchise,
         nomTransitaire: formData.nomTransitaire,
         dateSortie: new Date().toISOString().split('T')[0],
@@ -128,7 +128,7 @@ const SortieConteneurPage = () => {
       destination: "",
       adresseClient: "",
       typeDestination: "",
-      joursBAT: "",
+      joursBAD: "",
       dateFinFranchise: "",
       nomTransitaire: ""
     });
@@ -166,7 +166,7 @@ const SortieConteneurPage = () => {
       destination: sortie.destination,
       adresseClient: sortie.adresseClient || "",
       typeDestination: sortie.typeDestination,
-      joursBAT: sortie.joursBAT?.toString() || "",
+      joursBAD: sortie.joursBAD?.toString() || "",
       dateFinFranchise: sortie.dateFinFranchise || "",
       nomTransitaire: sortie.nomTransitaire
     });
@@ -205,7 +205,7 @@ const SortieConteneurPage = () => {
               destination: "",
               adresseClient: "",
               typeDestination: "",
-              joursBAT: "",
+              joursBAD: "",
               dateFinFranchise: "",
               nomTransitaire: ""
             });

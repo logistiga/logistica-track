@@ -9,8 +9,8 @@ export interface SortieConteneur {
   nomClient: string;
   destination: "base" | "client";
   adresseClient?: string;
-  typeDestination: "bat" | "detention";
-  joursBAT?: number;
+  typeDestination: "bad" | "detention";
+  joursBAD?: number;
   dateFinFranchise?: string;
   nomTransitaire: string;
   dateSortie: string;
@@ -29,7 +29,7 @@ export interface SortieFormData {
   destination: string;
   adresseClient: string;
   typeDestination: string;
-  joursBAT: string;
+  joursBAD: string;
   dateFinFranchise: string;
   nomTransitaire: string;
 }
