@@ -1,11 +1,8 @@
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Users, FileText, CheckCircle, Edit } from "lucide-react";
 import { DetentionContainer } from "@/types/detention";
 import { ResponsabiliteDialog } from "@/components/detention/ResponsabiliteDialog";
+import { DetentionStats } from "@/components/detention/DetentionStats";
+import { DetentionTable } from "@/components/detention/DetentionTable";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Detention() {
@@ -87,30 +84,6 @@ export default function Detention() {
     });
   };
 
-  const getResponsabilityBadge = (container: DetentionContainer) => {
-    if (!container.responsabilite) {
-      return <Badge variant="outline">Non définie</Badge>;
-    }
-
-    const variants = {
-      client: "destructive",
-      logistica: "secondary",
-      partagee: "default"
-    };
-
-    const labels = {
-      client: "Client",
-      logistica: "Logistica",
-      partagee: `Partagée (${container.joursClient}j / ${container.joursLogistica}j)`
-    };
-
-    return (
-      <Badge variant={variants[container.responsabilite] as any}>
-        {labels[container.responsabilite]}
-      </Badge>
-    );
-  };
-
   return (
     <div className="space-y-6">
       <div>
@@ -120,109 +93,14 @@ export default function Detention() {
         </p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Conteneurs en détention</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{containers.length}</div>
-          </CardContent>
-        </Card>
+      <DetentionStats containers={containers} />
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Jours totaux de dépassement</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {containers.reduce((acc, c) => acc + c.joursDepassement, 0)}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">En attente de paiement</CardTitle>
-            <CheckCircle className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {containers.filter(c => !c.paiementConfirme).length}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Conteneurs en détention</CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Conteneur</TableHead>
-                <TableHead>Armateur</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>BAT autorisés</TableHead>
-                <TableHead>Jours réalisés</TableHead>
-                <TableHead>Dépassement</TableHead>
-                <TableHead>Date sortie</TableHead>
-                <TableHead>Date retour</TableHead>
-                <TableHead>Client</TableHead>
-                <TableHead>Responsabilité</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {containers.map((container) => (
-                <TableRow key={container.id}>
-                  <TableCell className="font-medium">{container.numeroConteneur}</TableCell>
-                  <TableCell>{container.codeArmateur}</TableCell>
-                  <TableCell>{container.typeConteneur}</TableCell>
-                  <TableCell>{container.joursBAT} jours</TableCell>
-                  <TableCell>{container.joursRealises} jours</TableCell>
-                  <TableCell>
-                    <Badge variant="destructive">{container.joursDepassement} jours</Badge>
-                  </TableCell>
-                  <TableCell>{container.dateSortie}</TableCell>
-                  <TableCell>{container.dateRetour}</TableCell>
-                  <TableCell>{container.nomClient}</TableCell>
-                  <TableCell>{getResponsabilityBadge(container)}</TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleIdentifyResponsability(container)}
-                      >
-                        <Users className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleGeneratePDF(container)}
-                      >
-                        <FileText className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleConfirmPayment(container)}
-                      >
-                        <CheckCircle className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+      <DetentionTable
+        containers={containers}
+        onIdentifyResponsability={handleIdentifyResponsability}
+        onGeneratePDF={handleGeneratePDF}
+        onConfirmPayment={handleConfirmPayment}
+      />
 
       <ResponsabiliteDialog
         isOpen={isResponsabiliteDialogOpen}
