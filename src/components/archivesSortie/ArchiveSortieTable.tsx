@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FileText, Eye } from "lucide-react";
 import { ArchiveSortie } from "@/types/archivesSortie";
+import { formatCurrency } from "@/lib/currency";
 
 interface ArchiveSortieTableProps {
   archives: ArchiveSortie[];
@@ -109,7 +110,7 @@ export function ArchiveSortieTable({ archives, onViewInvoice, onViewDetails }: A
                   <TableCell>
                     {archive.montantTotalDetention ? (
                       <div className="text-xs">
-                        <div className="font-medium">{archive.montantTotalDetention.toFixed(2)} €</div>
+                      <div className="font-medium">{formatCurrency(archive.montantTotalDetention)}</div>
                         {archive.numeroFactureDetention && (
                           <div>{archive.numeroFactureDetention}</div>
                         )}

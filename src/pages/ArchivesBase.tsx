@@ -6,7 +6,6 @@ import { ArchiveTable } from "@/components/archives/ArchiveTable";
 import { useToast } from "@/hooks/use-toast";
 
 export default function ArchivesBase() {
-  console.log("ArchivesBase component is rendering");
   const { toast } = useToast();
   
   const [archives] = useState<ArchiveBase[]>([
@@ -24,7 +23,7 @@ export default function ArchivesBase() {
       remorqueSortie: "REM002 - Semi-remorque",
       joursGratuits: 5,
       joursPayants: 3,
-      montantTotalFacture: 350.00,
+      montantTotalFacture: 350000,
       dateFacturation: "2024-01-19",
       numeroFacture: "FACT-2024-001",
       statutPaiement: "paye",
@@ -40,7 +39,7 @@ export default function ArchivesBase() {
       dateSortieBase: "2024-01-12",
       camionArrivee: "CAM003 - Scania R500",
       remorqueArrivee: "REM003 - Plateau",
-      montantTotalFacture: 250.00,
+      montantTotalFacture: 250000,
       dateFacturation: "2024-01-13",
       numeroFacture: "FACT-2024-002",
       statutPaiement: "paye",

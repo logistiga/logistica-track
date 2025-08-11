@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FileText, Eye } from "lucide-react";
 import { ArchiveBase } from "@/types/archives";
+import { formatCurrency } from "@/lib/currency";
 
 interface ArchiveTableProps {
   archives: ArchiveBase[];
@@ -80,7 +81,7 @@ export function ArchiveTable({ archives, onViewInvoice, onViewDetails }: Archive
                       <div className="text-xs">Forfaitaire</div>
                     )}
                   </TableCell>
-                  <TableCell className="font-medium">{archive.montantTotalFacture.toFixed(2)} €</TableCell>
+                  <TableCell className="font-medium">{formatCurrency(archive.montantTotalFacture)}</TableCell>
                   <TableCell>
                     <div className="text-xs">
                       <div>{archive.numeroFacture}</div>

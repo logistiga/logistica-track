@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Archive, Package, Euro, FileText } from "lucide-react";
+import { Archive, Package, Coins, FileText } from "lucide-react";
 import { ArchiveBase } from "@/types/archives";
+import { formatCurrency } from "@/lib/currency";
 
 interface ArchiveStatsProps {
   archives: ArchiveBase[];
@@ -46,10 +47,10 @@ export function ArchiveStats({ archives }: ArchiveStatsProps) {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Montant total</CardTitle>
-          <Euro className="h-4 w-4 text-muted-foreground" />
+          <Coins className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{montantTotal.toFixed(2)} €</div>
+          <div className="text-2xl font-bold">{formatCurrency(montantTotal)}</div>
         </CardContent>
       </Card>
     </div>

@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FileText, CheckCircle } from "lucide-react";
 import { FactureInterne } from "@/types/facturation";
+import { formatCurrency } from "@/lib/currency";
 
 interface FacturationTableProps {
   factures: FactureInterne[];
@@ -67,14 +68,14 @@ export function FacturationTable({
                 <TableCell>{getOperationBadge(facture.typeOperation)}</TableCell>
                 <TableCell>{facture.numeroConteneur}</TableCell>
                 <TableCell>{facture.nomClient}</TableCell>
-                <TableCell className="font-medium">{facture.montantAPayer.toFixed(2)} €</TableCell>
+                <TableCell className="font-medium">{formatCurrency(facture.montantAPayer)}</TableCell>
                 <TableCell>{facture.dateSortieOperation}</TableCell>
                 <TableCell>
                   {facture.typeOperation === "stockage" && facture.joursPayants && (
                     <div className="text-xs text-muted-foreground">
                       {facture.joursGratuits}j gratuits + {facture.joursPayants}j payants
                       <br />
-                      ({facture.tarifJournalier?.toFixed(2)} €/jour)
+                      ({formatCurrency(facture.tarifJournalier || 0)}/jour)
                     </div>
                   )}
                   {facture.typeOperation === "double-relevage" && (
