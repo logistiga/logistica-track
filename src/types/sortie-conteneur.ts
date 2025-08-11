@@ -1,10 +1,11 @@
 export interface SortieConteneur {
   id: string;
   numeroConteneur: string;
-  numeroVL: string;
+  numeroBL: string;
   codeArmateur: string;
   camion: string;
   remorque: string;
+  primeChauffeur: number;
   nomClient: string;
   destination: "base" | "client";
   adresseClient?: string;
@@ -19,10 +20,11 @@ export interface SortieConteneur {
 
 export interface SortieFormData {
   numeroConteneur: string;
-  numeroVL: string;
+  numeroBL: string;
   codeArmateur: string;
   camion: string;
   remorque: string;
+  primeChauffeur: string;
   nomClient: string;
   destination: string;
   adresseClient: string;

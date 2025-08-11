@@ -31,9 +31,10 @@ export const SortieTable = ({
           <TableHeader>
             <TableRow>
               <TableHead>Conteneur</TableHead>
-              <TableHead>VL</TableHead>
+              <TableHead>BL</TableHead>
               <TableHead>Armateur</TableHead>
               <TableHead>Client</TableHead>
+              <TableHead>Prime</TableHead>
               <TableHead>Destination</TableHead>
               <TableHead>Date sortie</TableHead>
               {showHistory && <TableHead>Date retour</TableHead>}
@@ -45,9 +46,16 @@ export const SortieTable = ({
             {displayedSorties.map((sortie) => (
               <TableRow key={sortie.id}>
                 <TableCell className="font-medium">{sortie.numeroConteneur}</TableCell>
-                <TableCell>{sortie.numeroVL}</TableCell>
+                <TableCell>{sortie.numeroBL}</TableCell>
                 <TableCell>{sortie.codeArmateur}</TableCell>
                 <TableCell>{sortie.nomClient}</TableCell>
+                <TableCell>
+                  {new Intl.NumberFormat('fr-FR', { 
+                    style: 'currency', 
+                    currency: 'XOF',
+                    minimumFractionDigits: 0 
+                  }).format(sortie.primeChauffeur)}
+                </TableCell>
                 <TableCell>{sortie.destination === "base" ? "Base" : "Client"}</TableCell>
                 <TableCell>{sortie.dateSortie}</TableCell>
                 {showHistory && <TableCell>{sortie.dateRetour || "-"}</TableCell>}

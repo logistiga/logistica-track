@@ -15,15 +15,16 @@ const SortieConteneurPage = () => {
     {
       id: "1",
       numeroConteneur: "TCLU5234567",
-      numeroVL: "VL001",
-      codeArmateur: "ARM001",
-      camion: "CAM001",
-      remorque: "REM001",
-      nomClient: "Client A",
+      numeroBL: "BL001234",
+      codeArmateur: "CMA20",
+      camion: "1",
+      remorque: "1",
+      primeChauffeur: 25000,
+      nomClient: "CFAO Motors",
       destination: "client",
-      adresseClient: "123 Rue Example",
+      adresseClient: "Zone Industrielle, Abidjan",
       typeDestination: "detention",
-      nomTransitaire: "Trans A",
+      nomTransitaire: "BOLLORE LOGISTICS",
       dateSortie: "2024-01-15",
       statut: "en_cours"
     }
@@ -32,14 +33,16 @@ const SortieConteneurPage = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isReturnDialogOpen, setIsReturnDialogOpen] = useState(false);
   const [selectedSortie, setSelectedSortie] = useState<SortieConteneur | null>(null);
+  const [editingSortie, setEditingSortie] = useState<SortieConteneur | null>(null);
   const [activeTab, setActiveTab] = useState("nouvelle");
 
   const [formData, setFormData] = useState<SortieFormData>({
     numeroConteneur: "",
-    numeroVL: "",
+    numeroBL: "",
     codeArmateur: "",
     camion: "",
     remorque: "",
+    primeChauffeur: "",
     nomClient: "",
     destination: "",
     adresseClient: "",
@@ -58,31 +61,69 @@ const SortieConteneurPage = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    const nouvelleSortie: SortieConteneur = {
-      id: Date.now().toString(),
-      numeroConteneur: formData.numeroConteneur,
-      numeroVL: formData.numeroVL,
-      codeArmateur: formData.codeArmateur,
-      camion: formData.camion,
-      remorque: formData.remorque,
-      nomClient: formData.nomClient,
-      destination: formData.destination as "base" | "client",
-      adresseClient: formData.adresseClient,
-      typeDestination: formData.typeDestination as "bat" | "detention",
-      joursBAT: formData.joursBAT ? parseInt(formData.joursBAT) : undefined,
-      dateFinFranchise: formData.dateFinFranchise,
-      nomTransitaire: formData.nomTransitaire,
-      dateSortie: new Date().toISOString().split('T')[0],
-      statut: formData.destination === "base" ? "a_la_base" : "livre_client"
-    };
+    if (editingSortie) {
+      // Mode modification
+      const sortieModifiee: SortieConteneur = {
+        ...editingSortie,
+        numeroConteneur: formData.numeroConteneur,
+        numeroBL: formData.numeroBL,
+        codeArmateur: formData.codeArmateur,
+        camion: formData.camion,
+        remorque: formData.remorque,
+        primeChauffeur: formData.primeChauffeur ? parseInt(formData.primeChauffeur) : 0,
+        nomClient: formData.nomClient,
+        destination: formData.destination as "base" | "client",
+        adresseClient: formData.adresseClient,
+        typeDestination: formData.typeDestination as "bat" | "detention",
+        joursBAT: formData.joursBAT ? parseInt(formData.joursBAT) : undefined,
+        dateFinFranchise: formData.dateFinFranchise,
+        nomTransitaire: formData.nomTransitaire,
+      };
 
-    setSorties([...sorties, nouvelleSortie]);
+      setSorties(sorties.map(s => s.id === editingSortie.id ? sortieModifiee : s));
+      setEditingSortie(null);
+      
+      toast({
+        title: "Sortie modifiée",
+        description: "Les modifications ont été enregistrées."
+      });
+    } else {
+      // Mode création
+      const nouvelleSortie: SortieConteneur = {
+        id: Date.now().toString(),
+        numeroConteneur: formData.numeroConteneur,
+        numeroBL: formData.numeroBL,
+        codeArmateur: formData.codeArmateur,
+        camion: formData.camion,
+        remorque: formData.remorque,
+        primeChauffeur: formData.primeChauffeur ? parseInt(formData.primeChauffeur) : 0,
+        nomClient: formData.nomClient,
+        destination: formData.destination as "base" | "client",
+        adresseClient: formData.adresseClient,
+        typeDestination: formData.typeDestination as "bat" | "detention",
+        joursBAT: formData.joursBAT ? parseInt(formData.joursBAT) : undefined,
+        dateFinFranchise: formData.dateFinFranchise,
+        nomTransitaire: formData.nomTransitaire,
+        dateSortie: new Date().toISOString().split('T')[0],
+        statut: formData.destination === "base" ? "a_la_base" : "livre_client"
+      };
+
+      setSorties([...sorties, nouvelleSortie]);
+      
+      toast({
+        title: "Sortie ajoutée",
+        description: "La nouvelle sortie de conteneur a été enregistrée."
+      });
+    }
+
+    // Reset form
     setFormData({
       numeroConteneur: "",
-      numeroVL: "",
+      numeroBL: "",
       codeArmateur: "",
       camion: "",
       remorque: "",
+      primeChauffeur: "",
       nomClient: "",
       destination: "",
       adresseClient: "",
@@ -92,11 +133,6 @@ const SortieConteneurPage = () => {
       nomTransitaire: ""
     });
     setIsAddDialogOpen(false);
-    
-    toast({
-      title: "Sortie ajoutée",
-      description: "La nouvelle sortie de conteneur a été enregistrée."
-    });
   };
 
   const handleConfirmReturn = () => {
@@ -117,6 +153,34 @@ const SortieConteneurPage = () => {
     }
   };
 
+  const handleEdit = (sortie: SortieConteneur) => {
+    setEditingSortie(sortie);
+    setFormData({
+      numeroConteneur: sortie.numeroConteneur,
+      numeroBL: sortie.numeroBL,
+      codeArmateur: sortie.codeArmateur,
+      camion: sortie.camion,
+      remorque: sortie.remorque,
+      primeChauffeur: sortie.primeChauffeur.toString(),
+      nomClient: sortie.nomClient,
+      destination: sortie.destination,
+      adresseClient: sortie.adresseClient || "",
+      typeDestination: sortie.typeDestination,
+      joursBAT: sortie.joursBAT?.toString() || "",
+      dateFinFranchise: sortie.dateFinFranchise || "",
+      nomTransitaire: sortie.nomTransitaire
+    });
+    setIsAddDialogOpen(true);
+  };
+
+  const handleDelete = (sortie: SortieConteneur) => {
+    setSorties(sorties.filter(s => s.id !== sortie.id));
+    toast({
+      title: "Sortie supprimée",
+      description: "La sortie de conteneur a été supprimée."
+    });
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -126,7 +190,27 @@ const SortieConteneurPage = () => {
             Gérez les sorties et le suivi des conteneurs
           </p>
         </div>
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <Dialog open={isAddDialogOpen} onOpenChange={(open) => {
+          setIsAddDialogOpen(open);
+          if (!open) {
+            setEditingSortie(null);
+            setFormData({
+              numeroConteneur: "",
+              numeroBL: "",
+              codeArmateur: "",
+              camion: "",
+              remorque: "",
+              primeChauffeur: "",
+              nomClient: "",
+              destination: "",
+              adresseClient: "",
+              typeDestination: "",
+              joursBAT: "",
+              dateFinFranchise: "",
+              nomTransitaire: ""
+            });
+          }
+        }}>
           <DialogTrigger asChild>
             <Button className="gap-2">
               <Plus className="w-4 h-4" />
@@ -135,9 +219,14 @@ const SortieConteneurPage = () => {
           </DialogTrigger>
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Nouvelle sortie de conteneur</DialogTitle>
+              <DialogTitle>
+                {editingSortie ? "Modifier la sortie de conteneur" : "Nouvelle sortie de conteneur"}
+              </DialogTitle>
               <DialogDescription>
-                Enregistrez une nouvelle sortie de conteneur du port
+                {editingSortie 
+                  ? "Modifiez les informations de la sortie de conteneur"
+                  : "Enregistrez une nouvelle sortie de conteneur du port"
+                }
               </DialogDescription>
             </DialogHeader>
             <SortieForm
@@ -160,10 +249,12 @@ const SortieConteneurPage = () => {
           <SortieTable
             sorties={sorties}
             showHistory={false}
+            onEditClick={handleEdit}
             onReturnClick={(sortie) => {
               setSelectedSortie(sortie);
               setIsReturnDialogOpen(true);
             }}
+            onDeleteClick={handleDelete}
           />
         </TabsContent>
 
