@@ -61,8 +61,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = async () => {
     await authService.logout();
     setUser(null);
-    // Rediriger vers la page de login après déconnexion
-    window.location.href = '/login';
   };
 
   const updateUser = async (userData: Partial<User>) => {
