@@ -19,7 +19,12 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => explode(',', env('CORS_ALLOWED_ORIGINS', 'http://localhost:3000')),
+    'allowed_origins' => [
+        'http://localhost:3000',
+        'http://127.0.0.1:3000',
+        'https://b3b36859-40bc-4d2e-9dda-fa8b3af543d8.lovableproject.com',
+        '*' // Temporairement pour tests
+    ],
 
     'allowed_origins_patterns' => [],
 
