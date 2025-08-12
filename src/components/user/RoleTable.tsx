@@ -19,26 +19,26 @@ interface RoleTableProps {
 export function RoleTable({ roles, onDeleteRole }: RoleTableProps) {
   const getRiskBadge = (permissions: number) => {
     if (permissions >= 30) {
-      return <Badge className="bg-red-500 text-white">2 critiques</Badge>;
+      return <Badge variant="destructive">Critique</Badge>;
     } else if (permissions >= 15) {
-      return <Badge className="bg-orange-500 text-white">Moyen</Badge>;
+      return <Badge className="bg-warning text-warning-foreground">Moyen</Badge>;
     } else {
-      return <Badge className="bg-green-500 text-white">Faible</Badge>;
+      return <Badge className="bg-success text-success-foreground">Faible</Badge>;
     }
   };
 
   const getRoleBadge = (role: Role) => {
     const colorClasses = {
       violet: "bg-violet-500 text-white",
-      orange: "bg-orange-500 text-white",
-      gray: "bg-gray-500 text-white",
-      blue: "bg-blue-500 text-white",
-      yellow: "bg-yellow-500 text-black",
-      purple: "bg-purple-500 text-white",
+      orange: "bg-warning text-warning-foreground",
+      gray: "bg-muted text-muted-foreground",
+      blue: "bg-primary text-primary-foreground",
+      yellow: "bg-accent text-accent-foreground",
+      purple: "bg-secondary text-secondary-foreground",
     };
 
     return (
-      <Badge className={colorClasses[role.couleur as keyof typeof colorClasses] || "bg-gray-500 text-white"}>
+      <Badge className={colorClasses[role.couleur as keyof typeof colorClasses] || "bg-muted text-muted-foreground"}>
         {role.nom}
       </Badge>
     );

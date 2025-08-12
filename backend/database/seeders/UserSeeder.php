@@ -21,6 +21,14 @@ class UserSeeder extends Seeder
                 'telephone' => '+221 77 123 45 67',
             ],
             [
+                'name' => 'Omar Amraoui',
+                'email' => 'omar@logistiga.com',
+                'password' => Hash::make('Amraoui@1'),
+                'role' => 'admin',
+                'departement' => 'Direction',
+                'telephone' => '+221 77 123 45 01',
+            ],
+            [
                 'name' => 'Manager Transport',
                 'email' => 'manager@logistica.com',
                 'password' => Hash::make('manager123'),
