@@ -2,17 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Edit, Trash2 } from "lucide-react";
-
-interface User {
-  id: number;
-  name: string;
-  email: string;
-  role: string;
-  role_label?: string;
-  actif: boolean;
-  created_at: string;
-  updated_at: string;
-}
+import { User } from "@/services/authService";
 
 interface Role {
   id: string;
@@ -25,7 +15,7 @@ interface Role {
 interface UserTableProps {
   users: User[];
   roles: Role[];
-  onDeleteUser: (id: number) => void;
+  onDeleteUser: (id: string | number) => void;
 }
 
 export function UserTable({ users, roles, onDeleteUser }: UserTableProps) {

@@ -1,4 +1,5 @@
-const API_BASE_URL = 'http://127.0.0.1:8000/api';
+import { supabase } from '@/lib/supabase';
+import type { User as SupabaseUser } from '@supabase/supabase-js';
 
 export interface LoginCredentials {
   email: string;
@@ -15,7 +16,7 @@ export interface RegisterData {
 }
 
 export interface User {
-  id: number;
+  id: string;
   name: string;
   email: string;
   role: string;
@@ -39,45 +40,46 @@ export interface AuthResponse {
 }
 
 class AuthService {
-  private getAuthHeaders() {
-    const token = localStorage.getItem('auth_token');
-    return {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      ...(token && { 'Authorization': `Bearer ${token}` })
-    };
-  }
-
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
-    console.log('🔐 Tentative de connexion vers:', `${API_BASE_URL}/auth/login`);
-    console.log('📝 Données envoyées:', credentials);
-    console.log('🌐 Headers:', this.getAuthHeaders());
+    console.log('🔐 Tentative de connexion avec Supabase');
+    console.log('📝 Email:', credentials.email);
     
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/login`, {
-        method: 'POST',
-        headers: this.getAuthHeaders(),
-        body: JSON.stringify(credentials),
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: credentials.email,
+        password: credentials.password,
       });
 
-      console.log('📡 Réponse reçue:', response.status, response.statusText);
-
-      if (!response.ok) {
-        const error = await response.json();
-        console.error('❌ Erreur de la réponse:', error);
-        throw new Error(error.message || 'Erreur de connexion');
+      if (error) {
+        console.error('❌ Erreur Supabase:', error);
+        throw new Error(error.message);
       }
 
-      const data = await response.json();
-      console.log('✅ Données de connexion reçues:', data);
+      console.log('✅ Connexion réussie:', data);
       
-      if (data.success && data.data.token) {
-        localStorage.setItem('auth_token', data.data.token);
-        localStorage.setItem('auth_user', JSON.stringify(data.data.user));
-        console.log('💾 Token et utilisateur sauvegardés');
-      }
+      const user: User = {
+        id: data.user.id,
+        name: data.user.user_metadata?.name || credentials.email.split('@')[0],
+        email: data.user.email!,
+        role: 'admin',
+        role_label: 'Administrateur',
+        telephone: data.user.user_metadata?.telephone,
+        departement: data.user.user_metadata?.departement,
+        actif: true,
+        email_verified_at: data.user.email_confirmed_at,
+        derniere_connexion: new Date().toISOString(),
+        created_at: data.user.created_at,
+        updated_at: data.user.updated_at || data.user.created_at,
+      };
 
-      return data;
+      return {
+        success: true,
+        message: 'Connexion réussie',
+        data: {
+          user,
+          token: data.session.access_token,
+        },
+      };
     } catch (error) {
       console.error('🚨 Erreur lors de la connexion:', error);
       throw error;
@@ -85,93 +87,132 @@ class AuthService {
   }
 
   async register(userData: RegisterData): Promise<AuthResponse> {
-    const response = await fetch(`${API_BASE_URL}/auth/register`, {
-      method: 'POST',
-      headers: this.getAuthHeaders(),
-      body: JSON.stringify(userData),
-    });
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email: userData.email,
+        password: userData.password,
+        options: {
+          data: {
+            name: userData.name,
+            telephone: userData.telephone,
+            departement: userData.departement,
+          },
+        },
+      });
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Erreur lors de l\'inscription');
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      const user: User = {
+        id: data.user!.id,
+        name: userData.name,
+        email: userData.email,
+        role: 'user',
+        role_label: 'Utilisateur',
+        telephone: userData.telephone,
+        departement: userData.departement,
+        actif: true,
+        email_verified_at: data.user!.email_confirmed_at,
+        derniere_connexion: new Date().toISOString(),
+        created_at: data.user!.created_at,
+        updated_at: data.user!.updated_at || data.user!.created_at,
+      };
+
+      return {
+        success: true,
+        message: 'Inscription réussie',
+        data: {
+          user,
+          token: data.session?.access_token || '',
+        },
+      };
+    } catch (error) {
+      throw error;
     }
-
-    return await response.json();
   }
 
   async logout(): Promise<void> {
     try {
-      await fetch(`${API_BASE_URL}/auth/logout`, {
-        method: 'POST',
-        headers: this.getAuthHeaders(),
-      });
+      await supabase.auth.signOut();
+      console.log('💾 Déconnexion réussie');
     } catch (error) {
       console.error('Erreur lors de la déconnexion:', error);
-    } finally {
-      localStorage.removeItem('auth_token');
-      localStorage.removeItem('auth_user');
     }
   }
 
   async getCurrentUser(): Promise<User> {
-    const response = await fetch(`${API_BASE_URL}/auth/me`, {
-      method: 'GET',
-      headers: this.getAuthHeaders(),
-    });
+    const { data: { user }, error } = await supabase.auth.getUser();
 
-    if (!response.ok) {
-      throw new Error('Erreur lors de la récupération du profil');
+    if (error || !user) {
+      throw new Error('Utilisateur non connecté');
     }
 
-    const data = await response.json();
-    return data.data;
+    return {
+      id: user.id,
+      name: user.user_metadata?.name || user.email!.split('@')[0],
+      email: user.email!,
+      role: 'admin',
+      role_label: 'Administrateur',
+      telephone: user.user_metadata?.telephone,
+      departement: user.user_metadata?.departement,
+      actif: true,
+      email_verified_at: user.email_confirmed_at,
+      derniere_connexion: new Date().toISOString(),
+      created_at: user.created_at,
+      updated_at: user.updated_at || user.created_at,
+    };
   }
 
   async updateProfile(userData: Partial<User>): Promise<User> {
-    const response = await fetch(`${API_BASE_URL}/auth/profile`, {
-      method: 'PUT',
-      headers: this.getAuthHeaders(),
-      body: JSON.stringify(userData),
+    const { data, error } = await supabase.auth.updateUser({
+      data: {
+        name: userData.name,
+        telephone: userData.telephone,
+        departement: userData.departement,
+      },
     });
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Erreur lors de la mise à jour');
+    if (error) {
+      throw new Error(error.message);
     }
 
-    const data = await response.json();
-    localStorage.setItem('auth_user', JSON.stringify(data.data));
-    return data.data;
+    return {
+      id: data.user.id,
+      name: userData.name || data.user.user_metadata?.name,
+      email: data.user.email!,
+      role: 'admin',
+      role_label: 'Administrateur',
+      telephone: userData.telephone,
+      departement: userData.departement,
+      actif: true,
+      email_verified_at: data.user.email_confirmed_at,
+      derniere_connexion: new Date().toISOString(),
+      created_at: data.user.created_at,
+      updated_at: data.user.updated_at || data.user.created_at,
+    };
   }
 
   async changePassword(currentPassword: string, newPassword: string): Promise<void> {
-    const response = await fetch(`${API_BASE_URL}/auth/change-password`, {
-      method: 'POST',
-      headers: this.getAuthHeaders(),
-      body: JSON.stringify({
-        current_password: currentPassword,
-        password: newPassword,
-        password_confirmation: newPassword,
-      }),
+    const { error } = await supabase.auth.updateUser({
+      password: newPassword,
     });
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Erreur lors du changement de mot de passe');
+    if (error) {
+      throw new Error(error.message);
     }
   }
 
   getStoredUser(): User | null {
-    const user = localStorage.getItem('auth_user');
-    return user ? JSON.parse(user) : null;
+    return null; // Supabase gère le stockage automatiquement
   }
 
   getStoredToken(): string | null {
-    return localStorage.getItem('auth_token');
+    return null; // Supabase gère les tokens automatiquement
   }
 
   isAuthenticated(): boolean {
-    return !!this.getStoredToken();
+    return true; // Sera géré par le contexte
   }
 }
 

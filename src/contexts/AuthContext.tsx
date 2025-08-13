@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, authService } from '@/services/authService';
+import { supabase } from '@/lib/supabase';
 
 interface AuthContextType {
   user: User | null;
@@ -29,24 +30,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     const initAuth = async () => {
-      const storedUser = authService.getStoredUser();
-      const token = authService.getStoredToken();
-
-      if (storedUser && token) {
-        try {
-          // Vérifier que le token est toujours valide
+      try {
+        // Vérifier l'état d'authentification avec Supabase
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (session?.user) {
           const currentUser = await authService.getCurrentUser();
           setUser(currentUser);
-        } catch (error) {
-          // Token invalide, nettoyer le storage
-          await authService.logout();
-          setUser(null);
         }
+      } catch (error) {
+        console.error('Erreur lors de l\'initialisation:', error);
+        setUser(null);
       }
       setIsLoading(false);
     };
 
     initAuth();
+
+    // Écouter les changements d'état d'authentification
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (event === 'SIGNED_IN' && session?.user) {
+          try {
+            const currentUser = await authService.getCurrentUser();
+            setUser(currentUser);
+          } catch (error) {
+            console.error('Erreur lors de la récupération de l\'utilisateur:', error);
+          }
+        } else if (event === 'SIGNED_OUT') {
+          setUser(null);
+        }
+      }
+    );
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const login = async (email: string, password: string) => {

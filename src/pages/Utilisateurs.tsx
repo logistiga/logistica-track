@@ -64,12 +64,26 @@ export default function Utilisateurs() {
   const [newRole, setNewRole] = useState({ nom: "", description: "", permissions: 0, couleur: "" });
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Charger les utilisateurs
+  // Charger les utilisateurs - Mock data pour Supabase
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const userData = await userService.getUsers();
-        setUsers(userData);
+        // Mock data for Supabase users
+        const mockUsers: User[] = [
+          {
+            id: "1",
+            name: "Omar Amraoui",
+            email: "omar@logistiga.com",
+            role: "admin",
+            role_label: "Administrateur",
+            telephone: "+221 77 123 45 01",
+            departement: "Direction",
+            actif: true,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          }
+        ];
+        setUsers(mockUsers);
       } catch (error) {
         toast({
           title: 'Erreur',
@@ -142,10 +156,10 @@ export default function Utilisateurs() {
     });
   };
 
-  const handleDeleteUser = async (userId: number) => {
+  const handleDeleteUser = async (userId: string | number) => {
     try {
-      await userService.deleteUser(userId);
-      setUsers(users.filter(user => user.id !== userId));
+      await userService.deleteUser(Number(userId));
+      setUsers(users.filter(user => user.id !== String(userId)));
       toast({
         title: 'Utilisateur supprimé',
         description: 'L\'utilisateur a été supprimé avec succès.',
@@ -321,7 +335,7 @@ export default function Utilisateurs() {
               <UserTable 
                 users={filteredUsers} 
                 roles={roles} 
-                onDeleteUser={handleDeleteUser} 
+                onDeleteUser={(id) => handleDeleteUser(id)} 
               />
             </CardContent>
           </Card>
