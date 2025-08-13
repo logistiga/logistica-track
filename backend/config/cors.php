@@ -25,7 +25,8 @@ return [
         'https://b3b36859-40bc-4d2e-9dda-fa8b3af543d8.lovableproject.com',
         'https://id-preview--b3b36859-40bc-4d2e-9dda-fa8b3af543d8.lovable.app',
         'https://lovable.app',
-        '*' // Temporairement pour tests
+        'https://*.lovableproject.com',
+        '*' // Temporairement pour tous les domaines
     ],
 
     'allowed_origins_patterns' => [],
