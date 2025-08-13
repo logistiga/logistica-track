@@ -1,36 +1,92 @@
-import { useState, useEffect } from "react";
-import { armateurService, Armateur } from "@/services/armateurService";
-
-export { type Armateur } from "@/services/armateurService";
+import { useState, useEffect } from 'react';
+import { armateurService, type Armateur, type CreateArmateurData } from '@/services/armateurService';
+import { toast } from '@/hooks/use-toast';
 
 export function useArmateurs() {
   const [armateurs, setArmateurs] = useState<Armateur[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadArmateurs();
-  }, []);
-
-  const loadArmateurs = async () => {
+  const fetchArmateurs = async () => {
     try {
       setLoading(true);
       setError(null);
-      
       const data = await armateurService.getArmateurs();
       setArmateurs(data);
     } catch (err) {
-      setError('Erreur lors du chargement des armateurs');
-      console.error('Erreur armateurs:', err);
-      
-      // Fallback vers les données mock en cas d'erreur
-      const mockData = getArmateursMockData();
-      setArmateurs(mockData);
+      const errorMessage = err instanceof Error ? err.message : 'Erreur lors du chargement des armateurs';
+      setError(errorMessage);
+      toast({
+        title: "Erreur",
+        description: errorMessage,
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
   };
 
+  const createArmateur = async (data: CreateArmateurData): Promise<boolean> => {
+    try {
+      const newArmateur = await armateurService.createArmateur(data);
+      setArmateurs(prev => [...prev, newArmateur]);
+      toast({
+        title: "Succès",
+        description: "Armateur créé avec succès",
+      });
+      return true;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Erreur lors de la création';
+      toast({
+        title: "Erreur",
+        description: errorMessage,
+        variant: "destructive",
+      });
+      return false;
+    }
+  };
+
+  const updateArmateur = async (id: number, data: Partial<CreateArmateurData>): Promise<boolean> => {
+    try {
+      const updatedArmateur = await armateurService.updateArmateur(id, data);
+      setArmateurs(prev => prev.map(a => a.id === id ? updatedArmateur : a));
+      toast({
+        title: "Succès",
+        description: "Armateur modifié avec succès",
+      });
+      return true;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Erreur lors de la modification';
+      toast({
+        title: "Erreur",
+        description: errorMessage,
+        variant: "destructive",
+      });
+      return false;
+    }
+  };
+
+  const deleteArmateur = async (id: number): Promise<boolean> => {
+    try {
+      await armateurService.deleteArmateur(id);
+      setArmateurs(prev => prev.filter(a => a.id !== id));
+      toast({
+        title: "Succès",
+        description: "Armateur supprimé avec succès",
+      });
+      return true;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Erreur lors de la suppression';
+      toast({
+        title: "Erreur",
+        description: errorMessage,
+        variant: "destructive",
+      });
+      return false;
+    }
+  };
+
+  // Méthodes utilitaires pour compatibilité avec l'existant
   const getArmateurByCode = (code: string): Armateur | undefined => {
     return armateurs.find(a => a.code === code);
   };
@@ -40,57 +96,32 @@ export function useArmateurs() {
   };
 
   const getArmateurOptions = () => {
-    return armateurs
-      .filter(armateur => armateur.actif)
-      .map(armateur => ({
-        value: armateur.id.toString(),
-        label: `${armateur.code} - ${armateur.nom}`
-      }));
+    return armateurs.map(a => ({
+      value: a.code,
+      label: `${a.code} - ${a.nom}`,
+    }));
   };
 
   const getArmateurDisplay = (id: number): string => {
     const armateur = getArmateurById(id);
-    return armateur ? `${armateur.code} - ${armateur.nom}` : id.toString();
+    return armateur ? `${armateur.code} - ${armateur.nom}` : '';
   };
+
+  useEffect(() => {
+    fetchArmateurs();
+  }, []);
 
   return {
     armateurs,
     loading,
     error,
+    fetchArmateurs,
+    createArmateur,
+    updateArmateur,
+    deleteArmateur,
     getArmateurByCode,
     getArmateurById,
     getArmateurOptions,
     getArmateurDisplay,
-    reload: loadArmateurs
   };
-}
-
-// Mock data - fallback en cas d'erreur API
-function getArmateursMockData(): Armateur[] {
-  return [
-    { 
-      id: 1, 
-      code: "CMA", 
-      nom: "CMA-CGM", 
-      actif: true,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    },
-    { 
-      id: 2, 
-      code: "MSK", 
-      nom: "MAERSK", 
-      actif: true,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    },
-    { 
-      id: 3, 
-      code: "ONE", 
-      nom: "Ocean Network Express", 
-      actif: true,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    },
-  ];
 }

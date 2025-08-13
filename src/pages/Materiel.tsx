@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,77 +7,118 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Truck, Plus, Edit, Trash2, Search } from "lucide-react";
+import { Truck, Plus, Edit, Trash2, Search, Loader2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-
-interface Vehicle {
-  id: string;
-  numeroParc: string;
-  immatriculation: string;
-  statut: "disponible" | "en_mission" | "maintenance";
-}
+import { vehiculeService, type Vehicule, type CreateVehiculeData } from "@/services/vehiculeService";
 
 export default function Materiel() {
-  const [camions, setCamions] = useState<Vehicle[]>([
-    { id: "1", numeroParc: "TR 37", immatriculation: "TR 37", statut: "disponible" },
-    { id: "2", numeroParc: "tr 07", immatriculation: "tr 07", statut: "en_mission" },
-    { id: "3", numeroParc: "tr 08", immatriculation: "tr 08", statut: "disponible" },
-    { id: "4", numeroParc: "TR 41", immatriculation: "TR 41", statut: "disponible" },
-  ]);
-
-  const [remorques, setRemorques] = useState<Vehicle[]>([
-    { id: "1", numeroParc: "R 01", immatriculation: "R01", statut: "disponible" },
-    { id: "2", numeroParc: "R 02", immatriculation: "R02", statut: "disponible" },
-    { id: "3", numeroParc: "R 03", immatriculation: "R03", statut: "en_mission" },
-  ]);
-
+  const [camions, setCamions] = useState<Vehicule[]>([]);
+  const [remorques, setRemorques] = useState<Vehicule[]>([]);
+  const [loading, setLoading] = useState(true);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("camions");
-  const [newVehicle, setNewVehicle] = useState({ numeroParc: "", immatriculation: "" });
+  const [newVehicle, setNewVehicle] = useState({ 
+    numero_parc: "", 
+    immatriculation: "",
+    marque: "",
+    modele: "",
+    annee: new Date().getFullYear()
+  });
   const [searchTerm, setSearchTerm] = useState("");
 
-  const handleAddVehicle = () => {
-    if (!newVehicle.numeroParc || !newVehicle.immatriculation) {
+  const fetchVehicules = async () => {
+    try {
+      setLoading(true);
+      const vehicules = await vehiculeService.getVehicules();
+      setCamions(vehicules.filter(v => v.type === 'camion'));
+      setRemorques(vehicules.filter(v => v.type === 'remorque'));
+    } catch (error) {
       toast({
         title: "Erreur",
-        description: "Veuillez remplir tous les champs",
+        description: "Impossible de charger les véhicules",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchVehicules();
+  }, []);
+
+  const handleAddVehicle = async () => {
+    if (!newVehicle.numero_parc || !newVehicle.immatriculation) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez remplir tous les champs obligatoires",
         variant: "destructive",
       });
       return;
     }
 
-    const newId = Date.now().toString();
-    const vehicle: Vehicle = {
-      id: newId,
-      numeroParc: newVehicle.numeroParc,
-      immatriculation: newVehicle.immatriculation,
-      statut: "disponible",
-    };
+    try {
+      const vehicleData: CreateVehiculeData = {
+        numero_parc: newVehicle.numero_parc,
+        immatriculation: newVehicle.immatriculation,
+        type: activeTab === "camions" ? "camion" : "remorque",
+        marque: newVehicle.marque || undefined,
+        modele: newVehicle.modele || undefined,
+        annee: newVehicle.annee,
+        statut: "disponible",
+        actif: true,
+      };
 
-    if (activeTab === "camions") {
-      setCamions([...camions, vehicle]);
-    } else {
-      setRemorques([...remorques, vehicle]);
+      const newVehiculeCreated = await vehiculeService.createVehicule(vehicleData);
+      
+      if (activeTab === "camions") {
+        setCamions(prev => [...prev, newVehiculeCreated]);
+      } else {
+        setRemorques(prev => [...prev, newVehiculeCreated]);
+      }
+
+      setNewVehicle({ 
+        numero_parc: "", 
+        immatriculation: "",
+        marque: "",
+        modele: "",
+        annee: new Date().getFullYear()
+      });
+      setIsAddDialogOpen(false);
+      toast({
+        title: "Succès",
+        description: `${activeTab === "camions" ? "Camion" : "Remorque"} ajouté(e) avec succès`,
+      });
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de l'ajout du véhicule",
+        variant: "destructive",
+      });
     }
-
-    setNewVehicle({ numeroParc: "", immatriculation: "" });
-    setIsAddDialogOpen(false);
-    toast({
-      title: "Succès",
-      description: `${activeTab === "camions" ? "Camion" : "Remorque"} ajouté(e) avec succès`,
-    });
   };
 
-  const handleDeleteVehicle = (id: string) => {
-    if (activeTab === "camions") {
-      setCamions(camions.filter(c => c.id !== id));
-    } else {
-      setRemorques(remorques.filter(r => r.id !== id));
+  const handleDeleteVehicle = async (id: number) => {
+    try {
+      await vehiculeService.deleteVehicule(id);
+      
+      if (activeTab === "camions") {
+        setCamions(prev => prev.filter(c => c.id !== id));
+      } else {
+        setRemorques(prev => prev.filter(r => r.id !== id));
+      }
+      
+      toast({
+        title: "Supprimé",
+        description: `${activeTab === "camions" ? "Camion" : "Remorque"} supprimé(e) avec succès`,
+      });
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de la suppression",
+        variant: "destructive",
+      });
     }
-    toast({
-      title: "Supprimé",
-      description: `${activeTab === "camions" ? "Camion" : "Remorque"} supprimé(e) avec succès`,
-    });
   };
 
   const getStatusBadge = (statut: string) => {
@@ -88,24 +129,28 @@ export default function Materiel() {
         return <Badge className="bg-info text-info-foreground">En Mission</Badge>;
       case "maintenance":
         return <Badge className="bg-warning text-warning-foreground">Maintenance</Badge>;
+      case "hors_service":
+        return <Badge className="bg-destructive text-destructive-foreground">Hors Service</Badge>;
       default:
         return <Badge variant="secondary">{statut}</Badge>;
     }
   };
 
-  const filteredVehicles = (vehicles: Vehicle[]) => {
+  const filteredVehicles = (vehicles: Vehicule[]) => {
     return vehicles.filter(vehicle => 
-      vehicle.numeroParc.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      vehicle.numero_parc.toLowerCase().includes(searchTerm.toLowerCase()) ||
       vehicle.immatriculation.toLowerCase().includes(searchTerm.toLowerCase())
     );
   };
 
-  const VehicleTable = ({ vehicles, type }: { vehicles: Vehicle[], type: string }) => (
+  const VehicleTable = ({ vehicles, type }: { vehicles: Vehicule[], type: string }) => (
     <Table>
       <TableHeader>
         <TableRow>
           <TableHead>Numéro de Parc</TableHead>
           <TableHead>Immatriculation</TableHead>
+          <TableHead>Marque</TableHead>
+          <TableHead>Modèle</TableHead>
           <TableHead>Statut</TableHead>
           <TableHead className="w-24">Actions</TableHead>
         </TableRow>
@@ -113,8 +158,10 @@ export default function Materiel() {
       <TableBody>
         {filteredVehicles(vehicles).map((vehicle) => (
           <TableRow key={vehicle.id}>
-            <TableCell className="font-medium">{vehicle.numeroParc}</TableCell>
+            <TableCell className="font-medium">{vehicle.numero_parc}</TableCell>
             <TableCell>{vehicle.immatriculation}</TableCell>
+            <TableCell>{vehicle.marque || '-'}</TableCell>
+            <TableCell>{vehicle.modele || '-'}</TableCell>
             <TableCell>{getStatusBadge(vehicle.statut)}</TableCell>
             <TableCell>
               <div className="flex space-x-2">
@@ -136,6 +183,15 @@ export default function Materiel() {
       </TableBody>
     </Table>
   );
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin" />
+        <span className="ml-2">Chargement des véhicules...</span>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -178,23 +234,55 @@ export default function Materiel() {
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label htmlFor="numeroParc">Numéro de Parc</Label>
+                <Label htmlFor="numeroParc">Numéro de Parc *</Label>
                 <Input
                   id="numeroParc"
-                  value={newVehicle.numeroParc}
-                  onChange={(e) => setNewVehicle({ ...newVehicle, numeroParc: e.target.value })}
+                  value={newVehicle.numero_parc}
+                  onChange={(e) => setNewVehicle({ ...newVehicle, numero_parc: e.target.value })}
                   placeholder="Ex: TR 37"
                 />
               </div>
               <div>
-                <Label htmlFor="immatriculation">Immatriculation</Label>
+                <Label htmlFor="immatriculation">Immatriculation *</Label>
                 <Input
                   id="immatriculation"
                   value={newVehicle.immatriculation}
                   onChange={(e) => setNewVehicle({ ...newVehicle, immatriculation: e.target.value })}
-                  placeholder="Ex: TR 37"
+                  placeholder="Ex: LC-362-AA"
                 />
               </div>
+              {activeTab === "camions" && (
+                <>
+                  <div>
+                    <Label htmlFor="marque">Marque</Label>
+                    <Input
+                      id="marque"
+                      value={newVehicle.marque}
+                      onChange={(e) => setNewVehicle({ ...newVehicle, marque: e.target.value })}
+                      placeholder="Ex: Mercedes"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="modele">Modèle</Label>
+                    <Input
+                      id="modele"
+                      value={newVehicle.modele}
+                      onChange={(e) => setNewVehicle({ ...newVehicle, modele: e.target.value })}
+                      placeholder="Ex: Actros"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="annee">Année</Label>
+                    <Input
+                      id="annee"
+                      type="number"
+                      value={newVehicle.annee}
+                      onChange={(e) => setNewVehicle({ ...newVehicle, annee: parseInt(e.target.value) || new Date().getFullYear() })}
+                      placeholder="2024"
+                    />
+                  </div>
+                </>
+              )}
               <div className="flex justify-end space-x-2">
                 <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
                   Annuler

@@ -6,101 +6,73 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Ship, Plus, Edit, Trash2, Search } from "lucide-react";
-import { toast } from "@/hooks/use-toast";
-
-interface Armateur {
-  id: string;
-  code: string;
-  nom: string;
-  typeConteneur: string;
-  joursGratuits: number;
-  prixParJour: number;
-}
+import { Ship, Plus, Edit, Trash2, Search, Loader2 } from "lucide-react";
+import { useArmateurs } from "@/hooks/useArmateurs";
 
 export default function Armateurs() {
-  const [armateurs, setArmateurs] = useState<Armateur[]>([
-    { id: "1", code: "CMA20", nom: "CMA-CGM", typeConteneur: "20' sec", joursGratuits: 2, prixParJour: 10000 },
-    { id: "2", code: "CMA40", nom: "CMA-CGM", typeConteneur: "40' sec", joursGratuits: 2, prixParJour: 20000 },
-    { id: "3", code: "CMA20FRIGO", nom: "CMA-CGM", typeConteneur: "20' frigo", joursGratuits: 2, prixParJour: 100000 },
-    { id: "4", code: "MSK20", nom: "MAERSK", typeConteneur: "20' sec", joursGratuits: 5, prixParJour: 11800 },
-  ]);
-
+  const { armateurs, loading, createArmateur, deleteArmateur } = useArmateurs();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [newArmateur, setNewArmateur] = useState({
     code: "",
     nom: "",
-    typeConteneur: "",
-    joursGratuits: 0,
-    prixParJour: 0,
+    type_conteneur: "",
+    jours_gratuits: 0,
+    prix_par_jour: 0,
+    contact_nom: "",
+    contact_email: "",
+    contact_telephone: "",
+    adresse: "",
   });
   const [searchTerm, setSearchTerm] = useState("");
 
-  const handleAddArmateur = () => {
-    if (!newArmateur.code || !newArmateur.nom || !newArmateur.typeConteneur) {
-      toast({
-        title: "Erreur",
-        description: "Veuillez remplir tous les champs obligatoires",
-        variant: "destructive",
-      });
+  const handleAddArmateur = async () => {
+    if (!newArmateur.code || !newArmateur.nom) {
       return;
     }
 
-    // Check if code already exists
-    if (armateurs.some(a => a.code === newArmateur.code)) {
-      toast({
-        title: "Erreur",
-        description: "Ce code armateur existe déjà",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const armateur: Armateur = {
-      id: Date.now().toString(),
-      ...newArmateur,
-    };
-
-    setArmateurs([...armateurs, armateur]);
-    setNewArmateur({ code: "", nom: "", typeConteneur: "", joursGratuits: 0, prixParJour: 0 });
-    setIsAddDialogOpen(false);
-    toast({
-      title: "Succès",
-      description: "Armateur ajouté avec succès",
+    const success = await createArmateur({
+      code: newArmateur.code,
+      nom: newArmateur.nom,
+      contact_nom: newArmateur.contact_nom || undefined,
+      contact_email: newArmateur.contact_email || undefined,
+      contact_telephone: newArmateur.contact_telephone || undefined,
+      adresse: newArmateur.adresse || undefined,
+      actif: true,
     });
+
+    if (success) {
+      setNewArmateur({
+        code: "",
+        nom: "",
+        type_conteneur: "",
+        jours_gratuits: 0,
+        prix_par_jour: 0,
+        contact_nom: "",
+        contact_email: "",
+        contact_telephone: "",
+        adresse: "",
+      });
+      setIsAddDialogOpen(false);
+    }
   };
 
-  const handleDeleteArmateur = (id: string) => {
-    setArmateurs(armateurs.filter(a => a.id !== id));
-    toast({
-      title: "Supprimé",
-      description: "Armateur supprimé avec succès",
-    });
+  const handleDeleteArmateur = async (id: number) => {
+    await deleteArmateur(id);
   };
 
   const filteredArmateurs = armateurs.filter(armateur =>
     armateur.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    armateur.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    armateur.typeConteneur.toLowerCase().includes(searchTerm.toLowerCase())
+    armateur.code.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('fr-FR', {
-      style: 'currency',
-      currency: 'XOF',
-      minimumFractionDigits: 0,
-    }).format(price);
-  };
-
-  const getContainerBadge = (type: string) => {
-    if (type.includes("frigo")) {
-      return <Badge className="bg-info text-info-foreground">{type}</Badge>;
-    } else if (type.includes("40")) {
-      return <Badge className="bg-warning text-warning-foreground">{type}</Badge>;
-    } else {
-      return <Badge className="bg-success text-success-foreground">{type}</Badge>;
-    }
-  };
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin" />
+        <span className="ml-2">Chargement des armateurs...</span>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -159,32 +131,31 @@ export default function Armateurs() {
                 />
               </div>
               <div>
-                <Label htmlFor="typeConteneur">Type de Conteneur *</Label>
+                <Label htmlFor="contact_nom">Contact</Label>
                 <Input
-                  id="typeConteneur"
-                  value={newArmateur.typeConteneur}
-                  onChange={(e) => setNewArmateur({ ...newArmateur, typeConteneur: e.target.value })}
-                  placeholder="Ex: 20' sec"
+                  id="contact_nom"
+                  value={newArmateur.contact_nom}
+                  onChange={(e) => setNewArmateur({ ...newArmateur, contact_nom: e.target.value })}
+                  placeholder="Nom du contact"
                 />
               </div>
               <div>
-                <Label htmlFor="joursGratuits">Jours de Franchise</Label>
+                <Label htmlFor="contact_email">Email</Label>
                 <Input
-                  id="joursGratuits"
-                  type="number"
-                  value={newArmateur.joursGratuits}
-                  onChange={(e) => setNewArmateur({ ...newArmateur, joursGratuits: parseInt(e.target.value) || 0 })}
-                  placeholder="Ex: 2"
+                  id="contact_email"
+                  type="email"
+                  value={newArmateur.contact_email}
+                  onChange={(e) => setNewArmateur({ ...newArmateur, contact_email: e.target.value })}
+                  placeholder="contact@armateur.com"
                 />
               </div>
               <div>
-                <Label htmlFor="prixParJour">Prix par Jour (FCFA)</Label>
+                <Label htmlFor="contact_telephone">Téléphone</Label>
                 <Input
-                  id="prixParJour"
-                  type="number"
-                  value={newArmateur.prixParJour}
-                  onChange={(e) => setNewArmateur({ ...newArmateur, prixParJour: parseInt(e.target.value) || 0 })}
-                  placeholder="Ex: 10000"
+                  id="contact_telephone"
+                  value={newArmateur.contact_telephone}
+                  onChange={(e) => setNewArmateur({ ...newArmateur, contact_telephone: e.target.value })}
+                  placeholder="+221 XX XXX XX XX"
                 />
               </div>
               <div className="flex justify-end space-x-2">
@@ -220,11 +191,9 @@ export default function Armateurs() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Franchise Moyenne</p>
-                <p className="text-3xl font-bold text-info">
-                  {Math.round(armateurs.reduce((acc, a) => acc + a.joursGratuits, 0) / armateurs.length || 0)}
-                </p>
-                <p className="text-xs text-muted-foreground">Jours de franchise</p>
+                <p className="text-sm font-medium text-muted-foreground">Codes Disponibles</p>
+                <p className="text-3xl font-bold text-info">{armateurs.length}</p>
+                <p className="text-xs text-muted-foreground">codes armateurs</p>
               </div>
               <div className="p-3 bg-info-light rounded-xl">
                 <Ship className="w-6 h-6 text-info" />
@@ -236,9 +205,11 @@ export default function Armateurs() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Modules</p>
-                <p className="text-3xl font-bold text-success">{armateurs.length}</p>
-                <p className="text-xs text-muted-foreground">modules disponibles</p>
+                <p className="text-sm font-medium text-muted-foreground">Contacts</p>
+                <p className="text-3xl font-bold text-success">
+                  {armateurs.filter(a => a.contact_email).length}
+                </p>
+                <p className="text-xs text-muted-foreground">avec email</p>
               </div>
               <div className="p-3 bg-success-light rounded-xl">
                 <Ship className="w-6 h-6 text-success" />
@@ -250,11 +221,11 @@ export default function Armateurs() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Prix Moyen</p>
+                <p className="text-sm font-medium text-muted-foreground">Actifs</p>
                 <p className="text-3xl font-bold text-warning">
-                  {formatPrice(armateurs.reduce((acc, a) => acc + a.prixParJour, 0) / armateurs.length || 0)}
+                  {armateurs.filter(a => a.actif).length}
                 </p>
-                <p className="text-xs text-muted-foreground">actions possibles</p>
+                <p className="text-xs text-muted-foreground">armateurs actifs</p>
               </div>
               <div className="p-3 bg-warning-light rounded-xl">
                 <Ship className="w-6 h-6 text-warning" />
@@ -273,11 +244,12 @@ export default function Armateurs() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Code Unique</TableHead>
+                <TableHead>Code</TableHead>
                 <TableHead>Nom</TableHead>
-                <TableHead>Type Conteneur</TableHead>
-                <TableHead>Franchise</TableHead>
-                <TableHead>Prix/Jour</TableHead>
+                <TableHead>Contact</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Téléphone</TableHead>
+                <TableHead>Statut</TableHead>
                 <TableHead className="w-24">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -290,9 +262,14 @@ export default function Armateurs() {
                     </Badge>
                   </TableCell>
                   <TableCell className="font-medium">{armateur.nom}</TableCell>
-                  <TableCell>{getContainerBadge(armateur.typeConteneur)}</TableCell>
-                  <TableCell>{armateur.joursGratuits} jours</TableCell>
-                  <TableCell className="font-medium">{formatPrice(armateur.prixParJour)}</TableCell>
+                  <TableCell>{armateur.contact_nom || '-'}</TableCell>
+                  <TableCell>{armateur.contact_email || '-'}</TableCell>
+                  <TableCell>{armateur.contact_telephone || '-'}</TableCell>
+                  <TableCell>
+                    <Badge className={armateur.actif ? "bg-success text-success-foreground" : "bg-destructive text-destructive-foreground"}>
+                      {armateur.actif ? "Actif" : "Inactif"}
+                    </Badge>
+                  </TableCell>
                   <TableCell>
                     <div className="flex space-x-2">
                       <Button variant="outline" size="sm">
