@@ -1,5 +1,4 @@
-import { supabase } from '@/lib/supabase';
-import type { User as SupabaseUser } from '@supabase/supabase-js';
+import { apiService } from './apiService';
 
 export interface LoginCredentials {
   email: string;
@@ -41,92 +40,32 @@ export interface AuthResponse {
 
 class AuthService {
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
-    console.log('🔐 Tentative de connexion avec Supabase');
-    console.log('📝 Email:', credentials.email);
-    
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: credentials.email,
-        password: credentials.password,
-      });
-
-      if (error) {
-        console.error('❌ Erreur Supabase:', error);
-        throw new Error(error.message);
-      }
-
-      console.log('✅ Connexion réussie:', data);
+      const response = await apiService.post('/auth/login', credentials);
       
-      const user: User = {
-        id: data.user.id,
-        name: data.user.user_metadata?.name || credentials.email.split('@')[0],
-        email: data.user.email!,
-        role: 'admin',
-        role_label: 'Administrateur',
-        telephone: data.user.user_metadata?.telephone,
-        departement: data.user.user_metadata?.departement,
-        actif: true,
-        email_verified_at: data.user.email_confirmed_at,
-        derniere_connexion: new Date().toISOString(),
-        created_at: data.user.created_at,
-        updated_at: data.user.updated_at || data.user.created_at,
-      };
-
-      return {
-        success: true,
-        message: 'Connexion réussie',
-        data: {
-          user,
-          token: data.session.access_token,
-        },
-      };
+      // Stocker le token
+      if (response.data?.token) {
+        localStorage.setItem('auth_token', response.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+      }
+      
+      return response;
     } catch (error) {
-      console.error('🚨 Erreur lors de la connexion:', error);
       throw error;
     }
   }
 
   async register(userData: RegisterData): Promise<AuthResponse> {
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email: userData.email,
-        password: userData.password,
-        options: {
-          data: {
-            name: userData.name,
-            telephone: userData.telephone,
-            departement: userData.departement,
-          },
-        },
-      });
-
-      if (error) {
-        throw new Error(error.message);
+      const response = await apiService.post('/auth/register', userData);
+      
+      // Stocker le token si fourni
+      if (response.data?.token) {
+        localStorage.setItem('auth_token', response.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
       }
-
-      const user: User = {
-        id: data.user!.id,
-        name: userData.name,
-        email: userData.email,
-        role: 'user',
-        role_label: 'Utilisateur',
-        telephone: userData.telephone,
-        departement: userData.departement,
-        actif: true,
-        email_verified_at: data.user!.email_confirmed_at,
-        derniere_connexion: new Date().toISOString(),
-        created_at: data.user!.created_at,
-        updated_at: data.user!.updated_at || data.user!.created_at,
-      };
-
-      return {
-        success: true,
-        message: 'Inscription réussie',
-        data: {
-          user,
-          token: data.session?.access_token || '',
-        },
-      };
+      
+      return response;
     } catch (error) {
       throw error;
     }
@@ -134,85 +73,59 @@ class AuthService {
 
   async logout(): Promise<void> {
     try {
-      await supabase.auth.signOut();
-      console.log('💾 Déconnexion réussie');
+      await apiService.post('/auth/logout', {});
     } catch (error) {
       console.error('Erreur lors de la déconnexion:', error);
+    } finally {
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('user');
     }
   }
 
   async getCurrentUser(): Promise<User> {
-    const { data: { user }, error } = await supabase.auth.getUser();
-
-    if (error || !user) {
+    try {
+      const response = await apiService.get('/auth/user');
+      return response.data.user;
+    } catch (error) {
       throw new Error('Utilisateur non connecté');
     }
-
-    return {
-      id: user.id,
-      name: user.user_metadata?.name || user.email!.split('@')[0],
-      email: user.email!,
-      role: 'admin',
-      role_label: 'Administrateur',
-      telephone: user.user_metadata?.telephone,
-      departement: user.user_metadata?.departement,
-      actif: true,
-      email_verified_at: user.email_confirmed_at,
-      derniere_connexion: new Date().toISOString(),
-      created_at: user.created_at,
-      updated_at: user.updated_at || user.created_at,
-    };
   }
 
   async updateProfile(userData: Partial<User>): Promise<User> {
-    const { data, error } = await supabase.auth.updateUser({
-      data: {
-        name: userData.name,
-        telephone: userData.telephone,
-        departement: userData.departement,
-      },
-    });
-
-    if (error) {
-      throw new Error(error.message);
+    try {
+      const response = await apiService.put('/auth/user', userData);
+      
+      // Mettre à jour le localStorage
+      localStorage.setItem('user', JSON.stringify(response.data.user));
+      
+      return response.data.user;
+    } catch (error) {
+      throw error;
     }
-
-    return {
-      id: data.user.id,
-      name: userData.name || data.user.user_metadata?.name,
-      email: data.user.email!,
-      role: 'admin',
-      role_label: 'Administrateur',
-      telephone: userData.telephone,
-      departement: userData.departement,
-      actif: true,
-      email_verified_at: data.user.email_confirmed_at,
-      derniere_connexion: new Date().toISOString(),
-      created_at: data.user.created_at,
-      updated_at: data.user.updated_at || data.user.created_at,
-    };
   }
 
   async changePassword(currentPassword: string, newPassword: string): Promise<void> {
-    const { error } = await supabase.auth.updateUser({
-      password: newPassword,
-    });
-
-    if (error) {
-      throw new Error(error.message);
+    try {
+      await apiService.put('/auth/change-password', {
+        current_password: currentPassword,
+        new_password: newPassword,
+      });
+    } catch (error) {
+      throw error;
     }
   }
 
   getStoredUser(): User | null {
-    return null; // Supabase gère le stockage automatiquement
+    const userData = localStorage.getItem('user');
+    return userData ? JSON.parse(userData) : null;
   }
 
   getStoredToken(): string | null {
-    return null; // Supabase gère les tokens automatiquement
+    return localStorage.getItem('auth_token');
   }
 
   isAuthenticated(): boolean {
-    return true; // Sera géré par le contexte
+    return !!this.getStoredToken();
   }
 }
 

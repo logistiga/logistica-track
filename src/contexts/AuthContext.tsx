@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, authService } from '@/services/authService';
-import { supabase } from '@/lib/supabase';
 
 interface AuthContextType {
   user: User | null;
@@ -31,12 +30,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const initAuth = async () => {
       try {
-        // Vérifier l'état d'authentification avec Supabase
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (session?.user) {
-          const currentUser = await authService.getCurrentUser();
-          setUser(currentUser);
+        // Vérifier si un utilisateur est stocké
+        const storedUser = authService.getStoredUser();
+        if (storedUser && authService.isAuthenticated()) {
+          try {
+            // Vérifier que le token est toujours valide
+            const currentUser = await authService.getCurrentUser();
+            setUser(currentUser);
+          } catch (error) {
+            // Token invalide, nettoyer le localStorage
+            authService.logout();
+            setUser(null);
+          }
         }
       } catch (error) {
         console.error('Erreur lors de l\'initialisation:', error);
@@ -46,24 +51,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     initAuth();
-
-    // Écouter les changements d'état d'authentification
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (event === 'SIGNED_IN' && session?.user) {
-          try {
-            const currentUser = await authService.getCurrentUser();
-            setUser(currentUser);
-          } catch (error) {
-            console.error('Erreur lors de la récupération de l\'utilisateur:', error);
-          }
-        } else if (event === 'SIGNED_OUT') {
-          setUser(null);
-        }
-      }
-    );
-
-    return () => subscription.unsubscribe();
   }, []);
 
   const login = async (email: string, password: string) => {
