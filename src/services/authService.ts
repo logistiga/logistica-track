@@ -1,4 +1,8 @@
 import { apiService } from './apiService';
+import { mockAuthService } from './mockAuthService';
+
+// Utiliser le service mock en attendant la configuration du backend
+const USE_MOCK = true;
 
 export interface LoginCredentials {
   email: string;
@@ -40,6 +44,10 @@ export interface AuthResponse {
 
 class AuthService {
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
+    if (USE_MOCK) {
+      return mockAuthService.login(credentials);
+    }
+    
     try {
       const response = await apiService.post('/auth/login', credentials);
       
@@ -56,6 +64,10 @@ class AuthService {
   }
 
   async register(userData: RegisterData): Promise<AuthResponse> {
+    if (USE_MOCK) {
+      return mockAuthService.register(userData);
+    }
+    
     try {
       const response = await apiService.post('/auth/register', userData);
       
@@ -72,6 +84,10 @@ class AuthService {
   }
 
   async logout(): Promise<void> {
+    if (USE_MOCK) {
+      return mockAuthService.logout();
+    }
+    
     try {
       await apiService.post('/auth/logout', {});
     } catch (error) {
@@ -83,6 +99,10 @@ class AuthService {
   }
 
   async getCurrentUser(): Promise<User> {
+    if (USE_MOCK) {
+      return mockAuthService.getCurrentUser();
+    }
+    
     try {
       const response = await apiService.get('/auth/user');
       return response.data.user;
@@ -92,6 +112,10 @@ class AuthService {
   }
 
   async updateProfile(userData: Partial<User>): Promise<User> {
+    if (USE_MOCK) {
+      return mockAuthService.updateProfile(userData);
+    }
+    
     try {
       const response = await apiService.put('/auth/user', userData);
       
@@ -105,6 +129,10 @@ class AuthService {
   }
 
   async changePassword(currentPassword: string, newPassword: string): Promise<void> {
+    if (USE_MOCK) {
+      return mockAuthService.changePassword(currentPassword, newPassword);
+    }
+    
     try {
       await apiService.put('/auth/change-password', {
         current_password: currentPassword,
@@ -116,16 +144,15 @@ class AuthService {
   }
 
   getStoredUser(): User | null {
-    const userData = localStorage.getItem('user');
-    return userData ? JSON.parse(userData) : null;
+    return USE_MOCK ? mockAuthService.getStoredUser() : (localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')!) : null);
   }
 
   getStoredToken(): string | null {
-    return localStorage.getItem('auth_token');
+    return USE_MOCK ? mockAuthService.getStoredToken() : localStorage.getItem('auth_token');
   }
 
   isAuthenticated(): boolean {
-    return !!this.getStoredToken();
+    return USE_MOCK ? mockAuthService.isAuthenticated() : !!this.getStoredToken();
   }
 }
 
