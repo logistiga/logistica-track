@@ -49,25 +49,39 @@ class AuthService {
   }
 
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
-    const response = await fetch(`${API_BASE_URL}/auth/login`, {
-      method: 'POST',
-      headers: this.getAuthHeaders(),
-      body: JSON.stringify(credentials),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Erreur de connexion');
-    }
-
-    const data = await response.json();
+    console.log('🔐 Tentative de connexion vers:', `${API_BASE_URL}/auth/login`);
+    console.log('📝 Données envoyées:', credentials);
+    console.log('🌐 Headers:', this.getAuthHeaders());
     
-    if (data.success && data.data.token) {
-      localStorage.setItem('auth_token', data.data.token);
-      localStorage.setItem('auth_user', JSON.stringify(data.data.user));
-    }
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
+        method: 'POST',
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify(credentials),
+      });
 
-    return data;
+      console.log('📡 Réponse reçue:', response.status, response.statusText);
+
+      if (!response.ok) {
+        const error = await response.json();
+        console.error('❌ Erreur de la réponse:', error);
+        throw new Error(error.message || 'Erreur de connexion');
+      }
+
+      const data = await response.json();
+      console.log('✅ Données de connexion reçues:', data);
+      
+      if (data.success && data.data.token) {
+        localStorage.setItem('auth_token', data.data.token);
+        localStorage.setItem('auth_user', JSON.stringify(data.data.user));
+        console.log('💾 Token et utilisateur sauvegardés');
+      }
+
+      return data;
+    } catch (error) {
+      console.error('🚨 Erreur lors de la connexion:', error);
+      throw error;
+    }
   }
 
   async register(userData: RegisterData): Promise<AuthResponse> {
