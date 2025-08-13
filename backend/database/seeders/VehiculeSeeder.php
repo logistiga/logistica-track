@@ -9,11 +9,57 @@ class VehiculeSeeder extends Seeder
 {
     public function run(): void
     {
-        $vehicules = [
-            // Camions
-            [
-                'numero_parc' => 'TR 37',
-                'immatriculation' => 'DK 1234 AB',
+        // Camions avec données réelles
+        $camions = [
+            ['numero' => 'TR 37', 'matricule' => 'TR 37'],
+            ['numero' => 'tr 07', 'matricule' => 'tr 07'],
+            ['numero' => 'tr 08', 'matricule' => 'tr 08'],
+            ['numero' => 'TR 41', 'matricule' => 'TR 41'],
+            ['numero' => 'TR 40', 'matricule' => 'LC-362-AA'],
+            ['numero' => 'TR 38', 'matricule' => 'LC-361-AA'],
+            ['numero' => 'TR 39', 'matricule' => 'LC-363-AA'],
+            ['numero' => 'TR 35', 'matricule' => 'IF-365-AA'],
+            ['numero' => 'TR 33', 'matricule' => 'KY-380-AA'],
+            ['numero' => 'TR 14', 'matricule' => 'DM-580-AA'],
+            ['numero' => 'TR 16', 'matricule' => 'AP-904-AA'],
+            ['numero' => 'TR 17', 'matricule' => 'HU-564-AA'],
+            ['numero' => 'TR 10', 'matricule' => 'FE-877-AA'],
+            ['numero' => 'TR 32', 'matricule' => 'TR 32'],
+            ['numero' => 'TR 31', 'matricule' => 'tr31'],
+            ['numero' => 'TR 24', 'matricule' => 'TR 24'],
+            ['numero' => 'TR 30', 'matricule' => 'KT-965-AA'],
+            ['numero' => 'TR 19', 'matricule' => 'AF-535-AA'],
+            ['numero' => 'TR 15', 'matricule' => 'FX-717-AA'],
+            ['numero' => 'TR 06', 'matricule' => 'DY-413-AA'],
+            ['numero' => 'TR 09', 'matricule' => 'AL-704-AA'],
+            ['numero' => 'TR 05', 'matricule' => 'AL-701-AA'],
+            ['numero' => 'TR 03', 'matricule' => 'AL-702-AA'],
+            ['numero' => 'TR 02', 'matricule' => 'EQ-853-AA'],
+            ['numero' => 'TR 26', 'matricule' => 'JZ-175-AA'],
+            ['numero' => 'TR 21', 'matricule' => 'LC-360-AA'],
+            ['numero' => 'TR 20', 'matricule' => 'JL-282-AA'],
+            ['numero' => 'TR 23', 'matricule' => 'FA-406-AA'],
+            ['numero' => 'TR 18', 'matricule' => 'AK-841-AA'],
+            ['numero' => 'TR 28', 'matricule' => 'KE-582-AA'],
+            ['numero' => 'TR 25', 'matricule' => 'JZ-176-AA'],
+            ['numero' => 'TR 22', 'matricule' => 'FL-616-AA'],
+            ['numero' => 'TR 27', 'matricule' => 'AH-372-AA'],
+            ['numero' => 'TR 01', 'matricule' => 'TBN 1'],
+            ['numero' => 'TR 11', 'matricule' => 'TR 11'],
+            ['numero' => 'TR 12', 'matricule' => 'TR 12'],
+            ['numero' => 'TR 13', 'matricule' => 'TR 13'],
+            ['numero' => 'TR 04', 'matricule' => 'TR 04'],
+            ['numero' => 'TR 29', 'matricule' => 'TR 29'],
+            ['numero' => 'TR 34', 'matricule' => 'TR 34'],
+            ['numero' => 'TR 36', 'matricule' => 'TR 36'],
+            ['numero' => 'TR 42', 'matricule' => 'TR 42']
+        ];
+
+        // Créer les camions
+        foreach ($camions as $camion) {
+            Vehicule::create([
+                'numero_parc' => $camion['numero'],
+                'immatriculation' => $camion['matricule'],
                 'type' => 'camion',
                 'statut' => 'disponible',
                 'marque' => 'Mercedes',
@@ -22,90 +68,23 @@ class VehiculeSeeder extends Seeder
                 'capacite' => 30.00,
                 'derniere_revision' => '2024-01-15',
                 'prochaine_revision' => '2024-07-15',
-            ],
-            [
-                'numero_parc' => 'TR 41',
-                'immatriculation' => 'DK 5678 CD',
-                'type' => 'camion',
-                'statut' => 'disponible',
-                'marque' => 'Volvo',
-                'modele' => 'FH',
-                'annee' => 2019,
-                'capacite' => 32.00,
-                'derniere_revision' => '2023-12-20',
-                'prochaine_revision' => '2024-06-20',
-            ],
-            [
-                'numero_parc' => 'TR 08',
-                'immatriculation' => 'DK 9012 EF',
-                'type' => 'camion',
-                'statut' => 'en_mission',
-                'marque' => 'Scania',
-                'modele' => 'R500',
-                'annee' => 2021,
-                'capacite' => 35.00,
-                'derniere_revision' => '2024-02-10',
-                'prochaine_revision' => '2024-08-10',
-            ],
-            [
-                'numero_parc' => 'TR 15',
-                'immatriculation' => 'DK 3456 GH',
-                'type' => 'camion',
-                'statut' => 'disponible',
-                'marque' => 'MAN',
-                'modele' => 'TGX',
-                'annee' => 2022,
-                'capacite' => 33.00,
-                'derniere_revision' => '2024-01-05',
-                'prochaine_revision' => '2024-07-05',
-            ],
+            ]);
+        }
+
+        // Créer les remorques de R01 à R100
+        for ($i = 1; $i <= 100; $i++) {
+            $numero = sprintf('R %02d', $i);
+            $plaque = sprintf('R%02d', $i);
             
-            // Remorques
-            [
-                'numero_parc' => 'R 01',
-                'immatriculation' => 'DK 7890 IJ',
+            Vehicule::create([
+                'numero_parc' => $numero,
+                'immatriculation' => $plaque,
                 'type' => 'remorque',
                 'statut' => 'disponible',
                 'annee' => 2020,
-                'derniere_revision' => '2024-01-20',
-                'prochaine_revision' => '2024-07-20',
-            ],
-            [
-                'numero_parc' => 'R 02',
-                'immatriculation' => 'DK 1357 KL',
-                'type' => 'remorque',
-                'statut' => 'disponible',
-                'annee' => 2019,
-                'derniere_revision' => '2023-11-15',
-                'prochaine_revision' => '2024-05-15',
-            ],
-            [
-                'numero_parc' => 'R 03',
-                'immatriculation' => 'DK 2468 MN',
-                'type' => 'remorque',
-                'statut' => 'en_mission',
-                'annee' => 2021,
-                'derniere_revision' => '2024-02-01',
-                'prochaine_revision' => '2024-08-01',
-            ],
-            [
-                'numero_parc' => 'R 04',
-                'immatriculation' => 'DK 9753 OP',
-                'type' => 'remorque',
-                'statut' => 'maintenance',
-                'annee' => 2018,
-                'derniere_revision' => '2023-10-12',
-                'prochaine_revision' => '2024-04-12',
-                'notes' => 'Freins à réviser',
-            ],
-        ];
-
-        foreach ($vehicules as $vehicule) {
-            Vehicule::create($vehicule);
+                'derniere_revision' => '2024-01-15',
+                'prochaine_revision' => '2024-07-15',
+            ]);
         }
-
-        // Créer des véhicules supplémentaires avec la factory
-        Vehicule::factory(15)->camion()->create();
-        Vehicule::factory(20)->remorque()->create();
     }
 }
