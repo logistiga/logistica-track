@@ -1,4 +1,8 @@
 import { apiService } from './apiService';
+import { mockVehiculeService } from './mockVehiculeService';
+
+// Utiliser le service mock en mode développement quand l'API n'est pas accessible
+const USE_MOCK = true;
 
 export interface Vehicule {
   id: number;
@@ -67,4 +71,4 @@ class VehiculeService {
   }
 }
 
-export const vehiculeService = new VehiculeService();
+export const vehiculeService = USE_MOCK ? mockVehiculeService : new VehiculeService();
