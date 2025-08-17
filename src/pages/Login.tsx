@@ -126,7 +126,16 @@ export default function Login() {
               </Button>
             </form>
 
-            <div className="text-center">
+            <div className="text-center space-y-3">
+              <div className="p-3 bg-primary/10 rounded-lg border border-primary/20">
+                <p className="text-sm font-medium text-primary mb-2">
+                  🔧 Mode Test - Identifiants de connexion:
+                </p>
+                <p className="text-xs text-primary/80">
+                  <strong>Email:</strong> omar@logistiga.com<br />
+                  <strong>Mot de passe:</strong> A1mraoui@1
+                </p>
+              </div>
               <p className="text-sm text-muted-foreground">
                 Contactez votre administrateur pour créer un compte
               </p>
