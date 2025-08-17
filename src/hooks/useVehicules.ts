@@ -4,7 +4,7 @@ import { mockVehiculeService } from '@/services/mockVehiculeService';
 import { toast } from '@/hooks/use-toast';
 
 // Utiliser le service mock temporairement pour éviter les erreurs CORS
-const USE_MOCK = false;
+const USE_MOCK = true;
 const activeVehiculeService = USE_MOCK ? mockVehiculeService : vehiculeService;
 
 export function useVehicules() {

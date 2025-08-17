@@ -4,7 +4,7 @@ import { mockArmateurService } from '@/services/mockArmateurService';
 import { toast } from '@/hooks/use-toast';
 
 // Utiliser le service mock temporairement pour éviter les erreurs CORS
-const USE_MOCK = false;
+const USE_MOCK = true;
 const activeArmateurService = USE_MOCK ? mockArmateurService : armateurService;
 
 export function useArmateurs() {
