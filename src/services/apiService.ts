@@ -1,4 +1,7 @@
-const API_BASE_URL = 'http://127.0.0.1:8000/api';
+// Configuration de l'URL de l'API
+// Pour développement local: 'http://127.0.0.1:8000/api'
+// Pour production: remplacez par l'URL de votre backend déployé
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api';
 
 class ApiService {
   private getAuthHeaders() {
