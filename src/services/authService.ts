@@ -2,7 +2,7 @@ import { apiService } from './apiService';
 import { mockAuthService } from './mockAuthService';
 
 // Utiliser le service mock en attendant la configuration du backend
-const USE_MOCK = false;
+const USE_MOCK = true;
 
 export interface LoginCredentials {
   email: string;
