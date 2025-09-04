@@ -37,32 +37,113 @@ const App = () => (
             {/* Page de login sans layout */}
             <Route path="/login" element={<Login />} />
             
-            {/* Toutes les autres pages avec layout protégé */}
-            <Route path="/*" element={
+            {/* Routes protégées avec layout */}
+            <Route path="/" element={
               <ProtectedRoute>
                 <Layout>
-                  <Routes>
-                    <Route path="/" element={<Dashboard />} />
-                    <Route path="/materiel" element={<Materiel />} />
-                    <Route path="/armateurs" element={<Armateurs />} />
-                    <Route path="/utilisateurs" element={<Utilisateurs />} />
-                    <Route path="/sorties" element={<SortieConteneur />} />
-                    <Route path="/base" element={<Base />} />
-                    <Route path="/detention" element={<Detention />} />
-                    <Route path="/facturation" element={<Facturation />} />
-                    <Route path="/operations" element={<Operations />} />
-                    <Route path="/ordres" element={<Ordre />} />
-                    <Route path="/notifications" element={<Notifications />} />
-                    <Route path="/emails" element={<Emails />} />
-                    <Route path="/archives-base" element={<ArchivesBase />} />
-                    <Route path="/archives-sortie" element={<ArchivesSortie />} />
-                    <Route path="/archives-operation" element={<ArchivesOperation />} />
-                    {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
+                  <Dashboard />
                 </Layout>
               </ProtectedRoute>
             } />
+            <Route path="/materiel" element={
+              <ProtectedRoute>
+                <Layout>
+                  <Materiel />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/armateurs" element={
+              <ProtectedRoute>
+                <Layout>
+                  <Armateurs />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/utilisateurs" element={
+              <ProtectedRoute>
+                <Layout>
+                  <Utilisateurs />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/sorties" element={
+              <ProtectedRoute>
+                <Layout>
+                  <SortieConteneur />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/base" element={
+              <ProtectedRoute>
+                <Layout>
+                  <Base />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/detention" element={
+              <ProtectedRoute>
+                <Layout>
+                  <Detention />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/facturation" element={
+              <ProtectedRoute>
+                <Layout>
+                  <Facturation />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/operations" element={
+              <ProtectedRoute>
+                <Layout>
+                  <Operations />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/ordres" element={
+              <ProtectedRoute>
+                <Layout>
+                  <Ordre />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/notifications" element={
+              <ProtectedRoute>
+                <Layout>
+                  <Notifications />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/emails" element={
+              <ProtectedRoute>
+                <Layout>
+                  <Emails />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/archives-base" element={
+              <ProtectedRoute>
+                <Layout>
+                  <ArchivesBase />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/archives-sortie" element={
+              <ProtectedRoute>
+                <Layout>
+                  <ArchivesSortie />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/archives-operation" element={
+              <ProtectedRoute>
+                <Layout>
+                  <ArchivesOperation />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
       </TooltipProvider>
