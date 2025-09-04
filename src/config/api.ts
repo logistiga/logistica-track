@@ -1,25 +1,9 @@
 import { environment } from './environment';
 
-// Configuration intelligente de l'URL de l'API
+// Configuration simplifiée de l'URL de l'API
 export const getApiBaseUrl = () => {
-  // Détection automatique du protocole
-  const isHttps = window.location.protocol === 'https:';
-  
-  // URLs depuis les variables d'environnement
-  const primaryUrl = environment.apiUrl;
-  const fallbackUrl = environment.apiFallbackUrl;
-  
-  // En développement local, utiliser HTTP par défaut
-  if (environment.isDevelopment) {
-    return primaryUrl || environment.defaultApiUrl;
-  }
-  
-  // En production, adapter selon le protocole du frontend
-  if (isHttps) {
-    return primaryUrl?.replace('http://', 'https://') || 'https://127.0.0.1:8000/api';
-  } else {
-    return primaryUrl?.replace('https://', 'http://') || environment.defaultApiUrl;
-  }
+  // En développement, utiliser l'URL locale
+  return 'http://localhost:8000/api';
 };
 
 // Configuration API
