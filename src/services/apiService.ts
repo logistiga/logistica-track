@@ -1,7 +1,7 @@
 // Configuration de l'URL de l'API
 // Pour développement local: 'http://127.0.0.1:8000/api'
 // Pour production: remplacez par l'URL de votre backend déployé
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://b3b36859-40bc-4d2e-9dda-fa8b3af543d8.lovableproject.com/backend/public/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api';
 
 class ApiService {
   private getAuthHeaders() {
