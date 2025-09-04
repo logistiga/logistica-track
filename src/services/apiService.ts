@@ -15,6 +15,7 @@ class ApiService {
     const response = await fetch(`${this.currentBaseUrl}${endpoint}`, {
       ...options,
       headers: {
+        ...this.getAuthHeaders(),
         ...options.headers,
       },
     });
@@ -30,7 +31,6 @@ class ApiService {
   async get(endpoint: string) {
     const response = await this.makeRequest(endpoint, {
       method: 'GET',
-      headers: this.getAuthHeaders(),
     });
 
     return await response.json();
@@ -39,7 +39,6 @@ class ApiService {
   async post(endpoint: string, data: any) {
     const response = await this.makeRequest(endpoint, {
       method: 'POST',
-      headers: this.getAuthHeaders(),
       body: JSON.stringify(data),
     });
 
@@ -49,7 +48,6 @@ class ApiService {
   async put(endpoint: string, data: any) {
     const response = await this.makeRequest(endpoint, {
       method: 'PUT',
-      headers: this.getAuthHeaders(),
       body: JSON.stringify(data),
     });
 
@@ -59,7 +57,6 @@ class ApiService {
   async delete(endpoint: string) {
     const response = await this.makeRequest(endpoint, {
       method: 'DELETE',
-      headers: this.getAuthHeaders(),
     });
 
     return await response.json();

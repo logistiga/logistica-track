@@ -1,7 +1,7 @@
 // Configuration simplifiée de l'URL de l'API
 export const getApiBaseUrl = () => {
   // En développement, utiliser l'URL locale
-  return 'http://localhost:8000/api';
+  return 'http://127.0.0.1:8000/api';
 };
 
 // Configuration API
