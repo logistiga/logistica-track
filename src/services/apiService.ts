@@ -1,51 +1,38 @@
-// Configuration intelligente de l'URL de l'API
-const getApiBaseUrl = () => {
-  // Détection automatique du protocole
-  const isHttps = window.location.protocol === 'https:';
-  const isDevelopment = import.meta.env.DEV;
-  
-  // URLs depuis les variables d'environnement
-  const primaryUrl = import.meta.env.VITE_API_URL;
-  const fallbackUrl = import.meta.env.VITE_API_URL_FALLBACK;
-  
-  // En développement local, utiliser HTTP par défaut
-  if (isDevelopment) {
-    return primaryUrl || 'http://127.0.0.1:8000/api';
-  }
-  
-  // En production, adapter selon le protocole du frontend
-  if (isHttps) {
-    return primaryUrl?.replace('http://', 'https://') || 'https://127.0.0.1:8000/api';
-  } else {
-    return primaryUrl?.replace('https://', 'http://') || 'http://127.0.0.1:8000/api';
-  }
-};
-
-const API_BASE_URL = getApiBaseUrl();
+import { apiConfig, corsConfig } from '../config';
 
 class ApiService {
-  private currentBaseUrl = API_BASE_URL;
+  private currentBaseUrl = apiConfig.baseUrl;
   
   private getAuthHeaders() {
     const token = localStorage.getItem('auth_token');
     return {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
+      ...apiConfig.defaultHeaders,
       ...(token && { 'Authorization': `Bearer ${token}` })
     };
   }
 
   private async makeRequest(endpoint: string, options: RequestInit) {
     try {
-      const response = await fetch(`${this.currentBaseUrl}${endpoint}`, options);
+      const response = await fetch(`${this.currentBaseUrl}${endpoint}`, {
+        ...options,
+        headers: {
+          ...options.headers,
+          ...corsConfig.corsHeaders,
+        },
+      });
       return response;
     } catch (error) {
       // En cas d'erreur, essayer avec l'URL de fallback
-      const fallbackUrl = import.meta.env.VITE_API_URL_FALLBACK;
-      if (fallbackUrl && fallbackUrl !== this.currentBaseUrl) {
-        console.warn('Tentative avec URL de fallback:', fallbackUrl);
-        this.currentBaseUrl = fallbackUrl;
-        return await fetch(`${this.currentBaseUrl}${endpoint}`, options);
+      if (apiConfig.fallbackUrl && apiConfig.fallbackUrl !== this.currentBaseUrl) {
+        console.warn('Tentative avec URL de fallback:', apiConfig.fallbackUrl);
+        this.currentBaseUrl = apiConfig.fallbackUrl;
+        return await fetch(`${this.currentBaseUrl}${endpoint}`, {
+          ...options,
+          headers: {
+            ...options.headers,
+            ...corsConfig.corsHeaders,
+          },
+        });
       }
       throw error;
     }
