@@ -1,5 +1,3 @@
-import { environment } from './environment';
-
 // Configuration simplifiée de l'URL de l'API
 export const getApiBaseUrl = () => {
   // En développement, utiliser l'URL locale
@@ -9,8 +7,7 @@ export const getApiBaseUrl = () => {
 // Configuration API
 export const apiConfig = {
   baseUrl: getApiBaseUrl(),
-  fallbackUrl: environment.apiFallbackUrl,
-  timeout: environment.defaultTimeout,
+  timeout: 30000,
   
   // Headers par défaut
   defaultHeaders: {

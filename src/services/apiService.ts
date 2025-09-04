@@ -1,4 +1,4 @@
-import { apiConfig, corsConfig } from '../config';
+import { apiConfig } from '../config';
 
 class ApiService {
   private currentBaseUrl = apiConfig.baseUrl;
@@ -12,30 +12,19 @@ class ApiService {
   }
 
   private async makeRequest(endpoint: string, options: RequestInit) {
-    try {
-      const response = await fetch(`${this.currentBaseUrl}${endpoint}`, {
-        ...options,
-        headers: {
-          ...options.headers,
-          ...corsConfig.corsHeaders,
-        },
-      });
-      return response;
-    } catch (error) {
-      // En cas d'erreur, essayer avec l'URL de fallback
-      if (apiConfig.fallbackUrl && apiConfig.fallbackUrl !== this.currentBaseUrl) {
-        console.warn('Tentative avec URL de fallback:', apiConfig.fallbackUrl);
-        this.currentBaseUrl = apiConfig.fallbackUrl;
-        return await fetch(`${this.currentBaseUrl}${endpoint}`, {
-          ...options,
-          headers: {
-            ...options.headers,
-            ...corsConfig.corsHeaders,
-          },
-        });
-      }
-      throw error;
+    const response = await fetch(`${this.currentBaseUrl}${endpoint}`, {
+      ...options,
+      headers: {
+        ...options.headers,
+      },
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Erreur lors de la requête');
     }
+
+    return response;
   }
 
   async get(endpoint: string) {
@@ -43,11 +32,6 @@ class ApiService {
       method: 'GET',
       headers: this.getAuthHeaders(),
     });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Erreur lors de la requête');
-    }
 
     return await response.json();
   }
@@ -59,11 +43,6 @@ class ApiService {
       body: JSON.stringify(data),
     });
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Erreur lors de la requête');
-    }
-
     return await response.json();
   }
 
@@ -74,11 +53,6 @@ class ApiService {
       body: JSON.stringify(data),
     });
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Erreur lors de la requête');
-    }
-
     return await response.json();
   }
 
@@ -87,11 +61,6 @@ class ApiService {
       method: 'DELETE',
       headers: this.getAuthHeaders(),
     });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Erreur lors de la requête');
-    }
 
     return await response.json();
   }
