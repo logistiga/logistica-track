@@ -3,6 +3,10 @@ import { apiConfig } from '../config';
 class ApiService {
   private currentBaseUrl = apiConfig.baseUrl;
   
+  constructor() {
+    console.log('🔧 ApiService initialized with baseUrl:', this.currentBaseUrl);
+  }
+  
   private getAuthHeaders() {
     const token = localStorage.getItem('auth_token');
     return {
@@ -12,7 +16,10 @@ class ApiService {
   }
 
   private async makeRequest(endpoint: string, options: RequestInit) {
-    const response = await fetch(`${this.currentBaseUrl}${endpoint}`, {
+    const fullUrl = `${this.currentBaseUrl}${endpoint}`;
+    console.log('🌐 Making request to:', fullUrl);
+    
+    const response = await fetch(fullUrl, {
       ...options,
       headers: {
         ...this.getAuthHeaders(),
