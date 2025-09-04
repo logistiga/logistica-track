@@ -2,7 +2,7 @@ import { apiService } from './apiService';
 import { mockArmateurService } from './mockArmateurService';
 
 // Utiliser le service mock en mode développement quand l'API n'est pas accessible
-const USE_MOCK = false;
+const USE_MOCK = true;
 
 export interface Armateur {
   id: number;
