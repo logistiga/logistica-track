@@ -126,10 +126,19 @@ export default function Login() {
               </Button>
             </form>
 
-            <div className="text-center">
+            <div className="text-center space-y-2">
               <p className="text-sm text-muted-foreground">
                 Connectez-vous avec vos identifiants d'entreprise
               </p>
+              <div className="bg-blue-50 dark:bg-blue-950/20 p-3 rounded-lg">
+                <p className="text-xs text-blue-600 dark:text-blue-400 font-medium mb-1">
+                  Comptes de test disponibles:
+                </p>
+                <div className="text-xs text-blue-600 dark:text-blue-400">
+                  <div>Email: <span className="font-mono">omar@logistiga.com</span></div>
+                  <div>Mot de passe: <span className="font-mono">A1mraoui@1</span></div>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
