@@ -136,7 +136,7 @@ export default function Login() {
                 </p>
                 <div className="text-xs text-blue-600 dark:text-blue-400">
                   <div>Email: <span className="font-mono">omar@logistiga.com</span></div>
-                  <div>Mot de passe: <span className="font-mono">A1mraoui@1</span></div>
+                  <div>Mot de passe: <span className="font-mono">Amraoui@1</span></div>
                 </div>
               </div>
             </div>
