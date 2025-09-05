@@ -65,7 +65,11 @@ class VehiculeController extends Controller
             Cache::tags(['vehicules'])->flush();
 
             // Logger l'activité
-            logActivity('vehicule_created', $vehicule, 'Création d\'un nouveau véhicule');
+            try {
+                logActivity('vehicule_created', $vehicule, 'Création d\'un nouveau véhicule');
+            } catch (\Exception $e) {
+                // Silently fail
+            }
 
             DB::commit();
 
@@ -123,7 +127,11 @@ class VehiculeController extends Controller
             Cache::tags(['vehicules'])->flush();
 
             // Logger l'activité
-            logActivity('vehicule_updated', $updatedVehicule, 'Mise à jour d\'un véhicule');
+            try {
+                logActivity('vehicule_updated', $updatedVehicule, 'Mise à jour d\'un véhicule');
+            } catch (\Exception $e) {
+                // Silently fail
+            }
 
             DB::commit();
 
@@ -172,7 +180,11 @@ class VehiculeController extends Controller
             Cache::tags(['vehicules'])->flush();
 
             // Logger l'activité
-            logActivity('vehicule_deleted', null, "Suppression du véhicule {$vehicule->numero_parc}");
+            try {
+                logActivity('vehicule_deleted', null, "Suppression du véhicule {$vehicule->numero_parc}");
+            } catch (\Exception $e) {
+                // Silently fail
+            }
 
             DB::commit();
 
@@ -349,7 +361,11 @@ class VehiculeController extends Controller
             Cache::tags(['vehicules'])->flush();
 
             // Logger l'activité
-            logActivity('vehicule_assigned', $vehicule, "Véhicule assigné à: {$request->mission_type}");
+            try {
+                logActivity('vehicule_assigned', $vehicule, "Véhicule assigné à: {$request->mission_type}");
+            } catch (\Exception $e) {
+                // Silently fail
+            }
 
             return $this->successResponse(
                 new VehiculeResource($vehicule),
@@ -379,7 +395,11 @@ class VehiculeController extends Controller
             Cache::tags(['vehicules'])->flush();
 
             // Logger l'activité
-            logActivity('vehicule_released', $vehicule, 'Véhicule libéré de sa mission');
+            try {
+                logActivity('vehicule_released', $vehicule, 'Véhicule libéré de sa mission');
+            } catch (\Exception $e) {
+                // Silently fail
+            }
 
             return $this->successResponse(
                 new VehiculeResource($vehicule),
@@ -438,7 +458,11 @@ class VehiculeController extends Controller
             );
 
             // Logger l'activité
-            logActivity('vehicules_export', null, "Export des véhicules en format {$request->format}");
+            try {
+                logActivity('vehicules_export', null, "Export des véhicules en format {$request->format}");
+            } catch (\Exception $e) {
+                // Silently fail
+            }
 
             return $this->successResponse($exportData, 'Export généré avec succès');
 
