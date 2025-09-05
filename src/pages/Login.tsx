@@ -35,7 +35,7 @@ export default function Login() {
         title: "Connexion réussie",
         description: "Bienvenue dans votre espace",
       });
-      navigate("/dashboard");
+      navigate("/");
     } catch (error) {
       toast({
         title: "Erreur de connexion",
