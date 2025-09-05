@@ -75,13 +75,15 @@ class SortieConteneurController extends Controller
             logActivity('sortie_created', $sortie, 'Création d\'une nouvelle sortie');
 
             // Envoyer une notification
-            sendNotification(
-                auth()->id(),
-                'sortie_created',
-                'Nouvelle sortie créée',
-                "Sortie {$sortie->numero_conteneur} créée avec succès",
-                ['sortie_id' => $sortie->id]
-            );
+            if (auth()->check()) {
+                sendNotification(
+                    auth()->id(),
+                    'sortie_created',
+                    'Nouvelle sortie créée',
+                    "Sortie {$sortie->numero_conteneur} créée avec succès",
+                    ['sortie_id' => $sortie->id]
+                );
+            }
 
             DB::commit();
 
@@ -213,13 +215,15 @@ class SortieConteneurController extends Controller
             logActivity('sortie_returned', $returnedSortie, 'Retour de conteneur confirmé');
 
             // Envoyer une notification
-            sendNotification(
-                auth()->id(),
-                'sortie_returned',
-                'Retour de conteneur',
-                "Le conteneur {$sortie->numero_conteneur} est retourné au port",
-                ['sortie_id' => $sortie->id]
-            );
+            if (auth()->check()) {
+                sendNotification(
+                    auth()->id(),
+                    'sortie_returned',
+                    'Retour de conteneur',
+                    "Le conteneur {$sortie->numero_conteneur} est retourné au port",
+                    ['sortie_id' => $sortie->id]
+                );
+            }
 
             DB::commit();
 
