@@ -80,9 +80,9 @@ class SortieConteneurController extends Controller
 
             // Envoyer une notification
             try {
-                if (auth()->check()) {
+                if (\Illuminate\Support\Facades\Auth::check()) {
                     sendNotification(
-                        auth()->id(),
+                        \Illuminate\Support\Facades\Auth::id(),
                         'sortie_created',
                         'Nouvelle sortie créée',
                         "Sortie {$sortie->numero_conteneur} créée avec succès",
@@ -228,9 +228,9 @@ class SortieConteneurController extends Controller
 
             // Envoyer une notification
             try {
-                if (auth()->check()) {
+                if (\Illuminate\Support\Facades\Auth::check()) {
                     sendNotification(
-                        auth()->id(),
+                        \Illuminate\Support\Facades\Auth::id(),
                         'sortie_returned',
                         'Retour de conteneur',
                         "Le conteneur {$sortie->numero_conteneur} est retourné au port",

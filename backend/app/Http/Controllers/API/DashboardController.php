@@ -19,7 +19,7 @@ class DashboardController extends Controller
     public function index(Request $request): JsonResponse
     {
         try {
-            $cacheKey = 'dashboard_main_' . (auth()->check() ? auth()->id() : 'guest');
+            $cacheKey = 'dashboard_main_' . (\Illuminate\Support\Facades\Auth::check() ? \Illuminate\Support\Facades\Auth::id() : 'guest');
             
             $dashboardData = Cache::remember($cacheKey, CACHE_MEDIUM, function () {
                 return [
