@@ -71,47 +71,47 @@ export interface RetourData {
 
 class SortieConteneurService {
   async getSorties(): Promise<SortieConteneur[]> {
-    const response = await apiService.get('/sortie-conteneurs');
+    const response = await apiService.get('/sorties');
     return response.data;
   }
 
   async getSortie(id: number): Promise<SortieConteneur> {
-    const response = await apiService.get(`/sortie-conteneurs/${id}`);
+    const response = await apiService.get(`/sorties/${id}`);
     return response.data;
   }
 
   async createSortie(data: CreateSortieConteneurData): Promise<SortieConteneur> {
-    const response = await apiService.post('/sortie-conteneurs', data);
+    const response = await apiService.post('/sorties', data);
     return response.data;
   }
 
   async updateSortie(id: number, data: Partial<CreateSortieConteneurData>): Promise<SortieConteneur> {
-    const response = await apiService.put(`/sortie-conteneurs/${id}`, data);
+    const response = await apiService.put(`/sorties/${id}`, data);
     return response.data;
   }
 
   async deleteSortie(id: number): Promise<void> {
-    await apiService.delete(`/sortie-conteneurs/${id}`);
+    await apiService.delete(`/sorties/${id}`);
   }
 
   async confirmerRetour(id: number, retourData: RetourData): Promise<SortieConteneur> {
-    const response = await apiService.put(`/sortie-conteneurs/${id}/retour`, retourData);
+    const response = await apiService.put(`/sorties/${id}/return`, retourData);
     return response.data;
   }
 
   async getSortiesEnCours(): Promise<SortieConteneur[]> {
-    const response = await apiService.get('/sortie-conteneurs?statut=en_cours');
+    const response = await apiService.get('/sorties/en-cours');
     return response.data;
   }
 
   async getHistorique(): Promise<SortieConteneur[]> {
-    const response = await apiService.get('/sortie-conteneurs?statut=retourne_port,livre');
+    const response = await apiService.get('/sorties/retournees');
     return response.data;
   }
 
   async exportSorties(filters?: any): Promise<Blob> {
     const queryParams = filters ? `?${new URLSearchParams(filters).toString()}` : '';
-    const response = await fetch(`${apiService['API_BASE_URL']}/sortie-conteneurs/export${queryParams}`, {
+    const response = await fetch(`${apiService['API_BASE_URL']}/sorties/export${queryParams}`, {
       method: 'GET',
       headers: apiService['getAuthHeaders'](),
     });

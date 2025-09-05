@@ -1,8 +1,30 @@
 import { useState, useEffect, useCallback } from "react";
 import { SortieConteneur, SortieFormData, ReturnData } from "@/types/sortie-conteneur";
-import { SortieService, CreateSortieData } from "@/services/sortieService";
+import { sortieConteneurService, CreateSortieConteneurData } from "@/services/sortieConteneurService";
+import { SortieConteneur as APISortieConteneur } from "@/services/sortieConteneurService";
 import { useToast } from "@/hooks/use-toast";
 import { validateFormData, getEmptyFormData } from "@/utils/sortieUtils";
+
+// Fonction pour convertir l'API response vers le type local
+const convertApiToLocal = (apiSortie: APISortieConteneur): SortieConteneur => ({
+  id: apiSortie.id.toString(),
+  numeroConteneur: apiSortie.numero_conteneur,
+  numeroBL: apiSortie.numero_bl,
+  codeArmateur: apiSortie.armateur?.code || apiSortie.armateur_id.toString(),
+  camion: apiSortie.vehicule_camion?.numero_parc || apiSortie.vehicule_camion_id?.toString() || "",
+  remorque: apiSortie.vehicule_remorque?.numero_parc || apiSortie.vehicule_remorque_id?.toString() || "",
+  primeChauffeur: apiSortie.prime_chauffeur || 0,
+  nomClient: apiSortie.nom_client,
+  destination: apiSortie.destination as "base" | "client",
+  adresseClient: apiSortie.adresse_client,
+  typeDestination: apiSortie.type_destination as "bad" | "detention",
+  joursBAD: apiSortie.jours_bad,
+  dateFinFranchise: apiSortie.date_fin_franchise,
+  nomTransitaire: apiSortie.nom_transitaire,
+  dateSortie: apiSortie.date_sortie,
+  dateRetour: apiSortie.date_retour,
+  statut: apiSortie.statut as "en_cours" | "a_la_base" | "livre_client" | "retourne_port"
+});
 
 export function useSortieConteneur() {
   const { toast } = useToast();
@@ -27,8 +49,9 @@ export function useSortieConteneur() {
   const loadSorties = useCallback(async () => {
     try {
       setLoading(true);
-      const data = SortieService.getAllSorties();
-      setSorties(data);
+      const data = await sortieConteneurService.getSorties();
+      const convertedData = data.map(convertApiToLocal);
+      setSorties(convertedData);
     } catch (error) {
       toast({
         title: "Erreur",
@@ -55,26 +78,38 @@ export function useSortieConteneur() {
     }
 
     try {
-      const createData: CreateSortieData = {
-        ...formData,
-        joursBAD: formData.joursBAD ? parseInt(formData.joursBAD) : undefined
+      const createData: CreateSortieConteneurData = {
+        numero_conteneur: formData.numeroConteneur,
+        numero_bl: formData.numeroBL,
+        armateur_id: parseInt(formData.codeArmateur),
+        vehicule_camion_id: formData.camion ? parseInt(formData.camion) : undefined,
+        vehicule_remorque_id: formData.remorque ? parseInt(formData.remorque) : undefined,
+        nom_client: formData.nomClient,
+        adresse_client: formData.adresseClient,
+        destination: formData.destination,
+        type_destination: formData.typeDestination as 'port' | 'client' | 'depot',
+        date_sortie: new Date().toISOString().split('T')[0],
+        prime_chauffeur: formData.primeChauffeur ? parseInt(formData.primeChauffeur) : undefined,
+        jours_bad: formData.joursBAD ? parseInt(formData.joursBAD) : undefined,
+        date_fin_franchise: formData.dateFinFranchise,
+        nom_transitaire: formData.nomTransitaire
       };
 
       if (editingSortie) {
         // Mode modification
-        const updated = SortieService.updateSortie(editingSortie.id, createData);
-        if (updated) {
-          setSorties(prev => prev.map(s => s.id === editingSortie.id ? updated : s));
-          toast({
-            title: "Sortie modifiée",
-            description: "Les modifications ont été enregistrées."
-          });
-        }
+        const updated = await sortieConteneurService.updateSortie(parseInt(editingSortie.id), createData);
+        const convertedUpdated = convertApiToLocal(updated);
+        setSorties(prev => prev.map(s => s.id === editingSortie.id ? convertedUpdated : s));
+        toast({
+          title: "Sortie modifiée",
+          description: "Les modifications ont été enregistrées."
+        });
         setEditingSortie(null);
       } else {
         // Mode création
-        const nouvelleSortie = SortieService.createSortie(createData);
-        setSorties(prev => [...prev, nouvelleSortie]);
+        const nouvelleSortie = await sortieConteneurService.createSortie(createData);
+        const convertedNew = convertApiToLocal(nouvelleSortie);
+        setSorties(prev => [...prev, convertedNew]);
         toast({
           title: "Sortie ajoutée",
           description: "La nouvelle sortie de conteneur a été enregistrée."
@@ -101,24 +136,31 @@ export function useSortieConteneur() {
       codeArmateur: sortie.codeArmateur,
       camion: sortie.camion,
       remorque: sortie.remorque,
-      primeChauffeur: sortie.primeChauffeur.toString(),
+      primeChauffeur: sortie.primeChauffeur?.toString() || "",
       nomClient: sortie.nomClient,
       destination: sortie.destination,
       adresseClient: sortie.adresseClient || "",
       typeDestination: sortie.typeDestination,
       joursBAD: sortie.joursBAD?.toString() || "",
       dateFinFranchise: sortie.dateFinFranchise || "",
-      nomTransitaire: sortie.nomTransitaire
+      nomTransitaire: sortie.nomTransitaire || ""
     });
     setIsAddDialogOpen(true);
   }, []);
 
-  const handleDelete = useCallback((sortie: SortieConteneur) => {
-    if (SortieService.deleteSortie(sortie.id)) {
+  const handleDelete = useCallback(async (sortie: SortieConteneur) => {
+    try {
+      await sortieConteneurService.deleteSortie(parseInt(sortie.id));
       setSorties(prev => prev.filter(s => s.id !== sortie.id));
       toast({
         title: "Sortie supprimée",
         description: "La sortie de conteneur a été supprimée."
+      });
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de la suppression",
+        variant: "destructive"
       });
     }
   }, [toast]);
@@ -128,22 +170,36 @@ export function useSortieConteneur() {
     setIsReturnDialogOpen(true);
   }, []);
 
-  const handleConfirmReturn = useCallback(() => {
+  const handleConfirmReturn = useCallback(async () => {
     if (!selectedSortie || !returnData.dateRetour) return;
 
-    const updated = SortieService.confirmReturn(selectedSortie.id, returnData.dateRetour);
-    if (updated) {
-      setSorties(prev => prev.map(s => s.id === selectedSortie.id ? updated : s));
+    try {
+      const retourData = {
+        date_retour: returnData.dateRetour,
+        heure_retour: "12:00",
+        vehicule_camion_id: returnData.camionRetour ? parseInt(returnData.camionRetour) : undefined,
+        vehicule_remorque_id: returnData.remorqueRetour ? parseInt(returnData.remorqueRetour) : undefined
+      };
+
+      const updated = await sortieConteneurService.confirmerRetour(parseInt(selectedSortie.id), retourData);
+      const convertedUpdated = convertApiToLocal(updated);
+      setSorties(prev => prev.map(s => s.id === selectedSortie.id ? convertedUpdated : s));
       toast({
         title: "Retour confirmé",
         description: "Le retour au port a été enregistré."
       });
-    }
 
-    // Reset
-    setIsReturnDialogOpen(false);
-    setSelectedSortie(null);
-    setReturnData({ dateRetour: "", camionRetour: "", remorqueRetour: "" });
+      // Reset
+      setIsReturnDialogOpen(false);
+      setSelectedSortie(null);
+      setReturnData({ dateRetour: "", camionRetour: "", remorqueRetour: "" });
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de la confirmation du retour",
+        variant: "destructive"
+      });
+    }
   }, [selectedSortie, returnData, toast]);
 
   const handleCloseAddDialog = useCallback(() => {
