@@ -18,7 +18,7 @@ class Kernel extends HttpKernel
         // \App\Http\Middleware\TrustProxies::class, // Temporarily disabled
         // \Fruitcake\Cors\HandleCors::class, // Package not installed - disabled
         \App\Http\Middleware\CorsMiddleware::class, // Custom CORS middleware
-        \App\Http\Middleware\PreventRequestsDuringMaintenance::class,
+        // \App\Http\Middleware\PreventRequestsDuringMaintenance::class, // Temporarily disabled
         \Illuminate\Foundation\Http\Middleware\ValidatePostSize::class,
         \App\Http\Middleware\TrimStrings::class,
         \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
