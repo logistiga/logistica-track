@@ -3,8 +3,8 @@ import { vehiculeService, type Vehicule, type CreateVehiculeData } from '@/servi
 import { mockVehiculeService } from '@/services/mockVehiculeService';
 import { toast } from '@/hooks/use-toast';
 
-// Utiliser le service mock temporairement pour éviter les erreurs CORS
-const USE_MOCK = true;
+// Changer vers les vraies APIs
+const USE_MOCK = false;
 const activeVehiculeService = USE_MOCK ? mockVehiculeService : vehiculeService;
 
 export function useVehicules() {
