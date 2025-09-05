@@ -72,17 +72,25 @@ class SortieConteneurController extends Controller
             Cache::tags(['sorties'])->flush();
 
             // Logger l'activité
-            logActivity('sortie_created', $sortie, 'Création d\'une nouvelle sortie');
+            try {
+                logActivity('sortie_created', $sortie, 'Création d\'une nouvelle sortie');
+            } catch (\Exception $e) {
+                // Silently fail to avoid breaking the application
+            }
 
             // Envoyer une notification
-            if (auth()->check()) {
-                sendNotification(
-                    auth()->id(),
-                    'sortie_created',
-                    'Nouvelle sortie créée',
-                    "Sortie {$sortie->numero_conteneur} créée avec succès",
-                    ['sortie_id' => $sortie->id]
-                );
+            try {
+                if (auth()->check()) {
+                    sendNotification(
+                        auth()->id(),
+                        'sortie_created',
+                        'Nouvelle sortie créée',
+                        "Sortie {$sortie->numero_conteneur} créée avec succès",
+                        ['sortie_id' => $sortie->id]
+                    );
+                }
+            } catch (\Exception $e) {
+                // Silently fail to avoid breaking the application
             }
 
             DB::commit();
@@ -212,17 +220,25 @@ class SortieConteneurController extends Controller
             Cache::tags(['sorties'])->flush();
 
             // Logger l'activité
-            logActivity('sortie_returned', $returnedSortie, 'Retour de conteneur confirmé');
+            try {
+                logActivity('sortie_returned', $returnedSortie, 'Retour de conteneur confirmé');
+            } catch (\Exception $e) {
+                // Silently fail to avoid breaking the application
+            }
 
             // Envoyer une notification
-            if (auth()->check()) {
-                sendNotification(
-                    auth()->id(),
-                    'sortie_returned',
-                    'Retour de conteneur',
-                    "Le conteneur {$sortie->numero_conteneur} est retourné au port",
-                    ['sortie_id' => $sortie->id]
-                );
+            try {
+                if (auth()->check()) {
+                    sendNotification(
+                        auth()->id(),
+                        'sortie_returned',
+                        'Retour de conteneur',
+                        "Le conteneur {$sortie->numero_conteneur} est retourné au port",
+                        ['sortie_id' => $sortie->id]
+                    );
+                }
+            } catch (\Exception $e) {
+                // Silently fail to avoid breaking the application
             }
 
             DB::commit();
