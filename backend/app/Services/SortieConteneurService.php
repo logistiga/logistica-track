@@ -63,7 +63,7 @@ class SortieConteneurService
             // Créer la sortie
             $sortie = SortieConteneur::create([
                 ...$data,
-                'created_by' => Auth::id(),
+                // 'created_by' => Auth::id(), // Temporairement désactivé
                 'statut' => $data['destination'] === 'base' ? 'a_la_base' : 'livre_client',
                 'date_sortie' => $data['date_sortie'] ?? now()->format('Y-m-d'),
             ]);
@@ -104,7 +104,7 @@ class SortieConteneurService
 
             $sortie->update([
                 ...$data,
-                'updated_by' => Auth::id(),
+                // 'updated_by' => Auth::id(), // Temporairement désactivé
             ]);
 
             DB::commit();
@@ -156,7 +156,7 @@ class SortieConteneurService
                 'remorque_retour_id' => $data['remorque_retour_id'],
                 'observations' => $data['observations'] ?? null,
                 'statut' => 'retourne_port',
-                'updated_by' => Auth::id(),
+                // 'updated_by' => Auth::id(), // Temporairement désactivé
             ]);
 
             // Libérer les véhicules de sortie
