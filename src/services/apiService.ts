@@ -18,6 +18,9 @@ class ApiService {
   private async makeRequest(endpoint: string, options: RequestInit) {
     const fullUrl = `${this.currentBaseUrl}${endpoint}`;
     console.log('🌐 Making request to:', fullUrl);
+    console.log('📤 Request method:', options.method);
+    console.log('📦 Request headers:', this.getAuthHeaders());
+    console.log('📝 Request body:', options.body);
     
     const response = await fetch(fullUrl, {
       ...options,
@@ -27,9 +30,18 @@ class ApiService {
       },
     });
 
+    console.log('📥 Response status:', response.status);
+    console.log('📥 Response headers:', response.headers);
+
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Erreur lors de la requête');
+      const errorText = await response.text();
+      console.error('❌ Error response:', errorText);
+      try {
+        const error = JSON.parse(errorText);
+        throw new Error(error.message || 'Erreur lors de la requête');
+      } catch {
+        throw new Error(errorText || 'Erreur lors de la requête');
+      }
     }
 
     return response;
