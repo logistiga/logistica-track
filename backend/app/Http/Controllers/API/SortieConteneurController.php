@@ -38,7 +38,8 @@ class SortieConteneurController extends Controller
     public function index(Request $request): JsonResponse
     {
         try {
-            $cacheKey = 'sorties_' . md5(serialize($request->all()) . auth()->id());
+            $userId = auth()->check() ? auth()->id() : 'anonymous';
+            $cacheKey = 'sorties_' . md5(serialize($request->all()) . $userId);
             
             $result = Cache::remember($cacheKey, CACHE_SHORT, function () use ($request) {
                 return $this->sortieService->getAllSorties($request->all());

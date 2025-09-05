@@ -175,6 +175,11 @@ if (!function_exists('logActivity')) {
     function logActivity($action, $model = null, $description = null): void
     {
         try {
+            // Vérifier si l'authentification est disponible
+            if (!auth()->check()) {
+                return;
+            }
+            
             \Illuminate\Support\Facades\Log::info('User Activity', [
                 'user_id' => auth()->id(),
                 'action' => $action,
@@ -198,6 +203,11 @@ if (!function_exists('sendNotification')) {
     function sendNotification($userId, $type, $title, $message, $metadata = []): void
     {
         try {
+            // Vérifier si l'authentification est disponible et si userId est fourni
+            if (!$userId || (!auth()->check() && !is_numeric($userId))) {
+                return;
+            }
+            
             \App\Models\Notification::create([
                 'user_id' => $userId,
                 'type' => $type,
