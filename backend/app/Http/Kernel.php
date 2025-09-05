@@ -20,7 +20,7 @@ class Kernel extends HttpKernel
         \App\Http\Middleware\CorsMiddleware::class, // Custom CORS middleware
         // \App\Http\Middleware\PreventRequestsDuringMaintenance::class, // Temporarily disabled
         \Illuminate\Foundation\Http\Middleware\ValidatePostSize::class,
-        \App\Http\Middleware\TrimStrings::class,
+        // \App\Http\Middleware\TrimStrings::class, // Temporarily disabled
         \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
     ];
 
