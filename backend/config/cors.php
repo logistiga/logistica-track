@@ -27,7 +27,11 @@ return [
         'https://id-preview--b3b36859-40bc-4d2e-9dda-fa8b3af543d8.lovable.app',
     ],
 
-    'allowed_origins_patterns' => [],
+    'allowed_origins_patterns' => [
+        '/^https:\/\/.*\.lovableproject\.com$/',
+        '/^https:\/\/.*\.lovable\.app$/',
+        '/^https:\/\/.*--.*\.lovable\.app$/',
+    ],
 
     'allowed_headers' => ['*'],
 
