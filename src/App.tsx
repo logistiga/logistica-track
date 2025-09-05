@@ -34,7 +34,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
-            {/* Page de login sans layout */}
+            {/* Page de login avec AuthProvider */}
             <Route path="/login" element={<Login />} />
             
             {/* Routes protégées avec layout */}
