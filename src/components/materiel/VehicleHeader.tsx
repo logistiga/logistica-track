@@ -38,7 +38,7 @@ export function VehicleHeader({ searchTerm, onSearchChange, onAddClick, activeTa
         </div>
         <Button 
           onClick={onAddClick}
-          className="bg-gradient-to-r from-primary to-primary-dark hover:shadow-primary"
+          className="bg-primary hover:bg-primary/90"
         >
           <Plus className="w-4 h-4 mr-2" />
           Nouveau {activeTab === "camions" ? "Camion" : "Remorque"}

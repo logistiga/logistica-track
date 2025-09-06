@@ -8,8 +8,7 @@ interface VehicleStatsCardsProps {
 }
 
 export function VehicleStatsCards({ camions, remorques }: VehicleStatsCardsProps) {
-  const totalDisponibles = camions.filter(c => c.statut === "disponible").length + 
-                          remorques.filter(r => r.statut === "disponible").length;
+  const totalVehicules = camions.length + remorques.length;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -20,7 +19,7 @@ export function VehicleStatsCards({ camions, remorques }: VehicleStatsCardsProps
               <p className="text-sm font-medium text-muted-foreground">Total Camions</p>
               <p className="text-3xl font-bold text-info">{camions.length}</p>
             </div>
-            <div className="p-3 bg-info-light rounded-xl">
+            <div className="p-3 bg-info/10 rounded-xl">
               <Truck className="w-6 h-6 text-info" />
             </div>
           </div>
@@ -33,7 +32,7 @@ export function VehicleStatsCards({ camions, remorques }: VehicleStatsCardsProps
               <p className="text-sm font-medium text-muted-foreground">Total Remorques</p>
               <p className="text-3xl font-bold text-success">{remorques.length}</p>
             </div>
-            <div className="p-3 bg-success-light rounded-xl">
+            <div className="p-3 bg-success/10 rounded-xl">
               <Truck className="w-6 h-6 text-success" />
             </div>
           </div>
@@ -43,10 +42,10 @@ export function VehicleStatsCards({ camions, remorques }: VehicleStatsCardsProps
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Disponibles</p>
-              <p className="text-3xl font-bold text-primary">{totalDisponibles}</p>
+              <p className="text-sm font-medium text-muted-foreground">Total Véhicules</p>
+              <p className="text-3xl font-bold text-primary">{totalVehicules}</p>
             </div>
-            <div className="p-3 bg-primary-light rounded-xl">
+            <div className="p-3 bg-primary/10 rounded-xl">
               <Truck className="w-6 h-6 text-primary" />
             </div>
           </div>

@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Edit, Trash2 } from "lucide-react";
 import type { Vehicule } from "@/services/vehiculeService";
-import { getStatusBadge, filterVehicles } from "@/utils/vehiculeUtils";
+import { filterVehicles } from "@/utils/vehiculeUtils";
 
 interface VehicleTableProps {
   vehicles: Vehicule[];
