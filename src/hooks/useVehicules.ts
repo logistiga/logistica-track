@@ -1,11 +1,6 @@
 import { useState, useEffect } from 'react';
 import { vehiculeService, type Vehicule, type CreateVehiculeData } from '@/services/vehiculeService';
-import { mockVehiculeService } from '@/services/mockVehiculeService';
 import { toast } from '@/hooks/use-toast';
-
-// Essayons de nouveau avec les vraies APIs
-const USE_MOCK = false;
-const activeVehiculeService = USE_MOCK ? mockVehiculeService : vehiculeService;
 
 export function useVehicules() {
   const [camions, setCamions] = useState<Vehicule[]>([]);
@@ -15,7 +10,7 @@ export function useVehicules() {
   const fetchVehicules = async () => {
     try {
       setLoading(true);
-      const vehicules = await activeVehiculeService.getVehicules();
+      const vehicules = await vehiculeService.getVehicules();
       setCamions(vehicules.filter(v => v.type === 'camion'));
       setRemorques(vehicules.filter(v => v.type === 'remorque'));
     } catch (error) {
@@ -31,7 +26,7 @@ export function useVehicules() {
 
   const createVehicule = async (data: CreateVehiculeData): Promise<boolean> => {
     try {
-      const newVehicule = await activeVehiculeService.createVehicule(data);
+      const newVehicule = await vehiculeService.createVehicule(data);
       
       if (data.type === "camion") {
         setCamions(prev => [...prev, newVehicule]);
@@ -56,7 +51,7 @@ export function useVehicules() {
 
   const deleteVehicule = async (id: number, type: 'camion' | 'remorque'): Promise<boolean> => {
     try {
-      await activeVehiculeService.deleteVehicule(id);
+      await vehiculeService.deleteVehicule(id);
       
       if (type === "camion") {
         setCamions(prev => prev.filter(c => c.id !== id));
