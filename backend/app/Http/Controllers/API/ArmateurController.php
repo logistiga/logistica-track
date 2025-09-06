@@ -64,7 +64,8 @@ class ArmateurController extends Controller
         try {
             DB::beginTransaction();
 
-            $armateur = $this->armateurService->createArmateur($request->validated());
+            $armateurData = array_merge($request->validated(), ['actif' => true]);
+            $armateur = $this->armateurService->createArmateur($armateurData);
 
             // Invalider le cache
             Cache::tags(['armateurs'])->flush();

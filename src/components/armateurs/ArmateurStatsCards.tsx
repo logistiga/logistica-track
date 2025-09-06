@@ -9,7 +9,7 @@ interface ArmateurStatsCardsProps {
 export function ArmateurStatsCards({ armateurs }: ArmateurStatsCardsProps) {
   const totalArmateurs = new Set(armateurs.map(a => a.nom)).size;
   const armateurAvecEmail = armateurs.filter(a => a.contact_email).length;
-  const armateursActifs = armateurs.filter(a => a.actif).length;
+  const typesConteneur = new Set(armateurs.map(a => a.type_conteneur)).size;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -59,9 +59,9 @@ export function ArmateurStatsCards({ armateurs }: ArmateurStatsCardsProps) {
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Actifs</p>
-              <p className="text-3xl font-bold text-warning">{armateursActifs}</p>
-              <p className="text-xs text-muted-foreground">armateurs actifs</p>
+              <p className="text-sm font-medium text-muted-foreground">Types Conteneur</p>
+              <p className="text-3xl font-bold text-warning">{typesConteneur}</p>
+              <p className="text-xs text-muted-foreground">types différents</p>
             </div>
             <div className="p-3 bg-warning-light rounded-xl">
               <Ship className="w-6 h-6 text-warning" />

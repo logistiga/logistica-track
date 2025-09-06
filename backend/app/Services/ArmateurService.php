@@ -12,12 +12,10 @@ class ArmateurService
      */
     public function getAllArmateurs(array $filters = [])
     {
-        $query = Armateur::query();
+        // Toujours filtrer pour les armateurs actifs uniquement
+        $query = Armateur::where('actif', true);
 
-        // Filtres
-        if (isset($filters['actif'])) {
-            $query->where('actif', $filters['actif']);
-        }
+        // Filtres (suppression du filtre actif car tous sont actifs)
 
         if (isset($filters['type_conteneur'])) {
             $query->parType($filters['type_conteneur']);

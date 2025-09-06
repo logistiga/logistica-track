@@ -1,13 +1,4 @@
-import { Badge } from "@/components/ui/badge";
 import type { Armateur } from "@/services/armateurService";
-
-export const getStatusBadge = (actif: boolean) => {
-  return (
-    <Badge className={actif ? "bg-success text-success-foreground" : "bg-destructive text-destructive-foreground"}>
-      {actif ? "Actif" : "Inactif"}
-    </Badge>
-  );
-};
 
 export const filterArmateurs = (armateurs: Armateur[], searchTerm: string): Armateur[] => {
   return armateurs.filter(armateur =>

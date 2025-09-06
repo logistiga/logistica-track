@@ -3,7 +3,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Edit, Trash2 } from "lucide-react";
 import type { Armateur } from "@/services/armateurService";
-import { getStatusBadge, filterArmateurs } from "@/utils/armateurUtils";
+import { filterArmateurs } from "@/utils/armateurUtils";
 
 interface ArmateurTableProps {
   armateurs: Armateur[];
@@ -25,7 +25,6 @@ export function ArmateurTable({ armateurs, searchTerm, onDelete }: ArmateurTable
           <TableHead>Prix/Jour</TableHead>
           <TableHead>Contact</TableHead>
           <TableHead>Email</TableHead>
-          <TableHead>Statut</TableHead>
           <TableHead className="w-24">Actions</TableHead>
         </TableRow>
       </TableHeader>
@@ -45,7 +44,6 @@ export function ArmateurTable({ armateurs, searchTerm, onDelete }: ArmateurTable
             </TableCell>
             <TableCell>{armateur.contact_nom || '-'}</TableCell>
             <TableCell>{armateur.contact_email || '-'}</TableCell>
-            <TableCell>{getStatusBadge(armateur.actif)}</TableCell>
             <TableCell>
               <div className="flex space-x-2">
                 <Button variant="outline" size="sm">

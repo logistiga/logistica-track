@@ -24,7 +24,7 @@ class StoreArmateurRequest extends FormRequest
             'contact_email' => 'nullable|email|max:255',
             'contact_telephone' => 'nullable|string|max:20',
             'adresse' => 'nullable|string|max:1000',
-            'actif' => 'boolean',
+            // actif n'est plus requis car automatiquement true
         ];
     }
 

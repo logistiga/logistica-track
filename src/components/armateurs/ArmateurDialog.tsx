@@ -65,7 +65,7 @@ export function ArmateurDialog({ isOpen, onClose, onSubmit }: ArmateurDialogProp
       contact_email: formData.contact_email || undefined,
       contact_telephone: formData.contact_telephone || undefined,
       adresse: formData.adresse || undefined,
-      actif: true,
+      // actif est automatiquement true côté backend
     };
 
     const success = await onSubmit(armateurData);
