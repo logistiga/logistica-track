@@ -36,6 +36,18 @@ class ApiService {
     if (!response.ok) {
       const errorText = await response.text();
       console.error('❌ Error response:', errorText);
+      
+      // Si erreur 401, nettoyer l'authentification
+      if (response.status === 401) {
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('user');
+        // Rediriger vers login seulement si on n'y est pas déjà
+        if (!window.location.pathname.includes('/login')) {
+          window.location.href = '/login';
+        }
+        return;
+      }
+      
       try {
         const error = JSON.parse(errorText);
         throw new Error(error.message || 'Erreur lors de la requête');

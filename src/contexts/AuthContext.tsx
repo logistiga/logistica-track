@@ -33,15 +33,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Vérifier si un utilisateur est stocké
         const storedUser = authService.getStoredUser();
         if (storedUser && authService.isAuthenticated()) {
+          setUser(storedUser); // Utiliser d'abord l'utilisateur stocké pour éviter le flash
           try {
-            // Vérifier que le token est toujours valide
+            // Vérifier que le token est toujours valide en arrière-plan
             const currentUser = await authService.getCurrentUser();
             setUser(currentUser);
           } catch (error) {
+            console.log('Token expiré, redirection vers login');
             // Token invalide, nettoyer le localStorage
-            authService.logout();
+            await authService.logout();
             setUser(null);
           }
+        } else {
+          setUser(null);
         }
       } catch (error) {
         console.error('Erreur lors de l\'initialisation:', error);
