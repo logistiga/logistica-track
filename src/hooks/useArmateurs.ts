@@ -11,10 +11,13 @@ export function useArmateurs() {
     try {
       setLoading(true);
       setError(null);
+      console.log('🔄 Chargement des armateurs...');
       const data = await armateurService.getArmateurs();
+      console.log('✅ Armateurs chargés:', data);
       setArmateurs(data);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erreur lors du chargement des armateurs';
+      console.error('❌ Erreur chargement armateurs:', err);
       setError(errorMessage);
       toast({
         title: "Erreur",
@@ -96,6 +99,7 @@ export function useArmateurs() {
   };
 
   const getArmateurOptions = () => {
+    console.log('📋 Armateurs disponibles pour options:', armateurs);
     return armateurs.map(a => ({
       value: a.code,
       label: `${a.code} - ${a.nom}`,
