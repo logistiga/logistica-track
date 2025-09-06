@@ -79,6 +79,16 @@ class SortieConteneur extends Model
         return $this->belongsTo(User::class, 'updated_by');
     }
 
+    public function detention()
+    {
+        return $this->hasOne(Detention::class, 'sortie_conteneur_id');
+    }
+
+    public function facturation()
+    {
+        return $this->hasOne(Facturation::class, 'sortie_conteneur_id');
+    }
+
     // Scopes
     public function scopeEnCours($query)
     {

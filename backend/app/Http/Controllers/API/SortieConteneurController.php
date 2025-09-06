@@ -68,8 +68,10 @@ class SortieConteneurController extends Controller
 
             $sortie = $this->sortieService->createSortie($request->validated());
 
-            // Cache invalidation temporarily disabled
-            // Cache::tags(['sorties'])->flush();
+            // Invalider le cache simple
+            Cache::forget('sorties_all');
+            Cache::forget('sorties_en_cours');
+            Cache::forget('sorties_retournees');
 
             // Logger l'activité
             try {
@@ -154,8 +156,10 @@ class SortieConteneurController extends Controller
             $oldData = $sortie->toArray();
             $updatedSortie = $this->sortieService->updateSortie($sortie, $request->validated());
 
-            // Cache invalidation temporarily disabled
-            // Cache::tags(['sorties'])->flush();
+            // Invalider le cache simple
+            Cache::forget('sorties_all');
+            Cache::forget('sorties_en_cours');
+            Cache::forget('sorties_retournees');
 
             // Logger l'activité
             logActivity('sortie_updated', $updatedSortie, 'Mise à jour d\'une sortie');
@@ -191,8 +195,10 @@ class SortieConteneurController extends Controller
 
             $this->sortieService->deleteSortie($sortie);
 
-            // Cache invalidation temporarily disabled
-            // Cache::tags(['sorties'])->flush();
+            // Invalider le cache simple
+            Cache::forget('sorties_all');
+            Cache::forget('sorties_en_cours');
+            Cache::forget('sorties_retournees');
 
             // Logger l'activité
             logActivity('sortie_deleted', null, "Suppression de la sortie {$sortie->numero_conteneur}");
@@ -221,8 +227,10 @@ class SortieConteneurController extends Controller
 
             $returnedSortie = $this->sortieService->confirmerRetour($sortie, $request->validated());
 
-            // Cache invalidation temporarily disabled
-            // Cache::tags(['sorties'])->flush();
+            // Invalider le cache simple
+            Cache::forget('sorties_all');
+            Cache::forget('sorties_en_cours');
+            Cache::forget('sorties_retournees');
 
             // Logger l'activité
             try {
@@ -391,8 +399,10 @@ class SortieConteneurController extends Controller
 
             $results = $this->sortieService->bulkReturn($request->sorties);
 
-            // Cache invalidation temporarily disabled
-            // Cache::tags(['sorties'])->flush();
+            // Invalider le cache simple
+            Cache::forget('sorties_all');
+            Cache::forget('sorties_en_cours');
+            Cache::forget('sorties_retournees');
 
             // Logger l'activité
             logActivity('bulk_return', null, 'Retour en lot de ' . count($request->sorties) . ' conteneurs');
