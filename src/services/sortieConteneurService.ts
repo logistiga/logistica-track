@@ -95,7 +95,7 @@ class SortieConteneurService {
   }
 
   async confirmerRetour(id: number, retourData: RetourData): Promise<SortieConteneur> {
-    const response = await apiService.put(`/sorties/${id}/return`, retourData);
+    const response = await apiService.post(`/sorties/${id}/return`, retourData);
     return response.data;
   }
 
