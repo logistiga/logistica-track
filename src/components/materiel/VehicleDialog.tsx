@@ -1,15 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import type { CreateVehiculeData } from "@/services/vehiculeService";
+import type { CreateVehiculeData, Vehicule } from "@/services/vehiculeService";
 
 interface VehicleDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (data: CreateVehiculeData) => Promise<boolean>;
   activeTab: string;
+  editingVehicle?: Vehicule | null;
 }
 
 interface VehicleFormData {
@@ -17,10 +18,10 @@ interface VehicleFormData {
   immatriculation: string;
 }
 
-export function VehicleDialog({ isOpen, onClose, onSubmit, activeTab }: VehicleDialogProps) {
+export function VehicleDialog({ isOpen, onClose, onSubmit, activeTab, editingVehicle }: VehicleDialogProps) {
   const [formData, setFormData] = useState<VehicleFormData>({
-    numero_parc: "",
-    immatriculation: ""
+    numero_parc: editingVehicle?.numero_parc || "",
+    immatriculation: editingVehicle?.immatriculation || ""
   });
 
   const resetForm = () => {
@@ -29,6 +30,18 @@ export function VehicleDialog({ isOpen, onClose, onSubmit, activeTab }: VehicleD
       immatriculation: ""
     });
   };
+
+  // Update form when editing vehicle changes
+  useEffect(() => {
+    if (editingVehicle) {
+      setFormData({
+        numero_parc: editingVehicle.numero_parc,
+        immatriculation: editingVehicle.immatriculation
+      });
+    } else {
+      resetForm();
+    }
+  }, [editingVehicle]);
 
   const handleSubmit = async () => {
     if (!formData.numero_parc || !formData.immatriculation) {
@@ -59,7 +72,7 @@ export function VehicleDialog({ isOpen, onClose, onSubmit, activeTab }: VehicleD
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
-            Ajouter un nouveau {activeTab === "camions" ? "camion" : "remorque"}
+            {editingVehicle ? "Modifier" : "Ajouter un nouveau"} {activeTab === "camions" ? "camion" : "remorque"}
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
@@ -86,7 +99,7 @@ export function VehicleDialog({ isOpen, onClose, onSubmit, activeTab }: VehicleD
               Annuler
             </Button>
             <Button onClick={handleSubmit}>
-              Ajouter
+              {editingVehicle ? "Modifier" : "Ajouter"}
             </Button>
           </div>
         </div>

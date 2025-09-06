@@ -46,6 +46,31 @@ class VehiculeService
     }
 
     /**
+     * Créer un nouveau véhicule
+     */
+    public function createVehicule(array $data)
+    {
+        return Vehicule::create($data);
+    }
+
+    /**
+     * Mettre à jour un véhicule
+     */
+    public function updateVehicule(Vehicule $vehicule, array $data)
+    {
+        $vehicule->update($data);
+        return $vehicule;
+    }
+
+    /**
+     * Supprimer un véhicule
+     */
+    public function deleteVehicule(Vehicule $vehicule)
+    {
+        $vehicule->delete();
+    }
+
+    /**
      * Récupérer les remorques
      */
     public function getRemorques(array $filters = [])

@@ -74,6 +74,35 @@ export function useVehicules() {
     }
   };
 
+  const updateVehicule = async (id: number, data: CreateVehiculeData): Promise<boolean> => {
+    try {
+      const updatedVehicule = await vehiculeService.updateVehicule(id, data);
+      
+      if (data.type === "camion") {
+        setCamions(prev => prev.map(c => c.id === id ? updatedVehicule : c));
+        // Remove from remorques if type changed
+        setRemorques(prev => prev.filter(r => r.id !== id));
+      } else {
+        setRemorques(prev => prev.map(r => r.id === id ? updatedVehicule : r));
+        // Remove from camions if type changed
+        setCamions(prev => prev.filter(c => c.id !== id));
+      }
+
+      toast({
+        title: "Succès",
+        description: `${data.type === "camion" ? "Camion" : "Remorque"} modifié(e) avec succès`,
+      });
+      return true;
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de la modification du véhicule",
+        variant: "destructive",
+      });
+      return false;
+    }
+  };
+
   useEffect(() => {
     fetchVehicules();
   }, []);
@@ -105,6 +134,7 @@ export function useVehicules() {
     loading,
     fetchVehicules,
     createVehicule,
+    updateVehicule,
     deleteVehicule,
     getCamionOptions,
     getRemorqueOptions,
