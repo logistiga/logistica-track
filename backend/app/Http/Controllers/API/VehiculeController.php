@@ -11,7 +11,7 @@ use App\Services\VehiculeService;
 use App\Traits\ApiResponseTrait;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
+
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -32,11 +32,7 @@ class VehiculeController extends Controller
     public function index(Request $request): JsonResponse
     {
         try {
-            $cacheKey = 'vehicules_' . md5(serialize($request->all()));
-            
-            $result = Cache::remember($cacheKey, CACHE_MEDIUM, function () use ($request) {
-                return $this->vehiculeService->getAllVehicules($request->all());
-            });
+            $result = $this->vehiculeService->getAllVehicules($request->all());
 
             return $this->successResponse(
                 VehiculeResource::collection($result['data'])->additional([
@@ -60,9 +56,6 @@ class VehiculeController extends Controller
             DB::beginTransaction();
 
             $vehicule = $this->vehiculeService->createVehicule($request->validated());
-
-            // Invalider le cache
-            Cache::tags(['vehicules'])->flush();
 
             // Logger l'activité
             try {
@@ -123,9 +116,6 @@ class VehiculeController extends Controller
 
             $updatedVehicule = $this->vehiculeService->updateVehicule($vehicule, $request->validated());
 
-            // Invalider le cache
-            Cache::tags(['vehicules'])->flush();
-
             // Logger l'activité
             try {
                 logActivity('vehicule_updated', $updatedVehicule, 'Mise à jour d\'un véhicule');
@@ -167,9 +157,6 @@ class VehiculeController extends Controller
             DB::beginTransaction();
 
             $this->vehiculeService->deleteVehicule($vehicule);
-
-            // Invalider le cache
-            Cache::tags(['vehicules'])->flush();
 
             // Logger l'activité
             try {
