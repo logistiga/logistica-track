@@ -45,13 +45,13 @@ export interface SortieConteneur {
 export interface CreateSortieConteneurData {
   numero_conteneur: string;
   numero_bl: string;
-  armateur_id: number;
+  code_armateur: string;
   vehicule_camion_id?: number;
   vehicule_remorque_id?: number;
   nom_client: string;
   adresse_client?: string;
-  destination: string;
-  type_destination: 'port' | 'client' | 'depot';
+  destination: 'base' | 'client';
+  type_destination: 'bad' | 'detention';
   date_sortie: string;
   heure_sortie?: string;
   prime_chauffeur?: number;

@@ -22,6 +22,7 @@ Route::prefix('auth')->group(function () {
 
 // Routes protégées d'authentification
 Route::middleware('auth:sanctum')->prefix('auth')->group(function () {
+    Route::get('/user', [AuthController::class, 'user'])->name('auth.user');
     Route::get('/me', [AuthController::class, 'me'])->name('auth.me');
     Route::post('/logout', [AuthController::class, 'logout'])->name('auth.logout');
     Route::post('/refresh', [AuthController::class, 'refresh'])->name('auth.refresh');

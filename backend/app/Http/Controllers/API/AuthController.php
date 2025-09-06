@@ -72,32 +72,23 @@ class AuthController extends Controller
     }
 
     /**
-     * Inscription utilisateur (admin seulement)
+     * Récupérer l'utilisateur authentifié
      */
-    public function register(RegisterRequest $request): JsonResponse
+    public function user(Request $request): JsonResponse
     {
         try {
-            DB::beginTransaction();
-
-            $data = $request->validated();
-            $data['password'] = Hash::make($data['password']);
-
-            $user = User::create($data);
-
-            // Logger l'activité
-            logActivity('register', $user, 'Inscription d\'un nouvel utilisateur');
-
-            DB::commit();
+            $user = $request->user();
+            
+            if (!$user) {
+                return $this->errorResponse('Utilisateur non trouvé', 404);
+            }
 
             return $this->successResponse(
                 new UserResource($user),
-                'Utilisateur créé avec succès',
-                201
+                'Utilisateur récupéré avec succès'
             );
-
         } catch (\Exception $e) {
-            DB::rollback();
-            return $this->errorResponse('Erreur lors de la création de l\'utilisateur', 500);
+            return $this->errorResponse('Erreur lors de la récupération de l\'utilisateur', 500);
         }
     }
 
