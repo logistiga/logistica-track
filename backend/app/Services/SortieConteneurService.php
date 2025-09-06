@@ -46,7 +46,24 @@ class SortieConteneurService
         // Pagination
         $perPage = $filters['per_page'] ?? 15;
         
-        return $query->orderBy('date_sortie', 'desc')->paginate($perPage);
+        $paginatedResult = $query->orderBy('date_sortie', 'desc')->paginate($perPage);
+        
+        // Retourner dans le format attendu par le controller
+        return [
+            'data' => $paginatedResult->items(),
+            'meta' => [
+                'current_page' => $paginatedResult->currentPage(),
+                'last_page' => $paginatedResult->lastPage(),
+                'per_page' => $paginatedResult->perPage(),
+                'total' => $paginatedResult->total(),
+            ],
+            'links' => [
+                'first' => $paginatedResult->url(1),
+                'last' => $paginatedResult->url($paginatedResult->lastPage()),
+                'prev' => $paginatedResult->previousPageUrl(),
+                'next' => $paginatedResult->nextPageUrl(),
+            ]
+        ];
     }
 
     /**
