@@ -1,11 +1,6 @@
 import { useState, useEffect } from 'react';
 import { armateurService, type Armateur, type CreateArmateurData } from '@/services/armateurService';
-import { mockArmateurService } from '@/services/mockArmateurService';
 import { toast } from '@/hooks/use-toast';
-
-// Utiliser le service mock temporairement pour éviter les erreurs CORS
-const USE_MOCK = true;
-const activeArmateurService = USE_MOCK ? mockArmateurService : armateurService;
 
 export function useArmateurs() {
   const [armateurs, setArmateurs] = useState<Armateur[]>([]);
@@ -16,7 +11,7 @@ export function useArmateurs() {
     try {
       setLoading(true);
       setError(null);
-      const data = await activeArmateurService.getArmateurs();
+      const data = await armateurService.getArmateurs();
       setArmateurs(data);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erreur lors du chargement des armateurs';
@@ -33,7 +28,7 @@ export function useArmateurs() {
 
   const createArmateur = async (data: CreateArmateurData): Promise<boolean> => {
     try {
-      const newArmateur = await activeArmateurService.createArmateur(data);
+      const newArmateur = await armateurService.createArmateur(data);
       setArmateurs(prev => [...prev, newArmateur]);
       toast({
         title: "Succès",
@@ -53,7 +48,7 @@ export function useArmateurs() {
 
   const updateArmateur = async (id: number, data: Partial<CreateArmateurData>): Promise<boolean> => {
     try {
-      const updatedArmateur = await activeArmateurService.updateArmateur(id, data);
+      const updatedArmateur = await armateurService.updateArmateur(id, data);
       setArmateurs(prev => prev.map(a => a.id === id ? updatedArmateur : a));
       toast({
         title: "Succès",
@@ -73,7 +68,7 @@ export function useArmateurs() {
 
   const deleteArmateur = async (id: number): Promise<boolean> => {
     try {
-      await activeArmateurService.deleteArmateur(id);
+      await armateurService.deleteArmateur(id);
       setArmateurs(prev => prev.filter(a => a.id !== id));
       toast({
         title: "Succès",
