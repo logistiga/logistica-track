@@ -3,8 +3,8 @@ import { vehiculeService, type Vehicule, type CreateVehiculeData } from '@/servi
 import { mockVehiculeService } from '@/services/mockVehiculeService';
 import { toast } from '@/hooks/use-toast';
 
-// Utiliser temporairement le service mock car il y a un problème d'authentification avec l'API
-const USE_MOCK = true;
+// Essayons de nouveau avec les vraies APIs
+const USE_MOCK = false;
 const activeVehiculeService = USE_MOCK ? mockVehiculeService : vehiculeService;
 
 export function useVehicules() {
