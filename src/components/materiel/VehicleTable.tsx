@@ -19,7 +19,6 @@ export function VehicleTable({ vehicles, searchTerm, onDelete }: VehicleTablePro
         <TableRow>
           <TableHead>Numéro de Parc</TableHead>
           <TableHead>Immatriculation</TableHead>
-          <TableHead>Statut</TableHead>
           <TableHead className="w-24">Actions</TableHead>
         </TableRow>
       </TableHeader>
@@ -28,7 +27,6 @@ export function VehicleTable({ vehicles, searchTerm, onDelete }: VehicleTablePro
           <TableRow key={vehicle.id}>
             <TableCell className="font-medium">{vehicle.numero_parc}</TableCell>
             <TableCell>{vehicle.immatriculation}</TableCell>
-            <TableCell>{getStatusBadge(vehicle.statut)}</TableCell>
             <TableCell>
               <div className="flex space-x-2">
                 <Button variant="outline" size="sm">
