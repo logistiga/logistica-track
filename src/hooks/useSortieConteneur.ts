@@ -82,8 +82,8 @@ export function useSortieConteneur() {
         numero_conteneur: formData.numeroConteneur,
         numero_bl: formData.numeroBL,
         code_armateur: formData.codeArmateur,
-        vehicule_camion_id: formData.camion ? parseInt(formData.camion) : undefined,
-        vehicule_remorque_id: formData.remorque ? parseInt(formData.remorque) : undefined,
+        camion_id: formData.camion ? parseInt(formData.camion) : undefined,
+        remorque_id: formData.remorque ? parseInt(formData.remorque) : undefined,
         nom_client: formData.nomClient,
         adresse_client: formData.adresseClient,
         destination: formData.destination as 'base' | 'client',
@@ -177,8 +177,8 @@ export function useSortieConteneur() {
       const retourData = {
         date_retour: returnData.dateRetour,
         heure_retour: "12:00",
-        vehicule_camion_id: returnData.camionRetour ? parseInt(returnData.camionRetour) : undefined,
-        vehicule_remorque_id: returnData.remorqueRetour ? parseInt(returnData.remorqueRetour) : undefined
+        camion_retour_id: returnData.camionRetour ? parseInt(returnData.camionRetour) : undefined,
+        remorque_retour_id: returnData.remorqueRetour ? parseInt(returnData.remorqueRetour) : undefined
       };
 
       const updated = await sortieConteneurService.confirmerRetour(parseInt(selectedSortie.id), retourData);

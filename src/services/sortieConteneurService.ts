@@ -46,8 +46,8 @@ export interface CreateSortieConteneurData {
   numero_conteneur: string;
   numero_bl: string;
   code_armateur: string;
-  vehicule_camion_id?: number;
-  vehicule_remorque_id?: number;
+  camion_id?: number;
+  remorque_id?: number;
   nom_client: string;
   adresse_client?: string;
   destination: 'base' | 'client';
@@ -64,8 +64,8 @@ export interface CreateSortieConteneurData {
 export interface RetourData {
   date_retour: string;
   heure_retour?: string;
-  vehicule_camion_id?: number;
-  vehicule_remorque_id?: number;
+  camion_retour_id?: number;
+  remorque_retour_id?: number;
   observations?: string;
 }
 
