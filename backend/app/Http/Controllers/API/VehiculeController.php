@@ -155,14 +155,6 @@ class VehiculeController extends Controller
     public function destroy(Vehicule $vehicule): JsonResponse
     {
         try {
-            // Vérifier si le véhicule est en mission
-            if ($vehicule->statut === 'en_mission') {
-                return $this->errorResponse(
-                    'Impossible de supprimer un véhicule en mission',
-                    400
-                );
-            }
-
             // Vérifier s'il y a des sorties en cours
             if ($vehicule->sortiesCommeAttele()->whereIn('statut', ['en_cours', 'livre_client'])->exists() ||
                 $vehicule->sortiesCommeRemorque()->whereIn('statut', ['en_cours', 'livre_client'])->exists()) {

@@ -13,21 +13,11 @@ class Vehicule extends Model
         'numero_parc',
         'immatriculation',
         'type',
-        'statut',
-        'marque',
-        'modele',
-        'annee',
-        'capacite',
-        'derniere_revision',
-        'prochaine_revision',
-        'notes',
+        'actif',
     ];
 
     protected $casts = [
-        'annee' => 'integer',
-        'capacite' => 'decimal:2',
-        'derniere_revision' => 'date',
-        'prochaine_revision' => 'date',
+        'actif' => 'boolean',
     ];
 
     // Relations
@@ -52,14 +42,9 @@ class Vehicule extends Model
     }
 
     // Scopes
-    public function scopeDisponibles($query)
+    public function scopeActifs($query)
     {
-        return $query->where('statut', 'disponible');
-    }
-
-    public function scopeEnMission($query)
-    {
-        return $query->where('statut', 'en_mission');
+        return $query->where('actif', true);
     }
 
     public function scopeCamions($query)
@@ -76,17 +61,6 @@ class Vehicule extends Model
     public function getLibelleCompletAttribute()
     {
         return "{$this->numero_parc} - {$this->immatriculation}";
-    }
-
-    public function getStatutLabelAttribute()
-    {
-        $labels = [
-            'disponible' => 'Disponible',
-            'en_mission' => 'En mission',
-            'maintenance' => 'Maintenance',
-        ];
-
-        return $labels[$this->statut] ?? $this->statut;
     }
 
     public function getTypeLabelAttribute()
