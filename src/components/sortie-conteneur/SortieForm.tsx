@@ -4,12 +4,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Package, Truck, CalendarDays, DollarSign, Building } from "lucide-react";
+import { Package, Truck, CalendarDays, Building } from "lucide-react";
 import { SortieFormData } from "@/types/sortie-conteneur";
 import { useState, useEffect } from "react";
 import { useArmateurs } from "@/hooks/useArmateurs";
 import { useVehicules } from "@/hooks/useVehicules";
 import { calculateDaysFromDate } from "@/utils/sortieUtils";
+import { VehicleCombobox } from "@/components/ui/vehicle-combobox";
+import { CostSummary } from "./CostSummary";
 
 interface SortieFormProps {
   formData: SortieFormData;
@@ -101,33 +103,23 @@ export const SortieForm = ({ formData, setFormData, onSubmit, onCancel }: Sortie
           <div className="grid grid-cols-4 gap-4">
             <div>
               <Label htmlFor="camion">Numéro de camion *</Label>
-              <Select value={formData.camion} onValueChange={(value) => setFormData({ ...formData, camion: value })}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner un camion" />
-                </SelectTrigger>
-                <SelectContent>
-                  {getCamionOptions().map((camion) => (
-                    <SelectItem key={camion.value} value={camion.value}>
-                      {camion.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <VehicleCombobox
+                value={formData.camion}
+                onValueChange={(value) => setFormData({ ...formData, camion: value })}
+                options={getCamionOptions()}
+                placeholder="Sélectionner un camion"
+                emptyText="Aucun camion trouvé"
+              />
             </div>
             <div>
               <Label htmlFor="remorque">Numéro de remorque *</Label>
-              <Select value={formData.remorque} onValueChange={(value) => setFormData({ ...formData, remorque: value })}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner une remorque" />
-                </SelectTrigger>
-                <SelectContent>
-                  {getRemorqueOptions().map((remorque) => (
-                    <SelectItem key={remorque.value} value={remorque.value}>
-                      {remorque.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <VehicleCombobox
+                value={formData.remorque}
+                onValueChange={(value) => setFormData({ ...formData, remorque: value })}
+                options={getRemorqueOptions()}
+                placeholder="Sélectionner une remorque"
+                emptyText="Aucune remorque trouvée"
+              />
             </div>
             <div>
               <Label htmlFor="primeChauffeur">Prime chauffeur (FCFA)</Label>
@@ -247,6 +239,9 @@ export const SortieForm = ({ formData, setFormData, onSubmit, onCancel }: Sortie
               </div>
             </div>
           )}
+
+          {/* Récapitulatif des coûts */}
+          <CostSummary formData={formData} joursCalcules={joursCalcules} />
         </CardContent>
       </Card>
 
