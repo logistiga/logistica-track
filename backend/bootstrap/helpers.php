@@ -176,12 +176,12 @@ if (!function_exists('logActivity')) {
     {
         try {
             // Vérifier si l'authentification est disponible
-            if (!auth()->check()) {
+            if (!\Illuminate\Support\Facades\Auth::check()) {
                 return;
             }
             
             \Illuminate\Support\Facades\Log::info('User Activity', [
-                'user_id' => auth()->id(),
+                'user_id' => \Illuminate\Support\Facades\Auth::id(),
                 'action' => $action,
                 'model' => $model ? get_class($model) : null,
                 'model_id' => $model?->id,
@@ -204,7 +204,7 @@ if (!function_exists('sendNotification')) {
     {
         try {
             // Vérifier si l'authentification est disponible et si userId est fourni
-            if (!$userId || (!auth()->check() && !is_numeric($userId))) {
+            if (!$userId || (!\Illuminate\Support\Facades\Auth::check() && !is_numeric($userId))) {
                 return;
             }
             
