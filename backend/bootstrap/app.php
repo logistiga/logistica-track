@@ -2,6 +2,18 @@
 
 /*
 |--------------------------------------------------------------------------
+| Load Application Constants
+|--------------------------------------------------------------------------
+|
+| Load application constants before creating the application instance.
+| These constants will be available throughout the application.
+|
+*/
+
+require_once __DIR__ . '/constants.php';
+
+/*
+|--------------------------------------------------------------------------
 | Create The Application
 |--------------------------------------------------------------------------
 |
