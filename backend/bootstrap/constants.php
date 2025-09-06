@@ -166,12 +166,12 @@ define('API_NOT_FOUND', 404);
 define('API_VALIDATION_ERROR', 422);
 define('API_SERVER_ERROR', 500);
 
-// Log Levels
-define('LOG_EMERGENCY', 'emergency');
-define('LOG_ALERT', 'alert');
-define('LOG_CRITICAL', 'critical');
-define('LOG_ERROR', 'error');
-define('LOG_WARNING', 'warning');
-define('LOG_NOTICE', 'notice');
-define('LOG_INFO', 'info');
-define('LOG_DEBUG', 'debug');
+// Log Levels (only define if not already defined)
+if (!defined('LOG_EMERGENCY')) define('LOG_EMERGENCY', 'emergency');
+if (!defined('LOG_ALERT')) define('LOG_ALERT', 'alert');
+if (!defined('LOG_CRITICAL')) define('LOG_CRITICAL', 'critical');
+if (!defined('LOG_ERROR')) define('LOG_ERROR', 'error');
+if (!defined('LOG_WARNING')) define('LOG_WARNING', 'warning');
+if (!defined('LOG_NOTICE')) define('LOG_NOTICE', 'notice');
+if (!defined('LOG_INFO')) define('LOG_INFO', 'info');
+if (!defined('LOG_DEBUG')) define('LOG_DEBUG', 'debug');
