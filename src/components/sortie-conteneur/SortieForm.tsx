@@ -53,10 +53,13 @@ export const SortieForm = ({ formData, setFormData, onSubmit, onCancel }: Sortie
 
   // Mise à jour des informations armateur
   useEffect(() => {
-    const armateurId = parseInt(formData.codeArmateur);
-    const armateur = getArmateurById(armateurId);
-    setSelectedArmateur(armateur);
-  }, [formData.codeArmateur, formData.typeDestination, getArmateurById]);
+    if (formData.codeArmateur) {
+      const armateur = getArmateurByCode(formData.codeArmateur);
+      setSelectedArmateur(armateur);
+    } else {
+      setSelectedArmateur(null);
+    }
+  }, [formData.codeArmateur, formData.typeDestination, getArmateurByCode]);
 
   return (
     <form onSubmit={onSubmit} className="space-y-6">
