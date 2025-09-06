@@ -5,11 +5,10 @@ import { Truck, Search, Plus } from "lucide-react";
 interface VehicleHeaderProps {
   searchTerm: string;
   onSearchChange: (value: string) => void;
-  onAddClick: () => void;
   activeTab: string;
 }
 
-export function VehicleHeader({ searchTerm, onSearchChange, onAddClick, activeTab }: VehicleHeaderProps) {
+export function VehicleHeader({ searchTerm, onSearchChange, activeTab }: VehicleHeaderProps) {
   return (
     <>
       {/* Header */}
@@ -25,8 +24,8 @@ export function VehicleHeader({ searchTerm, onSearchChange, onAddClick, activeTa
         </div>
       </div>
 
-      {/* Search and Add */}
-      <div className="flex items-center justify-between">
+      {/* Search */}
+      <div className="flex items-center justify-start">
         <div className="relative w-96">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
           <Input
@@ -36,13 +35,6 @@ export function VehicleHeader({ searchTerm, onSearchChange, onAddClick, activeTa
             className="pl-10"
           />
         </div>
-        <Button 
-          onClick={onAddClick}
-          className="bg-primary hover:bg-primary/90"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Nouveau {activeTab === "camions" ? "Camion" : "Remorque"}
-        </Button>
       </div>
     </>
   );

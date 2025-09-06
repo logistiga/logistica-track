@@ -1,35 +1,29 @@
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Truck, Loader2 } from "lucide-react";
 import { useVehicules } from "@/hooks/useVehicules";
-import type { CreateVehiculeData } from "@/services/vehiculeService";
 import { VehicleHeader } from "@/components/materiel/VehicleHeader";
 import { VehicleStatsCards } from "@/components/materiel/VehicleStatsCards";
 import { VehicleTable } from "@/components/materiel/VehicleTable";
-import { VehicleDialog } from "@/components/materiel/VehicleDialog";
-import { toast } from "@/hooks/use-toast";
+import { filterVehicles } from "@/utils/vehiculeUtils";
 
 export default function Materiel() {
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("camions");
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Utiliser le hook qui gère les vraies APIs
-  const {
-    camions,
-    remorques,
-    loading,
-    createVehicule,
-    deleteVehicule
-  } = useVehicules();
+  const { camions, remorques, loading } = useVehicules();
 
-  const handleDeleteVehicle = async (id: number) => {
-    const type = activeTab === "camions" ? "camion" : "remorque";
-    await deleteVehicule(id, type as 'camion' | 'remorque');
-  };
+  // Optimisation avec useMemo pour le filtrage
+  const filteredCamions = useMemo(
+    () => filterVehicles(camions, searchTerm),
+    [camions, searchTerm]
+  );
 
-  console.log("Materiel component mounted, using real APIs...");
+  const filteredRemorques = useMemo(
+    () => filterVehicles(remorques, searchTerm),
+    [remorques, searchTerm]
+  );
 
   if (loading) {
     return (
@@ -45,13 +39,11 @@ export default function Materiel() {
       <VehicleHeader
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
-        onAddClick={() => setIsAddDialogOpen(true)}
         activeTab={activeTab}
       />
 
       <VehicleStatsCards camions={camions} remorques={remorques} />
 
-      {/* Vehicles Table */}
       <Card className="shadow-lg">
         <CardHeader>
           <CardTitle>Flotte de Véhicules</CardTitle>
@@ -61,37 +53,22 @@ export default function Materiel() {
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="camions" className="flex items-center space-x-2">
                 <Truck className="w-4 h-4" />
-                <span>Camions ({camions.length})</span>
+                <span>Camions ({filteredCamions.length})</span>
               </TabsTrigger>
               <TabsTrigger value="remorques" className="flex items-center space-x-2">
                 <Truck className="w-4 h-4" />
-                <span>Remorques ({remorques.length})</span>
+                <span>Remorques ({filteredRemorques.length})</span>
               </TabsTrigger>
             </TabsList>
             <TabsContent value="camions" className="mt-6">
-              <VehicleTable 
-                vehicles={camions} 
-                searchTerm={searchTerm}
-                onDelete={handleDeleteVehicle}
-              />
+              <VehicleTable vehicles={filteredCamions} />
             </TabsContent>
             <TabsContent value="remorques" className="mt-6">
-              <VehicleTable 
-                vehicles={remorques} 
-                searchTerm={searchTerm}
-                onDelete={handleDeleteVehicle}
-              />
+              <VehicleTable vehicles={filteredRemorques} />
             </TabsContent>
           </Tabs>
         </CardContent>
       </Card>
-
-      <VehicleDialog
-        isOpen={isAddDialogOpen}
-        onClose={() => setIsAddDialogOpen(false)}
-        onSubmit={createVehicule}
-        activeTab={activeTab}
-      />
     </div>
   );
 }
