@@ -110,7 +110,7 @@ export function SortieTable({
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
-                    {showReturnAction && sortie.statut === "en_cours" && (
+                    {showReturnAction && (sortie.statut === "en_cours" || sortie.statut === "livre_client") && (
                       <Button
                         variant="outline"
                         size="sm"
@@ -118,7 +118,8 @@ export function SortieTable({
                         title="Confirmer le retour"
                         className="text-primary"
                       >
-                        <CheckCircle className="h-4 w-4" />
+                        <CheckCircle className="h-4 w-4 mr-1" />
+                        Retour
                       </Button>
                     )}
                   </div>
