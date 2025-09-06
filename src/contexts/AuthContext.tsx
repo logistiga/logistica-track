@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, authService } from '@/services/authService';
 
 interface AuthContextType {
@@ -11,58 +11,87 @@ interface AuthContextType {
   refreshUser: () => Promise<void>;
 }
 
-// Créer le contexte avec une valeur par défaut
-const AuthContext = createContext<AuthContextType>({
-  user: null,
-  isAuthenticated: false,
-  isLoading: true,
-  login: async () => {},
-  logout: async () => {},
-  updateUser: async () => {},
-  refreshUser: async () => {},
-});
+// Créer le contexte avec null initialement
+const AuthContext = createContext<AuthContextType | null>(null);
 
-export const useAuth = () => {
+// Hook personnalisé avec gestion d'erreur robuste
+export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
-  if (!context) {
-    console.error('useAuth appelé sans AuthProvider dans l\'arbre des composants');
-    console.trace('Call stack:');
-    throw new Error('useAuth must be used within an AuthProvider');
+  
+  if (context === null) {
+    // Au lieu de lancer une erreur immédiatement, on retourne un état par défaut
+    console.warn('useAuth called before AuthProvider is ready, returning default state');
+    return {
+      user: null,
+      isAuthenticated: false,
+      isLoading: true,
+      login: async () => { throw new Error('Auth not initialized'); },
+      logout: async () => { throw new Error('Auth not initialized'); },
+      updateUser: async () => { throw new Error('Auth not initialized'); },
+      refreshUser: async () => { throw new Error('Auth not initialized'); },
+    };
   }
+  
   return context;
 };
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+interface AuthProviderProps {
+  children: ReactNode;
+}
+
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   const isAuthenticated = !!user && authService.isAuthenticated();
 
   useEffect(() => {
+    let isMounted = true;
+    
     const initAuth = async () => {
       try {
         const storedUser = authService.getStoredUser();
         if (storedUser && authService.isAuthenticated()) {
-          setUser(storedUser);
+          if (isMounted) {
+            setUser(storedUser);
+          }
+          
           try {
             const currentUser = await authService.getCurrentUser();
-            setUser(currentUser);
+            if (isMounted) {
+              setUser(currentUser);
+            }
           } catch (error) {
             console.log('Token expiré, nettoyage du storage');
             await authService.logout();
-            setUser(null);
+            if (isMounted) {
+              setUser(null);
+            }
           }
         } else {
-          setUser(null);
+          if (isMounted) {
+            setUser(null);
+          }
         }
       } catch (error) {
         console.error('Erreur lors de l\'initialisation:', error);
-        setUser(null);
+        if (isMounted) {
+          setUser(null);
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+          setIsInitialized(true);
+        }
       }
-      setIsLoading(false);
     };
 
     initAuth();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const login = async (email: string, password: string) => {
@@ -106,6 +135,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     updateUser,
     refreshUser,
   };
+
+  // Ne pas rendre le provider tant qu'il n'est pas initialisé
+  if (!isInitialized) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-2 text-muted-foreground">Initialisation...</p>
+        </div>
+      </div>
+    );
+  }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
