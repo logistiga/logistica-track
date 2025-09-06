@@ -18,6 +18,8 @@ import autoTable from 'jspdf-autotable';
 
 interface ExportDialogProps {
   sorties: SortieConteneur[];
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
 interface ExportFilters {

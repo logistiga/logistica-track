@@ -179,13 +179,33 @@ class SortieConteneurService
     /**
      * Obtenir les statistiques
      */
-    public function getStatistiques(array $filters = [])
+    public function getStatistics(array $filters = [])
     {
+        $query = SortieConteneur::query();
+        
+        // Appliquer les filtres si fournis
+        if (!empty($filters['date_debut'])) {
+            $query->whereDate('date_sortie', '>=', $filters['date_debut']);
+        }
+
+        if (!empty($filters['date_fin'])) {
+            $query->whereDate('date_sortie', '<=', $filters['date_fin']);
+        }
+
+        if (!empty($filters['code_armateur'])) {
+            $query->where('code_armateur', $filters['code_armateur']);
+        }
+
         $today = now()->format('Y-m-d');
         $currentMonth = now()->month;
         $currentYear = now()->year;
 
         return [
+            'total_sorties' => $query->count(),
+            'sorties_en_cours' => (clone $query)->where('statut', 'en_cours')->count(),
+            'sorties_retournees' => (clone $query)->where('statut', 'retourne_port')->count(),
+            'sorties_livrees' => (clone $query)->where('statut', 'livre_client')->count(),
+            'sorties_base' => (clone $query)->where('statut', 'a_la_base')->count(),
             'conteneurs_hors_port' => SortieConteneur::enCours()->count(),
             'sorties_aujourdhui' => SortieConteneur::whereDate('date_sortie', $today)->count(),
             'sorties_mois' => SortieConteneur::parMois($currentYear, $currentMonth)->count(),
@@ -193,8 +213,181 @@ class SortieConteneurService
                 ->whereYear('date_retour', $currentYear)
                 ->whereMonth('date_retour', $currentMonth)
                 ->count(),
-            'total_sorties' => SortieConteneur::count(),
-            'vehicules_disponibles' => Vehicule::disponibles()->count(),
+            'vehicules_disponibles' => Vehicule::where('statut', 'disponible')->count(),
+            'vehicules_en_mission' => Vehicule::where('statut', 'en_mission')->count(),
+            'moyenne_jours_hors_port' => $this->calculateAverageJoursHorsPort($filters),
+            'total_prime_chauffeur' => (clone $query)->sum('prime_chauffeur'),
+        ];
+    }
+
+    public function getSortiesEnCours(array $filters = [])
+    {
+        $query = SortieConteneur::with(['armateur', 'camion', 'remorque'])
+            ->where('statut', 'en_cours');
+
+        // Appliquer les mêmes filtres que getAllSorties
+        if (!empty($filters['code_armateur'])) {
+            $query->where('code_armateur', $filters['code_armateur']);
+        }
+
+        if (!empty($filters['search'])) {
+            $search = $filters['search'];
+            $query->where(function ($q) use ($search) {
+                $q->where('numero_conteneur', 'like', "%{$search}%")
+                  ->orWhere('numero_bl', 'like', "%{$search}%")
+                  ->orWhere('nom_client', 'like', "%{$search}%");
+            });
+        }
+
+        return $query->orderBy('date_sortie', 'desc')->get();
+    }
+
+    public function getSortiesRetournees(array $filters = [])
+    {
+        $query = SortieConteneur::with(['armateur', 'camion', 'remorque', 'camionRetour', 'remorqueRetour'])
+            ->where('statut', 'retourne_port');
+
+        // Appliquer les mêmes filtres
+        if (!empty($filters['code_armateur'])) {
+            $query->where('code_armateur', $filters['code_armateur']);
+        }
+
+        if (!empty($filters['search'])) {
+            $search = $filters['search'];
+            $query->where(function ($q) use ($search) {
+                $q->where('numero_conteneur', 'like', "%{$search}%")
+                  ->orWhere('numero_bl', 'like', "%{$search}%")
+                  ->orWhere('nom_client', 'like', "%{$search}%");
+            });
+        }
+
+        return $query->orderBy('date_retour', 'desc')->get();
+    }
+
+    private function calculateAverageJoursHorsPort(array $filters = [])
+    {
+        $query = SortieConteneur::where('statut', 'retourne_port');
+        
+        if (!empty($filters['date_debut'])) {
+            $query->whereDate('date_sortie', '>=', $filters['date_debut']);
+        }
+
+        if (!empty($filters['date_fin'])) {
+            $query->whereDate('date_sortie', '<=', $filters['date_fin']);
+        }
+
+        $sorties = $query->get();
+        
+        if ($sorties->isEmpty()) {
+            return 0;
+        }
+
+        $totalJours = $sorties->sum(function ($sortie) {
+            return $sortie->jours_hors_port;
+        });
+
+        return round($totalJours / $sorties->count(), 1);
+    }
+
+    public function searchSorties(string $query, array $filters = [])
+    {
+        $searchQuery = SortieConteneur::with(['armateur', 'camion', 'remorque'])
+            ->where(function ($q) use ($query) {
+                $q->where('numero_conteneur', 'like', "%{$query}%")
+                  ->orWhere('numero_bl', 'like', "%{$query}%")
+                  ->orWhere('nom_client', 'like', "%{$query}%")
+                  ->orWhere('nom_transitaire', 'like', "%{$query}%");
+            });
+
+        // Appliquer les filtres additionnels
+        if (!empty($filters['statut'])) {
+            $searchQuery->where('statut', $filters['statut']);
+        }
+
+        if (!empty($filters['code_armateur'])) {
+            $searchQuery->where('code_armateur', $filters['code_armateur']);
+        }
+
+        return $searchQuery->orderBy('date_sortie', 'desc')->limit(50)->get();
+    }
+
+    public function bulkReturn(array $sortiesData)
+    {
+        $results = [];
+        
+        foreach ($sortiesData as $sortieData) {
+            $sortie = SortieConteneur::findOrFail($sortieData['id']);
+            
+            if ($sortie->statut === 'en_cours') {
+                $returnData = [
+                    'date_retour' => now()->format('Y-m-d'),
+                    'camion_retour_id' => $sortieData['camion_retour_id'],
+                    'remorque_retour_id' => $sortieData['remorque_retour_id'],
+                    'observations' => $sortieData['observations'] ?? null,
+                ];
+                
+                $results[] = $this->confirmerRetour($sortie, $returnData);
+            }
+        }
+        
+        return $results;
+    }
+
+    public function getTimeline(SortieConteneur $sortie)
+    {
+        $timeline = [
+            [
+                'date' => $sortie->date_sortie,
+                'type' => 'sortie',
+                'title' => 'Sortie du port',
+                'description' => "Conteneur {$sortie->numero_conteneur} sorti du port",
+                'user' => $sortie->createdBy->name ?? 'Système',
+            ]
+        ];
+
+        if ($sortie->date_retour) {
+            $timeline[] = [
+                'date' => $sortie->date_retour,
+                'type' => 'retour',
+                'title' => 'Retour au port',
+                'description' => "Conteneur retourné au port",
+                'user' => $sortie->updatedBy->name ?? 'Système',
+            ];
+        }
+
+        return $timeline;
+    }
+
+    public function getDetentionInfo(SortieConteneur $sortie)
+    {
+        $info = [
+            'jours_hors_port' => $sortie->jours_hors_port,
+            'jours_bad' => $sortie->jours_bad,
+            'date_fin_franchise' => $sortie->date_fin_franchise,
+            'franchise_expiree' => false,
+            'jours_detention' => 0,
+        ];
+
+        if ($sortie->date_fin_franchise) {
+            $info['franchise_expiree'] = now()->gt($sortie->date_fin_franchise);
+            
+            if ($info['franchise_expiree']) {
+                $dateReference = $sortie->date_retour ? $sortie->date_retour : now();
+                $info['jours_detention'] = now()->parse($sortie->date_fin_franchise)->diffInDays($dateReference);
+            }
+        }
+
+        return $info;
+    }
+
+    public function getFacturationInfo(SortieConteneur $sortie)
+    {
+        return [
+            'prime_chauffeur' => $sortie->prime_chauffeur,
+            'prime_chauffeur_formattee' => number_format($sortie->prime_chauffeur, 0, ',', ' ') . ' XOF',
+            'type_destination' => $sortie->type_destination,
+            'destination' => $sortie->destination,
+            'jours_facturation' => $sortie->jours_hors_port,
         ];
     }
 

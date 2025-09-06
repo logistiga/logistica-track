@@ -20,24 +20,24 @@ const remorquesDisponibles = [
 ];
 
 interface ReturnDialogProps {
-  isOpen: boolean;
-  onOpenChange: (open: boolean) => void;
-  selectedSortie: SortieConteneur | null;
+  open: boolean;
+  sortie: SortieConteneur | null;
   returnData: ReturnData;
   setReturnData: (data: ReturnData) => void;
-  onConfirmReturn: () => void;
+  onConfirm: () => void;
+  onCancel: () => void;
 }
 
 export const ReturnDialog = ({
-  isOpen,
-  onOpenChange,
-  selectedSortie,
+  open,
+  sortie,
   returnData,
   setReturnData,
-  onConfirmReturn
+  onConfirm,
+  onCancel
 }: ReturnDialogProps) => {
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={onCancel}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -45,11 +45,11 @@ export const ReturnDialog = ({
             Confirmer le retour au port
           </DialogTitle>
           <DialogDescription>
-            Enregistrez le retour du conteneur {selectedSortie?.numeroConteneur} au port
+            Enregistrez le retour du conteneur {sortie?.numeroConteneur} au port
           </DialogDescription>
         </DialogHeader>
 
-        {selectedSortie && (
+        {sortie && (
           <Card className="mb-4">
             <CardHeader>
               <CardTitle className="text-lg">Informations de la sortie</CardTitle>
@@ -57,19 +57,19 @@ export const ReturnDialog = ({
             <CardContent className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <span className="font-medium text-muted-foreground">Conteneur:</span>
-                <p className="font-medium">{selectedSortie.numeroConteneur}</p>
+                <p className="font-medium">{sortie.numeroConteneur}</p>
               </div>
               <div>
                 <span className="font-medium text-muted-foreground">BL:</span>
-                <p className="font-medium">{selectedSortie.numeroBL}</p>
+                <p className="font-medium">{sortie.numeroBL}</p>
               </div>
               <div>
                 <span className="font-medium text-muted-foreground">Client:</span>
-                <p className="font-medium">{selectedSortie.nomClient}</p>
+                <p className="font-medium">{sortie.nomClient}</p>
               </div>
               <div>
                 <span className="font-medium text-muted-foreground">Date sortie:</span>
-                <p className="font-medium">{selectedSortie.dateSortie}</p>
+                <p className="font-medium">{sortie.dateSortie}</p>
               </div>
             </CardContent>
           </Card>
@@ -129,11 +129,11 @@ export const ReturnDialog = ({
         </div>
         
         <div className="flex justify-end gap-3 pt-4">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={onCancel}>
             Annuler
           </Button>
           <Button 
-            onClick={onConfirmReturn}
+            onClick={onConfirm}
             disabled={!returnData.dateRetour || !returnData.camionRetour || !returnData.remorqueRetour}
           >
             Confirmer le retour
