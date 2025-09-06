@@ -14,6 +14,7 @@ import { useVehicules } from "@/hooks/useVehicules";
 import { calculateDaysFromDate } from "@/utils/sortieUtils";
 import { VehicleCombobox } from "@/components/ui/vehicle-combobox";
 import { CostSummary } from "./CostSummary";
+import { DetentionSummary } from "./DetentionSummary";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -266,19 +267,25 @@ export const SortieForm = ({ formData, setFormData, onSubmit, onCancel }: Sortie
             </div>
           )}
 
-          {formData.typeDestination === "detention" && selectedArmateur && (
-            <div className="p-4 bg-muted rounded-lg">
-              <h4 className="font-medium mb-2">Informations armateur</h4>
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="text-muted-foreground">Code:</span>
-                  <span className="ml-2 font-medium">{selectedArmateur.code}</span>
+          {formData.typeDestination === "detention" && (
+            <div className="space-y-4">
+              <DetentionSummary armateurId={selectedArmateur?.id || null} />
+              
+              {selectedArmateur && (
+                <div className="p-4 bg-muted rounded-lg">
+                  <h4 className="font-medium mb-2">Informations armateur</h4>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="text-muted-foreground">Code:</span>
+                      <span className="ml-2 font-medium">{selectedArmateur.code}</span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Nom:</span>
+                      <span className="ml-2 font-medium">{selectedArmateur.nom}</span>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <span className="text-muted-foreground">Nom:</span>
-                  <span className="ml-2 font-medium">{selectedArmateur.nom}</span>
-                </div>
-              </div>
+              )}
             </div>
           )}
 
