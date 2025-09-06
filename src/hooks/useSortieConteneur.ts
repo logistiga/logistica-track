@@ -88,7 +88,7 @@ export function useSortieConteneur() {
         adresse_client: formData.adresseClient,
         destination: formData.destination as 'base' | 'client',
         type_destination: formData.typeDestination as 'bad' | 'detention',
-        date_sortie: new Date().toISOString().split('T')[0],
+        date_sortie: formData.dateSortie,
         prime_chauffeur: formData.primeChauffeur ? parseInt(formData.primeChauffeur) : undefined,
         jours_bad: formData.joursBAD ? parseInt(formData.joursBAD) : undefined,
         date_fin_franchise: formData.dateFinFranchise,
@@ -143,7 +143,8 @@ export function useSortieConteneur() {
       typeDestination: sortie.typeDestination,
       joursBAD: sortie.joursBAD?.toString() || "",
       dateFinFranchise: sortie.dateFinFranchise || "",
-      nomTransitaire: sortie.nomTransitaire || ""
+      nomTransitaire: sortie.nomTransitaire || "",
+      dateSortie: sortie.dateSortie
     });
     setIsAddDialogOpen(true);
   }, []);

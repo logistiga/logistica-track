@@ -32,6 +32,7 @@ export interface SortieFormData {
   joursBAD: string;
   dateFinFranchise: string;
   nomTransitaire: string;
+  dateSortie: string;
 }
 
 export interface ReturnData {

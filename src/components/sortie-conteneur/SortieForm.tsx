@@ -4,7 +4,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Package, Truck, CalendarDays, Building } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Package, Truck, CalendarDays, Building, CalendarIcon } from "lucide-react";
 import { SortieFormData } from "@/types/sortie-conteneur";
 import { useState, useEffect } from "react";
 import { useArmateurs } from "@/hooks/useArmateurs";
@@ -12,6 +14,9 @@ import { useVehicules } from "@/hooks/useVehicules";
 import { calculateDaysFromDate } from "@/utils/sortieUtils";
 import { VehicleCombobox } from "@/components/ui/vehicle-combobox";
 import { CostSummary } from "./CostSummary";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 
 interface SortieFormProps {
   formData: SortieFormData;
@@ -25,6 +30,9 @@ export const SortieForm = ({ formData, setFormData, onSubmit, onCancel }: Sortie
   const { getCamionOptions, getRemorqueOptions } = useVehicules();
   const [selectedArmateur, setSelectedArmateur] = useState<any>(null);
   const [joursCalcules, setJoursCalcules] = useState<number>(0);
+  const [dateSortie, setDateSortie] = useState<Date | undefined>(
+    formData.dateSortie ? new Date(formData.dateSortie) : new Date()
+  );
 
   // Calcul automatique des jours lors du changement de date
   useEffect(() => {
@@ -34,12 +42,19 @@ export const SortieForm = ({ formData, setFormData, onSubmit, onCancel }: Sortie
     }
   }, [formData.dateFinFranchise]);
 
+  // Synchroniser la date de sortie avec le formData
+  useEffect(() => {
+    if (dateSortie) {
+      const dateString = format(dateSortie, "yyyy-MM-dd");
+      setFormData({ ...formData, dateSortie: dateString });
+    }
+  }, [dateSortie]);
+
   // Mise à jour des informations armateur
   useEffect(() => {
     const armateurId = parseInt(formData.codeArmateur);
     const armateur = getArmateurById(armateurId);
     setSelectedArmateur(armateur);
-    // Note: joursGratuits ne fait plus partie du modèle armateur - à supprimer ou gérer différemment
   }, [formData.codeArmateur, formData.typeDestination, getArmateurById]);
 
   return (
@@ -102,6 +117,32 @@ export const SortieForm = ({ formData, setFormData, onSubmit, onCancel }: Sortie
         <CardContent className="space-y-4">
           <div className="grid grid-cols-4 gap-4">
             <div>
+              <Label htmlFor="dateSortie">Date de sortie *</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !dateSortie && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {dateSortie ? format(dateSortie, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={dateSortie}
+                    onSelect={setDateSortie}
+                    initialFocus
+                    className={cn("p-3 pointer-events-auto")}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+            <div>
               <Label htmlFor="camion">Numéro de camion *</Label>
               <VehicleCombobox
                 value={formData.camion}
@@ -131,6 +172,9 @@ export const SortieForm = ({ formData, setFormData, onSubmit, onCancel }: Sortie
                 placeholder="Ex: 25000"
               />
             </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="nomClient">Nom du client *</Label>
               <Input
@@ -141,9 +185,6 @@ export const SortieForm = ({ formData, setFormData, onSubmit, onCancel }: Sortie
                 required
               />
             </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="destination">Destination *</Label>
               <Select value={formData.destination} onValueChange={(value) => setFormData({ ...formData, destination: value })}>
@@ -156,20 +197,21 @@ export const SortieForm = ({ formData, setFormData, onSubmit, onCancel }: Sortie
                 </SelectContent>
               </Select>
             </div>
-            {formData.destination === "client" && (
-              <div>
-                <Label htmlFor="adresseClient">Adresse du client *</Label>
-                <Textarea
-                  id="adresseClient"
-                  value={formData.adresseClient}
-                  onChange={(e) => setFormData({ ...formData, adresseClient: e.target.value })}
-                  placeholder="Adresse complète du client"
-                  className="min-h-[80px]"
-                  required
-                />
-              </div>
-            )}
           </div>
+
+          {formData.destination === "client" && (
+            <div>
+              <Label htmlFor="adresseClient">Adresse du client *</Label>
+              <Textarea
+                id="adresseClient"
+                value={formData.adresseClient}
+                onChange={(e) => setFormData({ ...formData, adresseClient: e.target.value })}
+                placeholder="Adresse complète du client"
+                className="min-h-[80px]"
+                required
+              />
+            </div>
+          )}
         </CardContent>
       </Card>
 
