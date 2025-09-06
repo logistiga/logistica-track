@@ -2,28 +2,30 @@ import { apiService } from './apiService';
 
 export interface Armateur {
   id: number;
-  nom: string;
   code: string;
+  nom: string;
+  type_conteneur: string;
+  jours_gratuits: number;
+  prix_par_jour: number;
   contact_nom?: string;
   contact_email?: string;
   contact_telephone?: string;
   adresse?: string;
-  ville?: string;
-  pays?: string;
   actif: boolean;
   created_at: string;
   updated_at: string;
 }
 
 export interface CreateArmateurData {
-  nom: string;
   code: string;
+  nom: string;
+  type_conteneur: string;
+  jours_gratuits: number;
+  prix_par_jour: number;
   contact_nom?: string;
   contact_email?: string;
   contact_telephone?: string;
   adresse?: string;
-  ville?: string;
-  pays?: string;
   actif?: boolean;
 }
 

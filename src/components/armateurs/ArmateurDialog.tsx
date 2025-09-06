@@ -14,6 +14,9 @@ interface ArmateurDialogProps {
 interface ArmateurFormData {
   code: string;
   nom: string;
+  type_conteneur: string;
+  jours_gratuits: string;
+  prix_par_jour: string;
   contact_nom: string;
   contact_email: string;
   contact_telephone: string;
@@ -24,6 +27,9 @@ export function ArmateurDialog({ isOpen, onClose, onSubmit }: ArmateurDialogProp
   const [formData, setFormData] = useState<ArmateurFormData>({
     code: "",
     nom: "",
+    type_conteneur: "",
+    jours_gratuits: "0",
+    prix_par_jour: "0",
     contact_nom: "",
     contact_email: "",
     contact_telephone: "",
@@ -34,6 +40,9 @@ export function ArmateurDialog({ isOpen, onClose, onSubmit }: ArmateurDialogProp
     setFormData({
       code: "",
       nom: "",
+      type_conteneur: "",
+      jours_gratuits: "0",
+      prix_par_jour: "0",
       contact_nom: "",
       contact_email: "",
       contact_telephone: "",
@@ -42,13 +51,16 @@ export function ArmateurDialog({ isOpen, onClose, onSubmit }: ArmateurDialogProp
   };
 
   const handleSubmit = async () => {
-    if (!formData.code || !formData.nom) {
+    if (!formData.code || !formData.nom || !formData.type_conteneur) {
       return;
     }
 
     const armateurData: CreateArmateurData = {
       code: formData.code,
       nom: formData.nom,
+      type_conteneur: formData.type_conteneur,
+      jours_gratuits: parseInt(formData.jours_gratuits) || 0,
+      prix_par_jour: parseFloat(formData.prix_par_jour) || 0,
       contact_nom: formData.contact_nom || undefined,
       contact_email: formData.contact_email || undefined,
       contact_telephone: formData.contact_telephone || undefined,
@@ -91,6 +103,35 @@ export function ArmateurDialog({ isOpen, onClose, onSubmit }: ArmateurDialogProp
               value={formData.nom}
               onChange={(e) => setFormData({ ...formData, nom: e.target.value })}
               placeholder="Ex: CMA-CGM"
+            />
+          </div>
+          <div>
+            <Label htmlFor="type_conteneur">Type de Conteneur *</Label>
+            <Input
+              id="type_conteneur"
+              value={formData.type_conteneur}
+              onChange={(e) => setFormData({ ...formData, type_conteneur: e.target.value })}
+              placeholder="Ex: 20' sec, 40' sec"
+            />
+          </div>
+          <div>
+            <Label htmlFor="jours_gratuits">Jours Gratuits *</Label>
+            <Input
+              id="jours_gratuits"
+              type="number"
+              value={formData.jours_gratuits}
+              onChange={(e) => setFormData({ ...formData, jours_gratuits: e.target.value })}
+              placeholder="Nombre de jours"
+            />
+          </div>
+          <div>
+            <Label htmlFor="prix_par_jour">Prix par Jour (F CFA) *</Label>
+            <Input
+              id="prix_par_jour"
+              type="number"
+              value={formData.prix_par_jour}
+              onChange={(e) => setFormData({ ...formData, prix_par_jour: e.target.value })}
+              placeholder="Prix en F CFA"
             />
           </div>
           <div>

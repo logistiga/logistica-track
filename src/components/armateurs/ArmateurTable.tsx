@@ -20,9 +20,11 @@ export function ArmateurTable({ armateurs, searchTerm, onDelete }: ArmateurTable
         <TableRow>
           <TableHead>Code</TableHead>
           <TableHead>Nom</TableHead>
+          <TableHead>Type Conteneur</TableHead>
+          <TableHead>Jours Gratuits</TableHead>
+          <TableHead>Prix/Jour</TableHead>
           <TableHead>Contact</TableHead>
           <TableHead>Email</TableHead>
-          <TableHead>Téléphone</TableHead>
           <TableHead>Statut</TableHead>
           <TableHead className="w-24">Actions</TableHead>
         </TableRow>
@@ -36,9 +38,13 @@ export function ArmateurTable({ armateurs, searchTerm, onDelete }: ArmateurTable
               </Badge>
             </TableCell>
             <TableCell className="font-medium">{armateur.nom}</TableCell>
+            <TableCell>{armateur.type_conteneur}</TableCell>
+            <TableCell className="text-center">{armateur.jours_gratuits}</TableCell>
+            <TableCell className="text-right font-mono">
+              {armateur.prix_par_jour.toLocaleString()} F CFA
+            </TableCell>
             <TableCell>{armateur.contact_nom || '-'}</TableCell>
             <TableCell>{armateur.contact_email || '-'}</TableCell>
-            <TableCell>{armateur.contact_telephone || '-'}</TableCell>
             <TableCell>{getStatusBadge(armateur.actif)}</TableCell>
             <TableCell>
               <div className="flex space-x-2">
