@@ -399,20 +399,19 @@ class SortieConteneurService
         foreach ($vehiculeIds as $vehiculeId) {
             if ($vehiculeId) {
                 $vehicule = Vehicule::find($vehiculeId);
-                if (!$vehicule || $vehicule->statut !== 'disponible') {
-                    throw new \Exception("Le véhicule {$vehicule->numero_parc} n'est pas disponible");
+                if (!$vehicule || !$vehicule->actif) {
+                    throw new \Exception("Le véhicule avec l'ID {$vehiculeId} n'est pas disponible");
                 }
             }
         }
     }
 
     /**
-     * Mettre à jour le statut d'un véhicule
+     * Mettre à jour le statut d'un véhicule (pour l'instant, on ne fait rien car le modèle n'a pas de statut)
      */
     private function updateVehiculeStatut($vehiculeId, $statut)
     {
-        if ($vehiculeId) {
-            Vehicule::where('id', $vehiculeId)->update(['statut' => $statut]);
-        }
+        // Pour l'instant, on ne met pas à jour de statut car le modèle Vehicule n'a que le champ 'actif'
+        // Cette méthode pourrait être utilisée plus tard si on ajoute un système de statut aux véhicules
     }
 }
