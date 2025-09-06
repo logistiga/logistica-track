@@ -11,11 +11,22 @@ interface AuthContextType {
   refreshUser: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+// Créer le contexte avec une valeur par défaut
+const AuthContext = createContext<AuthContextType>({
+  user: null,
+  isAuthenticated: false,
+  isLoading: true,
+  login: async () => {},
+  logout: async () => {},
+  updateUser: async () => {},
+  refreshUser: async () => {},
+});
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
+  if (!context) {
+    console.error('useAuth appelé sans AuthProvider dans l\'arbre des composants');
+    console.trace('Call stack:');
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
@@ -30,17 +41,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const initAuth = async () => {
       try {
-        // Vérifier si un utilisateur est stocké
         const storedUser = authService.getStoredUser();
         if (storedUser && authService.isAuthenticated()) {
-          setUser(storedUser); // Utiliser d'abord l'utilisateur stocké pour éviter le flash
+          setUser(storedUser);
           try {
-            // Vérifier que le token est toujours valide en arrière-plan
             const currentUser = await authService.getCurrentUser();
             setUser(currentUser);
           } catch (error) {
-            console.log('Token expiré, redirection vers login');
-            // Token invalide, nettoyer le localStorage
+            console.log('Token expiré, nettoyage du storage');
             await authService.logout();
             setUser(null);
           }
