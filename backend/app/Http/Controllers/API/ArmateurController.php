@@ -33,15 +33,19 @@ class ArmateurController extends Controller
     public function index(Request $request): JsonResponse
     {
         try {
-            $cacheKey = 'armateurs_' . md5(serialize($request->all()));
+            $result = $this->armateurService->getAllArmateurs($request->all());
             
-            $result = Cache::remember($cacheKey, CACHE_MEDIUM, function () use ($request) {
-                return $this->armateurService->getAllArmateurs($request->all());
-            });
+            // Vérifier que le résultat contient des données valides
+            if (!$result || !isset($result['data'])) {
+                return $this->successResponse(
+                    [],
+                    'Aucun armateur trouvé'
+                );
+            }
 
             return $this->successResponse(
                 ArmateurResource::collection($result['data'])->additional([
-                    'meta' => $result['meta'],
+                    'meta' => $result['meta'] ?? ['total' => count($result['data'])],
                     'links' => $result['links'] ?? null,
                 ]),
                 'Armateurs récupérés avec succès'
