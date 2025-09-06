@@ -9,13 +9,8 @@ export interface Vehicule {
   numero_parc: string;
   immatriculation: string;
   type: 'camion' | 'remorque';
-  marque?: string;
-  modele?: string;
-  annee?: number;
-  statut: 'disponible' | 'en_mission' | 'maintenance' | 'hors_service';
-  derniere_mission?: string;
-  kilometrage?: number;
-  date_derniere_revision?: string;
+  type_label: string;
+  libelle_complet: string;
   actif: boolean;
   created_at: string;
   updated_at: string;
@@ -25,12 +20,6 @@ export interface CreateVehiculeData {
   numero_parc: string;
   immatriculation: string;
   type: 'camion' | 'remorque';
-  marque?: string;
-  modele?: string;
-  annee?: number;
-  statut?: 'disponible' | 'en_mission' | 'maintenance' | 'hors_service';
-  kilometrage?: number;
-  date_derniere_revision?: string;
   actif?: boolean;
 }
 
@@ -59,14 +48,9 @@ class VehiculeService {
     await apiService.delete(`/vehicules/${id}`);
   }
 
-  async getVehiculesDisponibles(type?: 'camion' | 'remorque'): Promise<Vehicule[]> {
-    const queryParam = type ? `?type=${type}&statut=disponible` : '?statut=disponible';
+  async getVehiculesActifs(type?: 'camion' | 'remorque'): Promise<Vehicule[]> {
+    const queryParam = type ? `?type=${type}&actif=true` : '?actif=true';
     const response = await apiService.get(`/vehicules${queryParam}`);
-    return response.data;
-  }
-
-  async updateStatut(id: number, statut: Vehicule['statut']): Promise<Vehicule> {
-    const response = await apiService.put(`/vehicules/${id}/statut`, { statut });
     return response.data;
   }
 }

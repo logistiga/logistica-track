@@ -1,19 +1,19 @@
 import type { Vehicule, CreateVehiculeData } from './vehiculeService';
 
-// Mock data basée sur les seeders
+// Mock data simplifiée alignée avec le backend optimisé
 const mockVehicules: Vehicule[] = [
   // Camions
-  { id: 1, numero_parc: 'TR 37', immatriculation: 'TR 37', type: 'camion', statut: 'disponible', marque: 'Mercedes', modele: 'Actros', annee: 2020, actif: true, created_at: '2024-01-01T00:00:00Z', updated_at: '2024-01-01T00:00:00Z' },
-  { id: 2, numero_parc: 'tr 07', immatriculation: 'tr 07', type: 'camion', statut: 'en_mission', marque: 'Volvo', modele: 'FH', annee: 2019, actif: true, created_at: '2024-01-01T00:00:00Z', updated_at: '2024-01-01T00:00:00Z' },
-  { id: 3, numero_parc: 'tr 08', immatriculation: 'tr 08', type: 'camion', statut: 'disponible', marque: 'Scania', modele: 'R', annee: 2021, actif: true, created_at: '2024-01-01T00:00:00Z', updated_at: '2024-01-01T00:00:00Z' },
-  { id: 4, numero_parc: 'TR 41', immatriculation: 'TR 41', type: 'camion', statut: 'disponible', marque: 'MAN', modele: 'TGX', annee: 2022, actif: true, created_at: '2024-01-01T00:00:00Z', updated_at: '2024-01-01T00:00:00Z' },
-  { id: 5, numero_parc: 'TR 40', immatriculation: 'LC-362-AA', type: 'camion', statut: 'disponible', marque: 'Mercedes', modele: 'Actros', annee: 2020, actif: true, created_at: '2024-01-01T00:00:00Z', updated_at: '2024-01-01T00:00:00Z' },
+  { id: 1, numero_parc: 'TR 37', immatriculation: 'TR 37', type: 'camion', type_label: 'Camion', libelle_complet: 'TR 37 - TR 37', actif: true, created_at: '2024-01-01T00:00:00Z', updated_at: '2024-01-01T00:00:00Z' },
+  { id: 2, numero_parc: 'tr 07', immatriculation: 'tr 07', type: 'camion', type_label: 'Camion', libelle_complet: 'tr 07 - tr 07', actif: true, created_at: '2024-01-01T00:00:00Z', updated_at: '2024-01-01T00:00:00Z' },
+  { id: 3, numero_parc: 'tr 08', immatriculation: 'tr 08', type: 'camion', type_label: 'Camion', libelle_complet: 'tr 08 - tr 08', actif: true, created_at: '2024-01-01T00:00:00Z', updated_at: '2024-01-01T00:00:00Z' },
+  { id: 4, numero_parc: 'TR 41', immatriculation: 'TR 41', type: 'camion', type_label: 'Camion', libelle_complet: 'TR 41 - TR 41', actif: true, created_at: '2024-01-01T00:00:00Z', updated_at: '2024-01-01T00:00:00Z' },
+  { id: 5, numero_parc: 'TR 40', immatriculation: 'LC-362-AA', type: 'camion', type_label: 'Camion', libelle_complet: 'TR 40 - LC-362-AA', actif: true, created_at: '2024-01-01T00:00:00Z', updated_at: '2024-01-01T00:00:00Z' },
   
   // Remorques (échantillon)
-  { id: 101, numero_parc: 'R 01', immatriculation: 'R01', type: 'remorque', statut: 'disponible', annee: 2020, actif: true, created_at: '2024-01-01T00:00:00Z', updated_at: '2024-01-01T00:00:00Z' },
-  { id: 102, numero_parc: 'R 02', immatriculation: 'R02', type: 'remorque', statut: 'en_mission', annee: 2019, actif: true, created_at: '2024-01-01T00:00:00Z', updated_at: '2024-01-01T00:00:00Z' },
-  { id: 103, numero_parc: 'R 03', immatriculation: 'R03', type: 'remorque', statut: 'disponible', annee: 2021, actif: true, created_at: '2024-01-01T00:00:00Z', updated_at: '2024-01-01T00:00:00Z' },
-  { id: 104, numero_parc: 'R 04', immatriculation: 'R04', type: 'remorque', statut: 'maintenance', annee: 2018, actif: true, created_at: '2024-01-01T00:00:00Z', updated_at: '2024-01-01T00:00:00Z' },
+  { id: 101, numero_parc: 'R 01', immatriculation: 'R01', type: 'remorque', type_label: 'Remorque', libelle_complet: 'R 01 - R01', actif: true, created_at: '2024-01-01T00:00:00Z', updated_at: '2024-01-01T00:00:00Z' },
+  { id: 102, numero_parc: 'R 02', immatriculation: 'R02', type: 'remorque', type_label: 'Remorque', libelle_complet: 'R 02 - R02', actif: true, created_at: '2024-01-01T00:00:00Z', updated_at: '2024-01-01T00:00:00Z' },
+  { id: 103, numero_parc: 'R 03', immatriculation: 'R03', type: 'remorque', type_label: 'Remorque', libelle_complet: 'R 03 - R03', actif: true, created_at: '2024-01-01T00:00:00Z', updated_at: '2024-01-01T00:00:00Z' },
+  { id: 104, numero_parc: 'R 04', immatriculation: 'R04', type: 'remorque', type_label: 'Remorque', libelle_complet: 'R 04 - R04', actif: true, created_at: '2024-01-01T00:00:00Z', updated_at: '2024-01-01T00:00:00Z' },
 ];
 
 class MockVehiculeService {
@@ -43,10 +43,8 @@ class MockVehiculeService {
       numero_parc: data.numero_parc,
       immatriculation: data.immatriculation,
       type: data.type,
-      statut: data.statut || 'disponible',
-      marque: data.marque,
-      modele: data.modele,
-      annee: data.annee,
+      type_label: data.type === 'camion' ? 'Camion' : 'Remorque',
+      libelle_complet: `${data.numero_parc} - ${data.immatriculation}`,
       actif: data.actif !== false,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
@@ -64,13 +62,17 @@ class MockVehiculeService {
       throw new Error('Véhicule non trouvé');
     }
 
-    this.vehicules[index] = {
+    const updatedVehicule = {
       ...this.vehicules[index],
       ...data,
+      libelle_complet: data.numero_parc && data.immatriculation 
+        ? `${data.numero_parc} - ${data.immatriculation}`
+        : this.vehicules[index].libelle_complet,
       updated_at: new Date().toISOString(),
     };
 
-    return this.vehicules[index];
+    this.vehicules[index] = updatedVehicule;
+    return updatedVehicule;
   }
 
   async deleteVehicule(id: number): Promise<void> {
@@ -84,18 +86,14 @@ class MockVehiculeService {
     this.vehicules.splice(index, 1);
   }
 
-  async getVehiculesDisponibles(type?: 'camion' | 'remorque'): Promise<Vehicule[]> {
+  async getVehiculesActifs(type?: 'camion' | 'remorque'): Promise<Vehicule[]> {
     await new Promise(resolve => setTimeout(resolve, 300));
     
     return this.vehicules.filter(v => {
-      const isAvailable = v.statut === 'disponible';
+      const isActive = v.actif;
       const matchesType = !type || v.type === type;
-      return isAvailable && matchesType;
+      return isActive && matchesType;
     });
-  }
-
-  async updateStatut(id: number, statut: Vehicule['statut']): Promise<Vehicule> {
-    return this.updateVehicule(id, { statut });
   }
 }
 

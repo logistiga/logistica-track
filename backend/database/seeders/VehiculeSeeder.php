@@ -61,13 +61,7 @@ class VehiculeSeeder extends Seeder
                 'numero_parc' => $camion['numero'],
                 'immatriculation' => $camion['matricule'],
                 'type' => 'camion',
-                'statut' => 'disponible',
-                'marque' => 'Mercedes',
-                'modele' => 'Actros',
-                'annee' => 2020,
-                'capacite' => 30.00,
-                'derniere_revision' => '2024-01-15',
-                'prochaine_revision' => '2024-07-15',
+                'actif' => true,
             ]);
         }
 
@@ -80,10 +74,7 @@ class VehiculeSeeder extends Seeder
                 'numero_parc' => $numero,
                 'immatriculation' => $plaque,
                 'type' => 'remorque',
-                'statut' => 'disponible',
-                'annee' => 2020,
-                'derniere_revision' => '2024-01-15',
-                'prochaine_revision' => '2024-07-15',
+                'actif' => true,
             ]);
         }
     }

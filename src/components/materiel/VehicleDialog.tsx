@@ -39,7 +39,6 @@ export function VehicleDialog({ isOpen, onClose, onSubmit, activeTab }: VehicleD
       numero_parc: formData.numero_parc,
       immatriculation: formData.immatriculation,
       type: activeTab === "camions" ? "camion" : "remorque",
-      statut: "disponible",
       actif: true,
     };
 
