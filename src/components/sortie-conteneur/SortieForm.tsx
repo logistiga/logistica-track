@@ -272,18 +272,84 @@ export const SortieForm = ({ formData, setFormData, onSubmit, onCancel }: Sortie
               <DetentionSummary armateurId={selectedArmateur?.id || null} />
               
               {selectedArmateur && (
-                <div className="p-4 bg-muted rounded-lg">
-                  <h4 className="font-medium mb-2">Informations armateur</h4>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="text-muted-foreground">Code:</span>
-                      <span className="ml-2 font-medium">{selectedArmateur.code}</span>
+                <div className="p-4 bg-muted rounded-lg space-y-4">
+                  <h4 className="font-medium mb-2">Conditions de détention - {selectedArmateur.code}</h4>
+                  
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="text-center p-3 bg-background rounded border">
+                      <div className="text-2xl font-bold text-primary">{selectedArmateur.jours_gratuits}</div>
+                      <div className="text-sm text-muted-foreground">Jours gratuits</div>
                     </div>
-                    <div>
-                      <span className="text-muted-foreground">Nom:</span>
-                      <span className="ml-2 font-medium">{selectedArmateur.nom}</span>
+                    <div className="text-center p-3 bg-background rounded border">
+                      <div className="text-2xl font-bold text-destructive">{selectedArmateur.prix_par_jour.toLocaleString()}</div>
+                      <div className="text-sm text-muted-foreground">FCFA / jour</div>
+                    </div>
+                    <div className="text-center p-3 bg-background rounded border">
+                      <div className="text-2xl font-bold text-orange-600">
+                        {(() => {
+                          if (dateSortie && selectedArmateur.jours_gratuits) {
+                            const dateLimite = new Date(dateSortie);
+                            dateLimite.setDate(dateLimite.getDate() + selectedArmateur.jours_gratuits);
+                            return format(dateLimite, "dd/MM", { locale: fr });
+                          }
+                          return "--";
+                        })()}
+                      </div>
+                      <div className="text-sm text-muted-foreground">Date limite retour</div>
                     </div>
                   </div>
+
+                  {dateSortie && selectedArmateur.jours_gratuits && (
+                    <div className="p-3 bg-orange-50 border border-orange-200 rounded">
+                      <div className="flex items-center gap-2 text-orange-700">
+                        <CalendarIcon className="w-4 h-4" />
+                        <span className="font-medium">
+                          Le conteneur doit être retourné au port avant le{" "}
+                          {(() => {
+                            const dateLimite = new Date(dateSortie);
+                            dateLimite.setDate(dateLimite.getDate() + selectedArmateur.jours_gratuits);
+                            return format(dateLimite, "dd MMMM yyyy", { locale: fr });
+                          })()}
+                        </span>
+                      </div>
+                      
+                      {(() => {
+                        const dateLimite = new Date(dateSortie);
+                        dateLimite.setDate(dateLimite.getDate() + selectedArmateur.jours_gratuits);
+                        const today = new Date();
+                        const diffTime = dateLimite.getTime() - today.getTime();
+                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                        
+                        if (diffDays < 0) {
+                          return (
+                            <div className="mt-2 p-2 bg-red-100 border border-red-300 rounded text-red-700 text-sm">
+                              ⚠️ <strong>RETARD:</strong> {Math.abs(diffDays)} jour(s) de retard
+                              <br />
+                              Coût détention: {(Math.abs(diffDays) * selectedArmateur.prix_par_jour).toLocaleString()} FCFA
+                            </div>
+                          );
+                        } else if (diffDays === 0) {
+                          return (
+                            <div className="mt-2 p-2 bg-yellow-100 border border-yellow-300 rounded text-yellow-700 text-sm">
+                              🟡 <strong>ATTENTION:</strong> Dernier jour de franchise
+                            </div>
+                          );
+                        } else if (diffDays <= 2) {
+                          return (
+                            <div className="mt-2 p-2 bg-yellow-100 border border-yellow-300 rounded text-yellow-700 text-sm">
+                              ⏰ <strong>URGENT:</strong> Plus que {diffDays} jour(s) avant détention
+                            </div>
+                          );
+                        } else {
+                          return (
+                            <div className="mt-2 p-2 bg-green-100 border border-green-300 rounded text-green-700 text-sm">
+                              ✅ <strong>OK:</strong> Encore {diffDays} jour(s) de franchise
+                            </div>
+                          );
+                        }
+                      })()}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
