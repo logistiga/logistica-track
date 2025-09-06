@@ -74,25 +74,58 @@ class SortieConteneurService
         DB::beginTransaction();
 
         try {
-            // Vérifier la disponibilité des véhicules
-            $this->checkVehiculeDisponibilite($data['camion_id'], $data['remorque_id']);
+            // Log des données reçues
+            \Log::info('Données reçues pour création sortie:', $data);
 
-            // Créer la sortie
-            $sortie = SortieConteneur::create([
-                ...$data,
-                // 'created_by' => Auth::id(), // Temporairement désactivé
+            // Vérifier la disponibilité des véhicules
+            if (isset($data['camion_id']) && isset($data['remorque_id'])) {
+                \Log::info('Vérification des véhicules:', [
+                    'camion_id' => $data['camion_id'],
+                    'remorque_id' => $data['remorque_id']
+                ]);
+                $this->checkVehiculeDisponibilite($data['camion_id'], $data['remorque_id']);
+            }
+
+            // Préparer les données pour création
+            $sortieData = [
+                'numero_conteneur' => $data['numero_conteneur'],
+                'numero_bl' => $data['numero_bl'],
+                'code_armateur' => $data['code_armateur'],
+                'camion_id' => $data['camion_id'] ?? null,
+                'remorque_id' => $data['remorque_id'] ?? null,
+                'prime_chauffeur' => $data['prime_chauffeur'] ?? null,
+                'nom_client' => $data['nom_client'],
+                'destination' => $data['destination'],
+                'adresse_client' => $data['adresse_client'] ?? null,
+                'type_destination' => $data['type_destination'],
+                'jours_bad' => $data['jours_bad'] ?? null,
+                'date_fin_franchise' => $data['date_fin_franchise'] ?? null,
+                'nom_transitaire' => $data['nom_transitaire'],
                 'statut' => $data['destination'] === 'base' ? 'a_la_base' : 'livre_client',
                 'date_sortie' => $data['date_sortie'] ?? now()->format('Y-m-d'),
-            ]);
+            ];
 
-            // Mettre à jour le statut des véhicules
-            $this->updateVehiculeStatut($data['camion_id'], 'en_mission');
-            $this->updateVehiculeStatut($data['remorque_id'], 'en_mission');
+            \Log::info('Données préparées pour création:', $sortieData);
+
+            // Créer la sortie
+            $sortie = SortieConteneur::create($sortieData);
+
+            \Log::info('Sortie créée avec succès:', ['id' => $sortie->id]);
+
+            // Mettre à jour le statut des véhicules (temporairement désactivé)
+            // $this->updateVehiculeStatut($data['camion_id'], 'en_mission');
+            // $this->updateVehiculeStatut($data['remorque_id'], 'en_mission');
 
             DB::commit();
 
             return $sortie->load(['armateur', 'camion', 'remorque']);
         } catch (\Exception $e) {
+            \Log::error('Erreur lors de la création de la sortie:', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
             DB::rollback();
             throw $e;
         }

@@ -106,7 +106,12 @@ class SortieConteneurController extends Controller
             return $this->errorResponse('Données invalides', 422, $e->errors());
         } catch (\Exception $e) {
             DB::rollback();
-            return $this->errorResponse('Erreur lors de la création de la sortie', 500);
+            \Log::error('Erreur controller création sortie:', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
+            return $this->errorResponse('Erreur lors de la création de la sortie: ' . $e->getMessage(), 500);
         }
     }
 
