@@ -11,9 +11,18 @@ export function useVehicules() {
     try {
       setLoading(true);
       const vehicules = await vehiculeService.getVehicules();
-      setCamions(vehicules.filter(v => v.type === 'camion'));
-      setRemorques(vehicules.filter(v => v.type === 'remorque'));
+      console.log('Véhicules reçus:', vehicules);
+      
+      const camionsFiltered = vehicules.filter(v => v.type === 'camion');
+      const remorquesFiltered = vehicules.filter(v => v.type === 'remorque');
+      
+      console.log('Camions filtrés:', camionsFiltered);
+      console.log('Remorques filtrées:', remorquesFiltered);
+      
+      setCamions(camionsFiltered);
+      setRemorques(remorquesFiltered);
     } catch (error) {
+      console.error('Erreur lors du chargement des véhicules:', error);
       toast({
         title: "Erreur",
         description: "Impossible de charger les véhicules",
