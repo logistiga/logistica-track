@@ -34,8 +34,23 @@ class ArmateurService
 
         // Pagination
         $perPage = $filters['per_page'] ?? 15;
+        $result = $query->orderBy('nom')->paginate($perPage);
         
-        return $query->orderBy('nom')->paginate($perPage);
+        return [
+            'data' => $result->items(),
+            'meta' => [
+                'total' => $result->total(),
+                'per_page' => $result->perPage(),
+                'current_page' => $result->currentPage(),
+                'last_page' => $result->lastPage(),
+            ],
+            'links' => [
+                'first' => $result->url(1),
+                'last' => $result->url($result->lastPage()),
+                'prev' => $result->previousPageUrl(),
+                'next' => $result->nextPageUrl(),
+            ]
+        ];
     }
 
     /**
