@@ -3,22 +3,18 @@
 namespace App\Services;
 
 use App\Models\Armateur;
-use Illuminate\Support\Facades\DB;
 
 class ArmateurService
 {
     /**
-     * Récupérer tous les armateurs avec filtres
+     * Récupérer tous les armateurs actifs avec filtres
      */
     public function getAllArmateurs(array $filters = [])
     {
-        // Toujours filtrer pour les armateurs actifs uniquement
         $query = Armateur::where('actif', true);
 
-        // Filtres (suppression du filtre actif car tous sont actifs)
-
         if (isset($filters['type_conteneur'])) {
-            $query->parType($filters['type_conteneur']);
+            $query->where('type_conteneur', $filters['type_conteneur']);
         }
 
         if (isset($filters['search'])) {
@@ -30,7 +26,6 @@ class ArmateurService
             });
         }
 
-        // Pagination
         $perPage = $filters['per_page'] ?? 15;
         $result = $query->orderBy('nom')->paginate($perPage);
         
@@ -52,41 +47,11 @@ class ArmateurService
     }
 
     /**
-     * Créer un nouvel armateur
-     */
-    public function createArmateur(array $data)
-    {
-        return Armateur::create($data);
-    }
-
-    /**
-     * Mettre à jour un armateur
-     */
-    public function updateArmateur(Armateur $armateur, array $data)
-    {
-        $armateur->update($data);
-        return $armateur;
-    }
-
-    /**
-     * Supprimer un armateur
-     */
-    public function deleteArmateur(Armateur $armateur)
-    {
-        // Vérifier s'il y a des sorties associées
-        if ($armateur->sorties()->exists()) {
-            throw new \Exception('Impossible de supprimer cet armateur car il a des sorties associées');
-        }
-
-        $armateur->delete();
-    }
-
-    /**
      * Obtenir les armateurs actifs pour les sélections
      */
     public function getArmateursPourSelection()
     {
-        return Armateur::actifs()
+        return Armateur::where('actif', true)
             ->select('id', 'code', 'nom', 'type_conteneur')
             ->orderBy('nom')
             ->get()
