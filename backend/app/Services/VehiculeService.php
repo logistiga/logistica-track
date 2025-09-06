@@ -32,9 +32,20 @@ class VehiculeService
             });
         }
 
-        // Pagination
-        $perPage = $filters['per_page'] ?? 15;
-        
+        // Pour l'interface de matériel, récupérer tous les véhicules sans pagination
+        if (!isset($filters['per_page'])) {
+            $result = $query->orderBy('numero_parc')->get();
+            
+            return [
+                'data' => $result,
+                'meta' => [
+                    'total' => $result->count(),
+                ],
+            ];
+        }
+
+        // Pagination seulement si explicitement demandée
+        $perPage = $filters['per_page'];
         $result = $query->orderBy('numero_parc')->paginate($perPage);
         
         return [
