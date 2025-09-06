@@ -119,10 +119,24 @@ export function useSortieConteneur() {
       // Reset form
       setFormData(getEmptyFormData());
       setIsAddDialogOpen(false);
-    } catch (error) {
+    } catch (error: any) {
+      console.error('❌ Erreur lors de l\'enregistrement:', error);
+      let errorMessage = 'Erreur lors de l\'enregistrement';
+      
+      if (error.response?.data?.errors) {
+        // Erreurs de validation Laravel
+        const errors = error.response.data.errors;
+        const errorMessages = Object.values(errors).flat();
+        errorMessage = errorMessages.join(', ');
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
       toast({
         title: "Erreur",
-        description: "Erreur lors de l'enregistrement",
+        description: errorMessage,
         variant: "destructive"
       });
     }

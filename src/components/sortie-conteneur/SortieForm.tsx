@@ -261,10 +261,17 @@ export const SortieForm = ({ formData, setFormData, onSubmit, onCancel }: Sortie
                     type="date"
                     value={formData.dateFinFranchise}
                     onChange={(e) => setFormData({ ...formData, dateFinFranchise: e.target.value })}
+                    min={formData.dateSortie || format(new Date(), "yyyy-MM-dd")}
                   />
                   {joursCalcules > 0 && (
                     <p className="text-sm text-muted-foreground mt-1">
                       Durée calculée: {joursCalcules} jours hors port
+                    </p>
+                  )}
+                  {formData.dateFinFranchise && formData.dateSortie && 
+                   new Date(formData.dateFinFranchise) <= new Date(formData.dateSortie) && (
+                    <p className="text-sm text-red-600 mt-1">
+                      ⚠️ La date de fin de franchise doit être après la date de sortie
                     </p>
                   )}
                 </div>
