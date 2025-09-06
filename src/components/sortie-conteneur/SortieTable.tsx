@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { StatusBadge } from "./StatusBadge";
+import { DetentionStatusButton } from "./DetentionStatusButton";
 import { Edit, Trash2, CheckCircle, Eye } from "lucide-react";
 
 interface SortieTableProps {
@@ -49,6 +50,7 @@ export function SortieTable({
               <TableHead>Date Sortie</TableHead>
               {!showReturnAction && <TableHead>Date Retour</TableHead>}
               <TableHead>Statut</TableHead>
+              <TableHead>Statut Détention</TableHead>
               <TableHead>Prime Chauffeur</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
@@ -72,6 +74,13 @@ export function SortieTable({
                 )}
                 <TableCell>
                   <StatusBadge statut={sortie.statut} />
+                </TableCell>
+                <TableCell>
+                  <DetentionStatusButton 
+                    armateurCode={sortie.codeArmateur}
+                    dateSortie={sortie.dateSortie}
+                    typeDestination={sortie.typeDestination}
+                  />
                 </TableCell>
                 <TableCell>
                   {new Intl.NumberFormat('fr-FR', {
