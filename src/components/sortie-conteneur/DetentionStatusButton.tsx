@@ -35,32 +35,24 @@ export function DetentionStatusButton({
   let text = "";
   let bgColor = "";
 
-  if (typeDestination === "detention") {
-    if (joursRestants < 0) {
-      // Retard - Rouge
-      variant = "destructive";
-      icon = <AlertTriangle className="w-3 h-3" />;
-      text = `${Math.abs(joursRestants)}j retard`;
-      bgColor = "bg-red-500 hover:bg-red-600";
-    } else if (joursRestants <= 2) {
-      // Urgent - Orange  
-      variant = "outline";
-      icon = <Calendar className="w-3 h-3" />;
-      text = joursRestants === 0 ? "Dernier jour" : `${joursRestants}j restants`;
-      bgColor = "bg-orange-500 hover:bg-orange-600 text-white border-orange-500";
-    } else {
-      // OK - Vert
-      variant = "outline";
-      icon = <Clock className="w-3 h-3" />;
-      text = `${joursRestants}j restants`;
-      bgColor = "bg-green-500 hover:bg-green-600 text-white border-green-500";
-    }
+  if (joursRestants < 0) {
+    // Retard - Rouge (peu importe le type de destination)
+    variant = "destructive";
+    icon = <AlertTriangle className="w-3 h-3" />;
+    text = `${Math.abs(joursRestants)}j retard`;
+    bgColor = "bg-red-500 hover:bg-red-600";
+  } else if (joursRestants <= 2) {
+    // Urgent - Orange (peu importe le type de destination)
+    variant = "outline";
+    icon = <Calendar className="w-3 h-3" />;
+    text = joursRestants === 0 ? "Dernier jour" : `${joursRestants}j restants`;
+    bgColor = "bg-orange-500 hover:bg-orange-600 text-white border-orange-500";
   } else {
-    // Type BAD - pas de détention
-    variant = "secondary";
+    // OK - Vert (peu importe le type de destination)
+    variant = "outline";
     icon = <Clock className="w-3 h-3" />;
-    text = "Pas de détention";
-    bgColor = "bg-gray-500 hover:bg-gray-600 text-white";
+    text = `${joursRestants}j restants`;
+    bgColor = "bg-green-500 hover:bg-green-600 text-white border-green-500";
   }
 
   return (
@@ -73,11 +65,9 @@ export function DetentionStatusButton({
         {icon}
         {text}
       </Badge>
-      {typeDestination === "detention" && (
-        <div className="text-xs text-muted-foreground">
-          Limite: {format(dateLimite, "dd/MM", { locale: fr })}
-        </div>
-      )}
+      <div className="text-xs text-muted-foreground">
+        Limite: {format(dateLimite, "dd/MM", { locale: fr })}
+      </div>
     </div>
   );
 }
