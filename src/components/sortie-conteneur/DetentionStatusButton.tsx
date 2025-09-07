@@ -19,8 +19,8 @@ export function DetentionStatusButton({
   
   const armateur = getArmateurByCode(armateurCode);
   
-  // Ne pas afficher si ce n'est pas une détention ou si pas d'armateur
-  if (typeDestination !== "detention" || !armateur) {
+  // Ne pas afficher si pas d'armateur
+  if (!armateur) {
     return null;
   }
 
@@ -35,24 +35,32 @@ export function DetentionStatusButton({
   let text = "";
   let bgColor = "";
 
-  if (joursRestants < 0) {
-    // Retard - Rouge
-    variant = "destructive";
-    icon = <AlertTriangle className="w-3 h-3" />;
-    text = `${Math.abs(joursRestants)}j retard`;
-    bgColor = "bg-red-500 hover:bg-red-600";
-  } else if (joursRestants <= 2) {
-    // Urgent - Orange  
-    variant = "outline";
-    icon = <Calendar className="w-3 h-3" />;
-    text = joursRestants === 0 ? "Dernier jour" : `${joursRestants}j restants`;
-    bgColor = "bg-orange-500 hover:bg-orange-600 text-white border-orange-500";
+  if (typeDestination === "detention") {
+    if (joursRestants < 0) {
+      // Retard - Rouge
+      variant = "destructive";
+      icon = <AlertTriangle className="w-3 h-3" />;
+      text = `${Math.abs(joursRestants)}j retard`;
+      bgColor = "bg-red-500 hover:bg-red-600";
+    } else if (joursRestants <= 2) {
+      // Urgent - Orange  
+      variant = "outline";
+      icon = <Calendar className="w-3 h-3" />;
+      text = joursRestants === 0 ? "Dernier jour" : `${joursRestants}j restants`;
+      bgColor = "bg-orange-500 hover:bg-orange-600 text-white border-orange-500";
+    } else {
+      // OK - Vert
+      variant = "outline";
+      icon = <Clock className="w-3 h-3" />;
+      text = `${joursRestants}j restants`;
+      bgColor = "bg-green-500 hover:bg-green-600 text-white border-green-500";
+    }
   } else {
-    // OK - Vert
-    variant = "outline";
+    // Type BAD - pas de détention
+    variant = "secondary";
     icon = <Clock className="w-3 h-3" />;
-    text = `${joursRestants}j restants`;
-    bgColor = "bg-green-500 hover:bg-green-600 text-white border-green-500";
+    text = "Pas de détention";
+    bgColor = "bg-gray-500 hover:bg-gray-600 text-white";
   }
 
   return (
@@ -65,9 +73,11 @@ export function DetentionStatusButton({
         {icon}
         {text}
       </Badge>
-      <div className="text-xs text-muted-foreground">
-        Limite: {format(dateLimite, "dd/MM", { locale: fr })}
-      </div>
+      {typeDestination === "detention" && (
+        <div className="text-xs text-muted-foreground">
+          Limite: {format(dateLimite, "dd/MM", { locale: fr })}
+        </div>
+      )}
     </div>
   );
 }

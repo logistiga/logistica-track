@@ -119,7 +119,7 @@ export function SortieTable({
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
-                    {showReturnAction && (sortie.statut === "en_cours" || sortie.statut === "livre_client") && (
+                    {showReturnAction && (sortie.statut === "en_cours" || sortie.statut === "livre_client" || sortie.statut === "a_la_base") && (
                       <Button
                         variant="outline"
                         size="sm"
