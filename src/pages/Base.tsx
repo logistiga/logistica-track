@@ -1,23 +1,37 @@
-import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Building2 } from "lucide-react";
+import { Building2, Loader2 } from "lucide-react";
 import { StockageTab } from "@/components/base/StockageTab";
 import { DoubleRelevageTab } from "@/components/base/DoubleRelevageTab";
+import { useVehicules } from "@/hooks/useVehicules";
 
 export default function Base() {
-  // Mock data for vehicles from Matériel page - En production, ceci viendrait d'une API ou d'un contexte partagé
-  const [camions] = useState([
-    { id: "1", numeroParc: "TR 37", immatriculation: "TR 37", statut: "disponible" },
-    { id: "2", numeroParc: "tr 07", immatriculation: "tr 07", statut: "en_mission" },
-    { id: "3", numeroParc: "tr 08", immatriculation: "tr 08", statut: "disponible" },
-    { id: "4", numeroParc: "TR 41", immatriculation: "TR 41", statut: "disponible" },
-  ]);
+  const { camions, remorques, loading } = useVehicules();
 
-  const [remorques] = useState([
-    { id: "1", numeroParc: "R 01", immatriculation: "R01", statut: "disponible" },
-    { id: "2", numeroParc: "R 02", immatriculation: "R02", statut: "disponible" },
-    { id: "3", numeroParc: "R 03", immatriculation: "R03", statut: "en_mission" },
-  ]);
+  // Transform data to match expected interface
+  const transformedCamions = camions.map(camion => ({
+    id: camion.id.toString(),
+    numeroParc: camion.numero_parc,
+    immatriculation: camion.immatriculation,
+    statut: camion.actif ? "disponible" : "maintenance"
+  }));
+
+  const transformedRemorques = remorques.map(remorque => ({
+    id: remorque.id.toString(),
+    numeroParc: remorque.numero_parc,
+    immatriculation: remorque.immatriculation,
+    statut: remorque.actif ? "disponible" : "maintenance"
+  }));
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="flex items-center space-x-3">
+          <Loader2 className="w-6 h-6 animate-spin" />
+          <span>Chargement des véhicules...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -40,11 +54,11 @@ export default function Base() {
         </TabsList>
         
         <TabsContent value="stockage">
-          <StockageTab camions={camions} remorques={remorques} />
+          <StockageTab camions={transformedCamions} remorques={transformedRemorques} />
         </TabsContent>
 
         <TabsContent value="double-relevage">
-          <DoubleRelevageTab camions={camions} remorques={remorques} />
+          <DoubleRelevageTab camions={transformedCamions} remorques={transformedRemorques} />
         </TabsContent>
       </Tabs>
     </div>
