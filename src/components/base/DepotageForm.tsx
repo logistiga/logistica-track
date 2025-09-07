@@ -4,37 +4,40 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
 
-interface StockageFormData {
+interface DepotageFormData {
   nomClient: string;
   numeroConteneur: string;
   provenance: string;
-  dateArrivee: string;
+  dateDepotage: string;
   camionProprietaire: boolean;
   plaqueCamion: string;
   plaqueRemorque: string;
-  joursGratuits: number;
-  prixParJour: number;
+  typeMarchandise: string;
+  prixDepotage: number;
+  observations?: string;
 }
 
-interface StockageFormProps {
-  onSubmit: (data: StockageFormData) => void;
-  initialData?: Partial<StockageFormData>;
+interface DepotageFormProps {
+  onSubmit: (data: DepotageFormData) => void;
+  initialData?: Partial<DepotageFormData>;
   camionsParc?: Array<{id: string, numeroParc: string}>;
   remorquesParc?: Array<{id: string, numeroParc: string}>;
 }
 
-export function StockageForm({ onSubmit, initialData, camionsParc = [], remorquesParc = [] }: StockageFormProps) {
-  const [formData, setFormData] = useState<StockageFormData>({
-    nomClient: "",
-    numeroConteneur: "",
-    provenance: "",
-    dateArrivee: new Date().toISOString().split('T')[0],
+export function DepotageForm({ onSubmit, initialData, camionsParc = [], remorquesParc = [] }: DepotageFormProps) {
+  const [formData, setFormData] = useState<DepotageFormData>({
+    nomClient: initialData?.nomClient || "",
+    numeroConteneur: initialData?.numeroConteneur || "",
+    provenance: initialData?.provenance || "",
+    dateDepotage: new Date().toISOString().split('T')[0],
     camionProprietaire: true,
     plaqueCamion: "",
     plaqueRemorque: "",
-    joursGratuits: 0,
-    prixParJour: 0,
+    typeMarchandise: "",
+    prixDepotage: 75000, // Prix par défaut
+    observations: "",
     ...initialData
   });
 
@@ -79,18 +82,36 @@ export function StockageForm({ onSubmit, initialData, camionsParc = [], remorque
       </div>
 
       <div>
-        <Label htmlFor="dateArrivee">Date d'Arrivée *</Label>
+        <Label htmlFor="dateDepotage">Date de Dépotage *</Label>
         <Input
-          id="dateArrivee"
+          id="dateDepotage"
           type="date"
-          value={formData.dateArrivee}
-          onChange={(e) => setFormData({ ...formData, dateArrivee: e.target.value })}
+          value={formData.dateDepotage}
+          onChange={(e) => setFormData({ ...formData, dateDepotage: e.target.value })}
           required
         />
       </div>
 
+      <div>
+        <Label htmlFor="typeMarchandise">Type de Marchandise *</Label>
+        <Select value={formData.typeMarchandise} onValueChange={(value) => setFormData({ ...formData, typeMarchandise: value })}>
+          <SelectTrigger className="bg-background border border-input">
+            <SelectValue placeholder="Sélectionner le type" />
+          </SelectTrigger>
+          <SelectContent className="bg-background border border-input z-50">
+            <SelectItem value="general" className="hover:bg-muted">Marchandise générale</SelectItem>
+            <SelectItem value="alimentaire" className="hover:bg-muted">Produits alimentaires</SelectItem>
+            <SelectItem value="textile" className="hover:bg-muted">Textile</SelectItem>
+            <SelectItem value="electronique" className="hover:bg-muted">Électronique</SelectItem>
+            <SelectItem value="automobile" className="hover:bg-muted">Pièces automobiles</SelectItem>
+            <SelectItem value="chimique" className="hover:bg-muted">Produits chimiques</SelectItem>
+            <SelectItem value="autre" className="hover:bg-muted">Autre</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
       <div className="bg-muted/50 p-4 rounded-lg space-y-4">
-        <h4 className="font-medium">Camion ayant amené le conteneur</h4>
+        <h4 className="font-medium">Camion pour le dépotage</h4>
         
         <div className="flex items-center space-x-2">
           <Checkbox
@@ -158,30 +179,25 @@ export function StockageForm({ onSubmit, initialData, camionsParc = [], remorque
         )}
       </div>
 
-      <div className="bg-muted/50 p-4 rounded-lg space-y-4">
-        <h4 className="font-medium">Informations tarifaires</h4>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="joursGratuits">Jours gratuits</Label>
-            <Input
-              id="joursGratuits"
-              type="number"
-              value={formData.joursGratuits}
-              onChange={(e) => setFormData({ ...formData, joursGratuits: parseInt(e.target.value) || 0 })}
-              placeholder="Ex: 5"
-            />
-          </div>
-          <div>
-            <Label htmlFor="prixParJour">Prix par jour après franchise (FCFA)</Label>
-            <Input
-              id="prixParJour"
-              type="number"
-              value={formData.prixParJour}
-              onChange={(e) => setFormData({ ...formData, prixParJour: parseInt(e.target.value) || 0 })}
-              placeholder="Ex: 10000"
-            />
-          </div>
-        </div>
+      <div className="bg-muted/50 p-4 rounded-lg">
+        <Label htmlFor="prixDepotage">Prix du Dépotage (FCFA)</Label>
+        <Input
+          id="prixDepotage"
+          type="number"
+          value={formData.prixDepotage}
+          onChange={(e) => setFormData({ ...formData, prixDepotage: parseInt(e.target.value) || 0 })}
+          placeholder="Ex: 75000"
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="observations">Observations</Label>
+        <Textarea
+          id="observations"
+          value={formData.observations}
+          onChange={(e) => setFormData({ ...formData, observations: e.target.value })}
+          placeholder="Notes supplémentaires..."
+        />
       </div>
 
       <div className="flex justify-end space-x-2">
@@ -189,7 +205,7 @@ export function StockageForm({ onSubmit, initialData, camionsParc = [], remorque
           Annuler
         </Button>
         <Button type="submit">
-          Enregistrer le Conteneur
+          Enregistrer le Dépotage
         </Button>
       </div>
     </form>

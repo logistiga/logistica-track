@@ -24,11 +24,12 @@ interface DoubleRelevageFormData {
 
 interface DoubleRelevageFormProps {
   onSubmit: (data: DoubleRelevageFormData) => void;
+  initialData?: Partial<DoubleRelevageFormData>;
   camionsParc?: Array<{id: string, numeroParc: string}>;
   remorquesParc?: Array<{id: string, numeroParc: string}>;
 }
 
-export function DoubleRelevageForm({ onSubmit, camionsParc = [], remorquesParc = [] }: DoubleRelevageFormProps) {
+export function DoubleRelevageForm({ onSubmit, initialData, camionsParc = [], remorquesParc = [] }: DoubleRelevageFormProps) {
   const [formData, setFormData] = useState<DoubleRelevageFormData>({
     nomClient: "",
     numeroConteneur: "",
@@ -43,7 +44,8 @@ export function DoubleRelevageForm({ onSubmit, camionsParc = [], remorquesParc =
       plaque: "",
       plaqueRemorque: ""
     },
-    montantOperation: 0
+    montantOperation: 0,
+    ...initialData
   });
 
   const handleSubmit = (e: React.FormEvent) => {

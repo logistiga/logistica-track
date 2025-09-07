@@ -2,6 +2,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Building2, Loader2 } from "lucide-react";
 import { StockageTab } from "@/components/base/StockageTab";
 import { DoubleRelevageTab } from "@/components/base/DoubleRelevageTab";
+import { ArriveeBaseTab } from "@/components/base/ArriveeBaseTab";
 import { useVehicules } from "@/hooks/useVehicules";
 
 export default function Base() {
@@ -47,12 +48,17 @@ export default function Base() {
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue="stockage" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2">
+      <Tabs defaultValue="arrivees" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="arrivees">Arrivées Base</TabsTrigger>
           <TabsTrigger value="stockage">Stockage</TabsTrigger>
           <TabsTrigger value="double-relevage">Double Relevage</TabsTrigger>
         </TabsList>
         
+        <TabsContent value="arrivees">
+          <ArriveeBaseTab camions={transformedCamions} remorques={transformedRemorques} />
+        </TabsContent>
+
         <TabsContent value="stockage">
           <StockageTab camions={transformedCamions} remorques={transformedRemorques} />
         </TabsContent>
