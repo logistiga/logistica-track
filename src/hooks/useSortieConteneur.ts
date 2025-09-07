@@ -78,6 +78,13 @@ export function useSortieConteneur() {
     }
 
     try {
+      // Ne pas envoyer date_fin_franchise si elle est dans le passé
+      // Laisser le backend calculer automatiquement
+      const today = new Date();
+      const dateFinFranchise = formData.dateFinFranchise && new Date(formData.dateFinFranchise) > today 
+        ? formData.dateFinFranchise 
+        : undefined;
+
       const createData: CreateSortieConteneurData = {
         numero_conteneur: formData.numeroConteneur,
         numero_bl: formData.numeroBL,
@@ -91,7 +98,7 @@ export function useSortieConteneur() {
         date_sortie: formData.dateSortie,
         prime_chauffeur: formData.primeChauffeur ? parseInt(formData.primeChauffeur) : undefined,
         jours_bad: formData.joursBAD ? parseInt(formData.joursBAD) : undefined,
-        date_fin_franchise: formData.dateFinFranchise,
+        date_fin_franchise: dateFinFranchise,
         nom_transitaire: formData.nomTransitaire
       };
 
