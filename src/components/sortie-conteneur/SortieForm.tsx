@@ -321,30 +321,57 @@ export const SortieForm = ({ formData, setFormData, onSubmit, onCancel }: Sortie
                       </div>
                       
                       {(() => {
-                        const dateLimite = new Date(dateSortie);
-                        dateLimite.setDate(dateLimite.getDate() + selectedArmateur.jours_gratuits);
+                        // Utiliser la date de fin de franchise si fournie, sinon calculer automatiquement
+                        const dateLimite = formData.dateFinFranchise 
+                          ? new Date(formData.dateFinFranchise)
+                          : (() => {
+                              const date = new Date(dateSortie);
+                              date.setDate(date.getDate() + selectedArmateur.jours_gratuits);
+                              return date;
+                            })();
+                        
                         const today = new Date();
                         const diffTime = dateLimite.getTime() - today.getTime();
                         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                        
+                        // Calculer les jours de détention si date de fin de franchise fournie
+                        const detentionDays = formData.dateFinFranchise 
+                          ? Math.max(0, Math.ceil((today.getTime() - dateLimite.getTime()) / (1000 * 60 * 60 * 24)))
+                          : Math.max(0, Math.abs(diffDays));
                         
                         if (diffDays < 0) {
                           return (
                             <div className="mt-2 p-2 bg-red-100 border border-red-300 rounded text-red-700 text-sm">
                               ⚠️ <strong>RETARD:</strong> {Math.abs(diffDays)} jour(s) de retard
                               <br />
-                              Coût détention: {(Math.abs(diffDays) * selectedArmateur.prix_par_jour).toLocaleString()} FCFA
+                              Coût détention: {(detentionDays * selectedArmateur.prix_par_jour).toLocaleString()} FCFA
+                              {formData.dateFinFranchise && (
+                                <div className="mt-1 text-xs">
+                                  📅 Basé sur la date de fin de franchise: {format(dateLimite, "dd/MM/yyyy", { locale: fr })}
+                                </div>
+                              )}
                             </div>
                           );
                         } else if (diffDays === 0) {
                           return (
                             <div className="mt-2 p-2 bg-yellow-100 border border-yellow-300 rounded text-yellow-700 text-sm">
                               🟡 <strong>ATTENTION:</strong> Dernier jour de franchise
+                              {formData.dateFinFranchise && (
+                                <div className="mt-1 text-xs">
+                                  📅 Date de fin personnalisée: {format(dateLimite, "dd/MM/yyyy", { locale: fr })}
+                                </div>
+                              )}
                             </div>
                           );
                         } else if (diffDays <= 2) {
                           return (
                             <div className="mt-2 p-2 bg-yellow-100 border border-yellow-300 rounded text-yellow-700 text-sm">
                               ⏰ <strong>URGENT:</strong> Plus que {diffDays} jour(s) avant détention
+                              {formData.dateFinFranchise && (
+                                <div className="mt-1 text-xs">
+                                  📅 Date de fin personnalisée: {format(dateLimite, "dd/MM/yyyy", { locale: fr })}
+                                </div>
+                              )}
                             </div>
                           );
                         } else {
