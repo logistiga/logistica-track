@@ -274,6 +274,12 @@ export const SortieForm = ({ formData, setFormData, onSubmit, onCancel }: Sortie
                       ⚠️ La date de fin de franchise doit être après la date de sortie
                     </p>
                   )}
+                  {formData.dateFinFranchise && 
+                   new Date(formData.dateFinFranchise) <= new Date() && (
+                    <p className="text-sm text-orange-600 mt-1">
+                      ⚠️ Attention: Date de fin de franchise dans le passé - calcul de détention automatique
+                    </p>
+                  )}
                 </div>
               </div>
 
