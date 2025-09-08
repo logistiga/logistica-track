@@ -21,12 +21,17 @@ class ArriveeBaseService {
       // Récupérer toutes les sorties
       const sorties = await sortieConteneurService.getSorties();
       
-      // Filtrer celles qui sont destinées à la base et pas encore traitées
+      // Filtrer celles qui sont destinées à la base et disponibles pour traitement
+      console.log('🔍 Sorties récupérées:', sorties);
+      console.log('🔍 Sorties filtrées pour destination "base":', sorties.filter(s => s.destination === 'base'));
+      
       const arrivees = sorties
-        .filter(sortie => 
-          sortie.destination === 'base' && 
-          sortie.statut === 'en_cours'
-        )
+        .filter(sortie => {
+          const isDestinationBase = sortie.destination === 'base';
+          const isStatutValide = sortie.statut === 'en_cours' || sortie.statut === 'livre';
+          console.log(`🔍 Conteneur ${sortie.numero_conteneur}: destination=${sortie.destination}, statut=${sortie.statut}, valid=${isDestinationBase && isStatutValide}`);
+          return isDestinationBase && isStatutValide;
+        })
         .map(sortie => ({
           id: sortie.id,
           numero_conteneur: sortie.numero_conteneur,
