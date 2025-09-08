@@ -67,6 +67,11 @@ export function ArriveeBaseTab({ camions, remorques }: ArriveeBaseTabProps) {
 
       await stockageService.createStockage(stockageData);
       
+      // Marquer le conteneur comme traité pour qu'il disparaisse de la liste
+      if (selectedArrivee) {
+        arriveeBaseService.marquerCommeTraite(selectedArrivee.numero_conteneur);
+      }
+      
       toast({
         title: "Succès",
         description: "Conteneur transféré vers le stockage",
@@ -101,6 +106,11 @@ export function ArriveeBaseTab({ camions, remorques }: ArriveeBaseTabProps) {
 
       await doubleRelevageService.createDoubleRelevage(doubleRelevageData);
       
+      // Marquer le conteneur comme traité pour qu'il disparaisse de la liste
+      if (selectedArrivee) {
+        arriveeBaseService.marquerCommeTraite(selectedArrivee.numero_conteneur);
+      }
+      
       toast({
         title: "Succès",
         description: "Conteneur transféré vers le double relevage",
@@ -134,6 +144,11 @@ export function ArriveeBaseTab({ camions, remorques }: ArriveeBaseTabProps) {
       };
 
       await depotageService.createDepotage(depotageData);
+      
+      // Marquer le conteneur comme traité pour qu'il disparaisse de la liste
+      if (selectedArrivee) {
+        arriveeBaseService.marquerCommeTraite(selectedArrivee.numero_conteneur);
+      }
       
       toast({
         title: "Succès",

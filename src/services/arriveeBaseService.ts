@@ -16,21 +16,37 @@ export interface ArriveeBase {
 }
 
 class ArriveeBaseService {
+  private getTraitedContainers(): string[] {
+    const traited = localStorage.getItem('traited_containers');
+    return traited ? JSON.parse(traited) : [];
+  }
+
+  private markContainerAsTraited(numeroConteneur: string): void {
+    const traited = this.getTraitedContainers();
+    if (!traited.includes(numeroConteneur)) {
+      traited.push(numeroConteneur);
+      localStorage.setItem('traited_containers', JSON.stringify(traited));
+    }
+  }
+
   async getConteneursPourBase(): Promise<ArriveeBase[]> {
     try {
       // Récupérer toutes les sorties
       const sorties = await sortieConteneurService.getSorties();
+      const traitedContainers = this.getTraitedContainers();
       
       // Filtrer celles qui sont destinées à la base et disponibles pour traitement
       console.log('🔍 Sorties récupérées:', sorties);
+      console.log('🔍 Conteneurs déjà traités:', traitedContainers);
       console.log('🔍 Sorties filtrées pour destination "base":', sorties.filter(s => s.destination === 'base'));
       
       const arrivees = sorties
         .filter(sortie => {
           const isDestinationBase = sortie.destination === 'base';
           const isStatutValide = sortie.statut === 'en_cours' || sortie.statut === 'livre' || (sortie.statut as any) === 'a_la_base';
-          console.log(`🔍 Conteneur ${sortie.numero_conteneur}: destination=${sortie.destination}, statut=${sortie.statut}, valid=${isDestinationBase && isStatutValide}`);
-          return isDestinationBase && isStatutValide;
+          const isNotTraited = !traitedContainers.includes(sortie.numero_conteneur);
+          console.log(`🔍 Conteneur ${sortie.numero_conteneur}: destination=${sortie.destination}, statut=${sortie.statut}, traité=${!isNotTraited}, valid=${isDestinationBase && isStatutValide && isNotTraited}`);
+          return isDestinationBase && isStatutValide && isNotTraited;
         })
         .map(sortie => ({
           id: sortie.id,
@@ -61,6 +77,12 @@ class ArriveeBaseService {
       console.error('Erreur lors de la confirmation d\'arrivée:', error);
       throw error;
     }
+  }
+
+  // Marquer un conteneur comme traité
+  marquerCommeTraite(numeroConteneur: string): void {
+    console.log(`📝 Marquage du conteneur ${numeroConteneur} comme traité`);
+    this.markContainerAsTraited(numeroConteneur);
   }
 
   // Transformer une arrivée vers un stockage
