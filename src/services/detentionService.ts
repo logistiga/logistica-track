@@ -217,6 +217,8 @@ class DetentionService {
       responsabilite: this.mapResponsabilite(backendData.responsabilite),
       joursClient: backendData.responsabilite === 'client' ? backendData.jours_detention : 0,
       joursLogistica: backendData.responsabilite === 'transitaire' ? backendData.jours_detention : 0,
+      coutParJour: backendData.cout_par_jour || 15000,
+      montantTotal: backendData.cout_total || 0,
       noteDebitGeneree: backendData.statut === 'resolue',
       paiementConfirme: backendData.statut === 'resolue',
     };

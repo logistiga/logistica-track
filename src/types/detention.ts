@@ -12,6 +12,8 @@ export interface DetentionContainer {
   responsabilite?: "client" | "logistica" | "partagee";
   joursClient?: number;
   joursLogistica?: number;
+  coutParJour: number;
+  montantTotal: number;
   noteDebitGeneree: boolean;
   paiementConfirme: boolean;
 }

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\SortieConteneur;
 use App\Models\Vehicule;
+use App\Services\DetentionService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -217,6 +218,9 @@ class SortieConteneurService
             $this->updateVehiculeStatut($data['camion_retour_id'], 'en_mission');
             $this->updateVehiculeStatut($data['remorque_retour_id'], 'en_mission');
 
+            // Calculer automatiquement la détention si dépassement
+            $this->calculerDetentionApresRetour($sortie);
+
             DB::commit();
 
             return $sortie->load(['armateur', 'camion', 'remorque', 'camionRetour', 'remorqueRetour']);
@@ -224,6 +228,72 @@ class SortieConteneurService
             DB::rollback();
             throw $e;
         }
+    }
+
+    /**
+     * Calculer et créer automatiquement une détention après retour si dépassement
+     */
+    private function calculerDetentionApresRetour(SortieConteneur $sortie): void
+    {
+        // Vérifier que les données nécessaires sont disponibles
+        if (!$sortie->date_sortie || !$sortie->date_retour || !$sortie->jours_bad) {
+            return;
+        }
+
+        // Calculer les jours réels hors port
+        $joursReels = $sortie->date_sortie->diffInDays($sortie->date_retour);
+        $joursAutorises = $sortie->jours_bad;
+
+        // Vérifier s'il y a dépassement
+        if ($joursReels <= $joursAutorises) {
+            return; // Pas de dépassement, pas de détention
+        }
+
+        // Calculer les jours de dépassement
+        $joursDepassement = $joursReels - $joursAutorises;
+
+        // Tarif par défaut en FCFA (à configurer par armateur si nécessaire)
+        $coutParJour = $this->getCoutDetentionParJour($sortie);
+
+        // Calculer le coût total
+        $coutTotal = $joursDepassement * $coutParJour;
+
+        // Créer la détention automatiquement
+        try {
+            $detentionService = app(DetentionService::class);
+            $detentionService->createDetention([
+                'sortie_conteneur_id' => $sortie->id,
+                'date_debut_detention' => $sortie->date_sortie->addDays($joursAutorises),
+                'date_fin_detention' => $sortie->date_retour,
+                'jours_detention' => $joursDepassement,
+                'cout_par_jour' => $coutParJour,
+                'cout_total' => $coutTotal,
+                'responsabilite' => 'client', // Par défaut, peut être modifié manuellement
+                'motif_detention' => 'Dépassement automatique calculé après retour',
+                'statut' => 'active',
+            ]);
+        } catch (\Exception $e) {
+            // Log l'erreur mais ne pas faire échouer la confirmation de retour
+            \Log::warning('Erreur lors de la création automatique de détention', [
+                'sortie_id' => $sortie->id,
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Obtenir le coût de détention par jour selon l'armateur
+     */
+    private function getCoutDetentionParJour(SortieConteneur $sortie): float
+    {
+        $tarifs = config('detention.tarifs_par_jour', ['default' => 15000]);
+
+        // Récupérer le tarif spécifique à l'armateur si configuré
+        if ($sortie->armateur && isset($tarifs[$sortie->armateur->code])) {
+            return $tarifs[$sortie->armateur->code];
+        }
+
+        return $tarifs['default'];
     }
 
     /**

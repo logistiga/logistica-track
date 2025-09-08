@@ -269,34 +269,15 @@ class DetentionService
 
     /**
      * Calculer automatiquement les détentions pour les sorties dépassées
+     * DÉSACTIVÉ : Le calcul se fait maintenant automatiquement après retour
      */
     public function calculateAutomaticDetentions(): array
     {
-        $sortiesDepassees = SortieConteneur::whereNotNull('date_fin_franchise')
-            ->where('date_fin_franchise', '<', now())
-            ->whereNull('date_retour')
-            ->whereDoesntHave('detention')
-            ->get();
-
-        $detentionsCreated = [];
-
-        foreach ($sortiesDepassees as $sortie) {
-            $joursDepassement = now()->diffInDays($sortie->date_fin_franchise);
-            
-            if ($joursDepassement > 0) {
-                $detention = $this->createDetention([
-                    'sortie_conteneur_id' => $sortie->id,
-                    'date_debut_detention' => $sortie->date_fin_franchise->addDay(),
-                    'cout_par_jour' => 25.00, // Coût par défaut, à configurer
-                    'responsabilite' => 'client', // Par défaut, à réviser manuellement
-                    'motif_detention' => 'Dépassement automatique de la franchise',
-                ]);
-
-                $detentionsCreated[] = $detention;
-            }
-        }
-
-        return $detentionsCreated;
+        // Ancienne logique désactivée - Le calcul se fait maintenant dans confirmerRetour()
+        // Les détentions sont créées automatiquement seulement APRÈS le retour du conteneur
+        // en comparant jours_réels vs jours_bad
+        
+        return []; // Retourner un tableau vide
     }
 
     /**

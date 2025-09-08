@@ -70,6 +70,8 @@ export function useDetention(): UseDetentionReturn {
           responsabilite: 'client',
           joursClient: 3,
           joursLogistica: 0,
+          coutParJour: 15000,
+          montantTotal: 45000,
           noteDebitGeneree: false,
           paiementConfirme: false,
         },

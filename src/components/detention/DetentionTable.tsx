@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, FileText, CheckCircle } from "lucide-react";
 import { DetentionContainer } from "@/types/detention";
 import { Skeleton } from "@/components/ui/skeleton";
+import { formatCurrency } from "@/lib/currency";
 
 interface DetentionTableProps {
   containers: DetentionContainer[];
@@ -61,6 +62,7 @@ export function DetentionTable({
               <TableHead>BAT autorisés</TableHead>
               <TableHead>Jours réalisés</TableHead>
               <TableHead>Dépassement</TableHead>
+              <TableHead>Montant Total</TableHead>
               <TableHead>Date sortie</TableHead>
               <TableHead>Date retour</TableHead>
               <TableHead>Client</TableHead>
@@ -80,6 +82,7 @@ export function DetentionTable({
                   <TableCell><Skeleton className="h-4 w-16" /></TableCell>
                   <TableCell><Skeleton className="h-4 w-24" /></TableCell>
                   <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-24" /></TableCell>
                   <TableCell><Skeleton className="h-4 w-32" /></TableCell>
                   <TableCell><Skeleton className="h-4 w-20" /></TableCell>
                   <TableCell><Skeleton className="h-4 w-24" /></TableCell>
@@ -87,7 +90,7 @@ export function DetentionTable({
               ))
             ) : containers.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={11} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={12} className="text-center py-8 text-muted-foreground">
                   Aucune détention trouvée
                 </TableCell>
               </TableRow>
@@ -101,6 +104,9 @@ export function DetentionTable({
                   <TableCell>{container.joursRealises} jours</TableCell>
                   <TableCell>
                     <Badge variant="destructive">{container.joursDepassement} jours</Badge>
+                  </TableCell>
+                  <TableCell className="font-semibold text-red-600">
+                    {formatCurrency(container.montantTotal)}
                   </TableCell>
                   <TableCell>{container.dateSortie}</TableCell>
                   <TableCell>{container.dateRetour}</TableCell>
