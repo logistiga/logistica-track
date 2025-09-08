@@ -28,7 +28,7 @@ class ArriveeBaseService {
       const arrivees = sorties
         .filter(sortie => {
           const isDestinationBase = sortie.destination === 'base';
-          const isStatutValide = sortie.statut === 'en_cours' || sortie.statut === 'livre';
+          const isStatutValide = sortie.statut === 'en_cours' || sortie.statut === 'livre' || (sortie.statut as any) === 'a_la_base';
           console.log(`🔍 Conteneur ${sortie.numero_conteneur}: destination=${sortie.destination}, statut=${sortie.statut}, valid=${isDestinationBase && isStatutValide}`);
           return isDestinationBase && isStatutValide;
         })
