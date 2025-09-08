@@ -49,6 +49,7 @@ class DetentionService {
    * Récupérer toutes les détentions avec filtres et pagination
    */
   async getDetentions(filters: DetentionFilters = {}) {
+    console.log('🔍 DetentionService.getDetentions called with filters:', filters);
     const params = new URLSearchParams();
     
     Object.entries(filters).forEach(([key, value]) => {
@@ -60,7 +61,9 @@ class DetentionService {
     const queryString = params.toString();
     const endpoint = queryString ? `/detentions?${queryString}` : '/detentions';
     
+    console.log('📡 Making API call to:', endpoint);
     const response = await apiService.get(endpoint);
+    console.log('📦 Raw API response:', response);
     
     // Transformer les données du backend vers le format frontend
     if (response.success && response.data) {

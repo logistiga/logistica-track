@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DetentionContainer, ResponsabiliteFormData } from "@/types/detention";
 import { ResponsabiliteDialog } from "@/components/detention/ResponsabiliteDialog";
 import { DetentionStats } from "@/components/detention/DetentionStats";
@@ -6,9 +6,13 @@ import { DetentionTable } from "@/components/detention/DetentionTable";
 import { useDetention } from "@/hooks/useDetention";
 import { useToast } from "@/hooks/use-toast";
 
+console.log('🔄 Detention.tsx file loaded');
+
 export default function Detention() {
+  console.log('🎯 Detention page component rendered');
   const { toast } = useToast();
   
+  console.log('🔧 Initializing useDetention hook...');
   const {
     detentions,
     stats,
@@ -21,8 +25,40 @@ export default function Detention() {
     exportDetentions,
   } = useDetention();
 
+  console.log('📊 Current detention state:', { 
+    detentionsCount: detentions.length, 
+    stats, 
+    loading, 
+    error 
+  });
+
   const [selectedContainer, setSelectedContainer] = useState<DetentionContainer | null>(null);
   const [isResponsabiliteDialogOpen, setIsResponsabiliteDialogOpen] = useState(false);
+
+  // Test direct de l'API
+  useEffect(() => {
+    const testAPI = async () => {
+      console.log('🧪 Testing API directly...');
+      try {
+        // Test avec fetch direct
+        const token = localStorage.getItem('auth_token');
+        const response = await fetch('http://127.0.0.1:8000/api/detentions', {
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            ...(token && { 'Authorization': `Bearer ${token}` })
+          }
+        });
+        console.log('🔗 Direct API test response status:', response.status);
+        const data = await response.json();
+        console.log('📦 Direct API test response data:', data);
+      } catch (error) {
+        console.error('❌ Direct API test failed:', error);
+      }
+    };
+    
+    testAPI();
+  }, []);
 
   const handleIdentifyResponsability = (container: DetentionContainer) => {
     setSelectedContainer(container);

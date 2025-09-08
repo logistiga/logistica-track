@@ -202,6 +202,7 @@ export function useDetention(): UseDetentionReturn {
 
   // Charger les données initiales
   useEffect(() => {
+    console.log('🚀 useDetention: Component mounted, starting data fetch...');
     fetchDetentions();
     fetchStats();
   }, []);

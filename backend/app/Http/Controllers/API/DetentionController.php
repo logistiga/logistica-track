@@ -24,8 +24,11 @@ class DetentionController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
+        \Log::info('📥 DetentionController@index called with params:', $request->all());
         try {
+            \Log::info('🔍 Starting detention service call');
             $result = $this->detentionService->getAllDetentions($request->all());
+            \Log::info('📊 DetentionService result:', ['count' => count($result['data'] ?? [])]);
 
             return $this->successResponse(
                 DetentionResource::collection($result['data'])->additional([
