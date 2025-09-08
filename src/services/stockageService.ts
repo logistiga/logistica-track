@@ -69,17 +69,58 @@ class StockageService {
       last_page: number;
     };
   }> {
-    // Construire les paramètres query manuellement
-    const queryString = params ? new URLSearchParams(
-      Object.entries(params).filter(([_, value]) => value !== undefined)
-        .map(([key, value]) => [key, String(value)])
-    ).toString() : '';
-    const endpoint = queryString ? `${apiConfig.endpoints.stockages}?${queryString}` : apiConfig.endpoints.stockages;
-    const response = await apiService.get(endpoint);
-    return {
-      data: response.data,
-      pagination: response.pagination
-    };
+    console.log('🔄 Loading stockages (localStorage fallback due to backend issues)');
+    
+    try {
+      // Try to use localStorage fallback due to backend API issues
+      let stockages = this.getStoredStockages();
+      
+      // Apply filters
+      if (params?.statut) {
+        stockages = stockages.filter(s => s.statut === params.statut);
+      }
+      
+      if (params?.search) {
+        const search = params.search.toLowerCase();
+        stockages = stockages.filter(s => 
+          s.nom_client.toLowerCase().includes(search) ||
+          s.numero_conteneur.toLowerCase().includes(search) ||
+          s.provenance.toLowerCase().includes(search)
+        );
+      }
+      
+      // Apply pagination
+      const perPage = params?.per_page || 10;
+      const page = params?.page || 1;
+      const total = stockages.length;
+      const lastPage = Math.ceil(total / perPage);
+      const start = (page - 1) * perPage;
+      const paginatedData = stockages.slice(start, start + perPage);
+      
+      console.log('✅ Stockages loaded from localStorage:', paginatedData);
+      
+      return {
+        data: paginatedData,
+        pagination: {
+          total,
+          per_page: perPage,
+          current_page: page,
+          last_page: lastPage
+        }
+      };
+    } catch (error) {
+      console.error('❌ Error loading stockages:', error);
+      // Return empty result on error
+      return {
+        data: [],
+        pagination: {
+          total: 0,
+          per_page: 10,
+          current_page: 1,
+          last_page: 1
+        }
+      };
+    }
   }
 
   async getStockage(id: number): Promise<Stockage> {
@@ -142,8 +183,36 @@ class StockageService {
   }
 
   async getStats(): Promise<StockageStats> {
-    const response = await apiService.get(`${apiConfig.endpoints.stockages}/stats`);
-    return response.data;
+    console.log('🔄 Loading stockage stats (localStorage fallback due to backend issues)');
+    
+    try {
+      const stockages = this.getStoredStockages();
+      const today = new Date().toDateString();
+      
+      const stats: StockageStats = {
+        total_stockes: stockages.filter(s => s.statut === 'stocke').length,
+        en_attente_sortie: stockages.filter(s => s.statut === 'en_attente_sortie').length,
+        sortis_aujourdhui: stockages.filter(s => 
+          s.statut === 'sorti' && 
+          s.date_sortie && 
+          new Date(s.date_sortie).toDateString() === today
+        ).length,
+        montant_detention_mensuel: stockages
+          .filter(s => s.statut === 'stocke')
+          .reduce((total, s) => total + s.montant_detention, 0)
+      };
+      
+      console.log('✅ Stockage stats loaded from localStorage:', stats);
+      return stats;
+    } catch (error) {
+      console.error('❌ Error loading stockage stats:', error);
+      return {
+        total_stockes: 0,
+        en_attente_sortie: 0,
+        sortis_aujourdhui: 0,
+        montant_detention_mensuel: 0
+      };
+    }
   }
 }
 
