@@ -277,7 +277,6 @@ Route::middleware('auth:sanctum')->group(function () {
         });
     });
 });
-});
 
 // Routes de fallback pour API non trouvée
 Route::fallback(function () {
