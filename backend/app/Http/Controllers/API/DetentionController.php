@@ -29,7 +29,7 @@ class DetentionController extends Controller
         \Log::info('🔑 User authenticated', ['user_id' => auth()->check() ? auth()->user()->id : 'anonymous']);
         
         try {
-            \Log::info('🔍 Starting detention service call');
+            \Log::info('🔍 Starting detention service call', []);
             $result = $this->detentionService->getAllDetentions($request->all());
             \Log::info('📊 DetentionService result:', [
                 'count' => count($result['data'] ?? []), 
