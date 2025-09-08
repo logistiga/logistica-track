@@ -10,6 +10,7 @@ console.log('🔄 Detention.tsx file loaded');
 
 export default function Detention() {
   console.log('🎯 Detention page component rendered');
+  console.log('🌍 Current window location:', window.location.href);
   const { toast } = useToast();
   
   console.log('🔧 Initializing useDetention hook...');

@@ -203,6 +203,7 @@ export function useDetention(): UseDetentionReturn {
   // Charger les données initiales
   useEffect(() => {
     console.log('🚀 useDetention: Component mounted, starting data fetch...');
+    console.log('🔗 API URL configured as:', 'http://127.0.0.1:8000/api/detentions');
     fetchDetentions();
     fetchStats();
   }, []);
