@@ -2,6 +2,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Building2, Loader2 } from "lucide-react";
 import { StockageTab } from "@/components/base/StockageTab";
 import { DoubleRelevageTab } from "@/components/base/DoubleRelevageTab";
+import { DepotageTab } from "@/components/base/DepotageTab";
 import { ArriveeBaseTab } from "@/components/base/ArriveeBaseTab";
 import { useVehicules } from "@/hooks/useVehicules";
 
@@ -43,16 +44,17 @@ export default function Base() {
         </div>
         <div>
           <h1 className="text-3xl font-bold text-foreground">Gestion de la Base</h1>
-          <p className="text-muted-foreground">Stockage et double relevage des conteneurs</p>
+          <p className="text-muted-foreground">Stockage, double relevage et dépotage des conteneurs</p>
         </div>
       </div>
 
       {/* Tabs */}
       <Tabs defaultValue="arrivees" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="arrivees">Arrivées Base</TabsTrigger>
           <TabsTrigger value="stockage">Stockage</TabsTrigger>
           <TabsTrigger value="double-relevage">Double Relevage</TabsTrigger>
+          <TabsTrigger value="depotage">Dépotage</TabsTrigger>
         </TabsList>
         
         <TabsContent value="arrivees">
@@ -65,6 +67,10 @@ export default function Base() {
 
         <TabsContent value="double-relevage">
           <DoubleRelevageTab camions={transformedCamions} remorques={transformedRemorques} />
+        </TabsContent>
+
+        <TabsContent value="depotage">
+          <DepotageTab camions={transformedCamions} remorques={transformedRemorques} />
         </TabsContent>
       </Tabs>
     </div>
