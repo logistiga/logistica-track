@@ -3,6 +3,7 @@ import { Users, FileText, CheckCircle, DollarSign } from "lucide-react";
 import { DetentionContainer } from "@/types/detention";
 import { DetentionStats as DetentionStatsType } from "@/services/detentionService";
 import { Skeleton } from "@/components/ui/skeleton";
+import { formatCurrency } from "@/lib/currency";
 
 interface DetentionStatsProps {
   stats?: DetentionStatsType | null;
@@ -75,7 +76,7 @@ export function DetentionStats({ stats, loading }: DetentionStatsProps) {
           <DollarSign className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{displayStats.coutTotalActif.toFixed(2)} €</div>
+          <div className="text-2xl font-bold">{formatCurrency(Number(displayStats.coutTotalActif) || 0)}</div>
         </CardContent>
       </Card>
     </div>
