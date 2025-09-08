@@ -6,18 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Truck, ArrowLeft } from "lucide-react";
 import { SortieConteneur, ReturnData } from "@/types/sortie-conteneur";
-
-// Mock data des camions disponibles pour le retour
-const camionsDisponibles = [
-  { id: "1", numeroParc: "TR 37", immatriculation: "TR 37", statut: "disponible" },
-  { id: "2", numeroParc: "TR 41", immatriculation: "TR 41", statut: "disponible" },
-  { id: "3", numeroParc: "tr 08", immatriculation: "tr 08", statut: "disponible" },
-];
-
-const remorquesDisponibles = [
-  { id: "1", numeroParc: "R 01", immatriculation: "R01", statut: "disponible" },
-  { id: "2", numeroParc: "R 02", immatriculation: "R02", statut: "disponible" },
-];
+import { useVehicules } from "@/hooks/useVehicules";
 
 interface ReturnDialogProps {
   open: boolean;
@@ -36,6 +25,12 @@ export const ReturnDialog = ({
   onConfirm,
   onCancel
 }: ReturnDialogProps) => {
+  // Récupérer les données des véhicules depuis la page Matériel
+  const { camions, remorques, loading } = useVehicules();
+  
+  // Filtrer uniquement les véhicules disponibles
+  const camionsDisponibles = camions.filter(camion => camion.actif);
+  const remorquesDisponibles = remorques.filter(remorque => remorque.actif);
   return (
     <Dialog open={open} onOpenChange={onCancel}>
       <DialogContent className="max-w-2xl">
@@ -92,36 +87,56 @@ export const ReturnDialog = ({
             <div>
               <Label htmlFor="camionRetour">Camion de retour *</Label>
               <Select value={returnData.camionRetour} onValueChange={(value) => setReturnData({ ...returnData, camionRetour: value })}>
-                <SelectTrigger>
+                <SelectTrigger className="bg-background border border-input">
                   <SelectValue placeholder="Sélectionner un camion" />
                 </SelectTrigger>
-                <SelectContent>
-                  {camionsDisponibles.map((camion) => (
-                    <SelectItem key={camion.id} value={camion.id}>
-                      <div className="flex items-center gap-2">
-                        <Truck className="w-4 h-4" />
-                        {camion.numeroParc} - {camion.immatriculation}
-                      </div>
+                <SelectContent className="bg-background border border-input z-50">
+                  {loading ? (
+                    <SelectItem value="loading" disabled>
+                      Chargement des camions...
                     </SelectItem>
-                  ))}
+                  ) : camionsDisponibles.length === 0 ? (
+                    <SelectItem value="empty" disabled>
+                      Aucun camion disponible
+                    </SelectItem>
+                  ) : (
+                    camionsDisponibles.map((camion) => (
+                      <SelectItem key={camion.id} value={camion.id.toString()} className="hover:bg-muted">
+                        <div className="flex items-center gap-2">
+                          <Truck className="w-4 h-4" />
+                          {camion.numero_parc} - {camion.immatriculation}
+                        </div>
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
             </div>
             <div>
               <Label htmlFor="remorqueRetour">Remorque de retour *</Label>
               <Select value={returnData.remorqueRetour} onValueChange={(value) => setReturnData({ ...returnData, remorqueRetour: value })}>
-                <SelectTrigger>
+                <SelectTrigger className="bg-background border border-input">
                   <SelectValue placeholder="Sélectionner une remorque" />
                 </SelectTrigger>
-                <SelectContent>
-                  {remorquesDisponibles.map((remorque) => (
-                    <SelectItem key={remorque.id} value={remorque.id}>
-                      <div className="flex items-center gap-2">
-                        <Truck className="w-4 h-4" />
-                        {remorque.numeroParc} - {remorque.immatriculation}
-                      </div>
+                <SelectContent className="bg-background border border-input z-50">
+                  {loading ? (
+                    <SelectItem value="loading" disabled>
+                      Chargement des remorques...
                     </SelectItem>
-                  ))}
+                  ) : remorquesDisponibles.length === 0 ? (
+                    <SelectItem value="empty" disabled>
+                      Aucune remorque disponible
+                    </SelectItem>
+                  ) : (
+                    remorquesDisponibles.map((remorque) => (
+                      <SelectItem key={remorque.id} value={remorque.id.toString()} className="hover:bg-muted">
+                        <div className="flex items-center gap-2">
+                          <Truck className="w-4 h-4" />
+                          {remorque.numero_parc} - {remorque.immatriculation}
+                        </div>
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
             </div>
