@@ -1,22 +1,9 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Package, Clock, CheckCircle, AlertCircle } from "lucide-react";
-
-interface StockageItem {
-  id: string;
-  nomClient: string;
-  numeroConteneur: string;
-  provenance: string;
-  dateArrivee: string;
-  camionProprietaire: boolean;
-  plaqueCamion: string;
-  plaqueRemorque: string;
-  joursGratuits: number;
-  prixParJour: number;
-  statut: "stocke" | "en_attente_sortie";
-}
+import { Stockage } from "@/services/stockageService";
 
 interface StockageStatsProps {
-  stockages: StockageItem[];
+  stockages: Stockage[];
 }
 
 export function StockageStats({ stockages }: StockageStatsProps) {

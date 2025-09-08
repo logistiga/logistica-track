@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,20 +10,7 @@ import { StockageForm } from "./StockageForm";
 import { StockageStats } from "./StockageStats";
 import { SortieStockageDialog } from "./SortieStockageDialog";
 import { toast } from "@/hooks/use-toast";
-
-interface StockageItem {
-  id: string;
-  nomClient: string;
-  numeroConteneur: string;
-  provenance: string;
-  dateArrivee: string;
-  camionProprietaire: boolean;
-  plaqueCamion: string;
-  plaqueRemorque: string;
-  joursGratuits: number;
-  prixParJour: number;
-  statut: "stocke" | "en_attente_sortie";
-}
+import { stockageService, Stockage } from "@/services/stockageService";
 
 interface StockageTabProps {
   camions: Array<{id: string, numeroParc: string, immatriculation: string, statut: string}>;
@@ -31,34 +18,44 @@ interface StockageTabProps {
 }
 
 export function StockageTab({ camions, remorques }: StockageTabProps) {
-  const [stockages, setStockages] = useState<StockageItem[]>([
-    {
-      id: "1",
-      nomClient: "Client ABC",
-      numeroConteneur: "MSKU1234567",
-      provenance: "Port de Douala",
-      dateArrivee: "2024-01-15",
-      camionProprietaire: true,
-      plaqueCamion: "TR 37",
-      plaqueRemorque: "R 01",
-      joursGratuits: 5,
-      prixParJour: 10000,
-      statut: "stocke"
-    }
-  ]);
-
+  const [stockages, setStockages] = useState<Stockage[]>([]);
+  const [loading, setLoading] = useState(true);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isSortieDialogOpen, setIsSortieDialogOpen] = useState(false);
-  const [selectedStockage, setSelectedStockage] = useState<StockageItem | null>(null);
+  const [selectedStockage, setSelectedStockage] = useState<Stockage | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+
+  useEffect(() => {
+    loadStockages();
+  }, []);
+
+  const loadStockages = async () => {
+    try {
+      setLoading(true);
+      const response = await stockageService.getStockages({
+        statut: 'stocke'
+      });
+      console.log('🔍 Stockages récupérés:', response.data);
+      setStockages(response.data);
+    } catch (error) {
+      console.error('Erreur lors du chargement des stockages:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de charger les stockages",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Transform data for forms
   const camionsParc = camions.map(c => ({ id: c.id, numeroParc: c.numeroParc }));
   const remorquesParc = remorques.map(r => ({ id: r.id, numeroParc: r.numeroParc }));
 
   const filteredStockages = stockages.filter(item =>
-    item.numeroConteneur.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.nomClient.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.numero_conteneur.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.nom_client.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.provenance.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -73,64 +70,87 @@ export function StockageTab({ camions, remorques }: StockageTabProps) {
     }
   };
 
-  const handleAddStockage = (data: any) => {
-    const newStockage: StockageItem = {
-      id: Date.now().toString(),
-      nomClient: data.nomClient,
-      numeroConteneur: data.numeroConteneur,
-      provenance: data.provenance,
-      dateArrivee: data.dateArrivee,
-      camionProprietaire: data.camionProprietaire,
-      plaqueCamion: data.plaqueCamion,
-      plaqueRemorque: data.plaqueRemorque,
-      joursGratuits: data.joursGratuits,
-      prixParJour: data.prixParJour,
-      statut: "stocke"
-    };
-    setStockages([...stockages, newStockage]);
-    setIsAddDialogOpen(false);
-    toast({
-      title: "Succès",
-      description: "Conteneur ajouté au stockage avec succès"
-    });
-  };
+  const handleAddStockage = async (data: any) => {
+    try {
+      const stockageData = {
+        nom_client: data.nomClient,
+        numero_conteneur: data.numeroConteneur,
+        provenance: data.provenance,
+        date_arrivee: data.dateArrivee,
+        camion_proprietaire: data.camionProprietaire,
+        plaque_camion: data.plaqueCamion,
+        plaque_remorque: data.plaqueRemorque,
+        jours_gratuits: data.joursGratuits,
+        prix_par_jour: data.prixParJour,
+        observations: data.observations,
+      };
 
-  const handleSortieStockage = (data: any) => {
-    if (selectedStockage) {
-      // Calculate detention days
-      const dateArrivee = new Date(selectedStockage.dateArrivee);
-      const dateSortie = new Date(data.dateSortie);
-      const joursTotal = Math.ceil((dateSortie.getTime() - dateArrivee.getTime()) / (1000 * 3600 * 24));
-      const joursDetention = Math.max(0, joursTotal - selectedStockage.joursGratuits);
-      const montantDetention = joursDetention * selectedStockage.prixParJour;
-
-      // Remove from stockage (move to archives)
-      setStockages(stockages.filter(s => s.id !== selectedStockage.id));
-      setIsSortieDialogOpen(false);
-      setSelectedStockage(null);
+      await stockageService.createStockage(stockageData);
+      setIsAddDialogOpen(false);
+      loadStockages();
       
       toast({
-        title: "Sortie confirmée",
-        description: `Conteneur sorti - ${joursDetention} jours de détention (${montantDetention.toLocaleString()} FCFA)`
+        title: "Succès",
+        description: "Conteneur ajouté au stockage avec succès"
+      });
+    } catch (error) {
+      console.error('Erreur lors de la création du stockage:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de créer le stockage",
+        variant: "destructive",
       });
     }
   };
 
-  const handleDeleteStockage = (id: string) => {
-    setStockages(stockages.filter(s => s.id !== id));
-    toast({
-      title: "Supprimé",
-      description: "Conteneur supprimé du stockage"
-    });
+  const handleSortieStockage = async (data: any) => {
+    if (selectedStockage) {
+      try {
+        const result = await stockageService.sortieStockage(selectedStockage.id, {
+          date_sortie: data.dateSortie,
+          observations: data.observations,
+        });
+
+        setIsSortieDialogOpen(false);
+        setSelectedStockage(null);
+        loadStockages();
+        
+        toast({
+          title: "Sortie confirmée",
+          description: `Conteneur sorti - ${result.detention.jours} jours de détention (${result.detention.montant_formate})`
+        });
+      } catch (error) {
+        console.error('Erreur lors de la sortie du stockage:', error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de confirmer la sortie",
+          variant: "destructive",
+        });
+      }
+    }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('fr-FR', {
-      style: 'currency',
-      currency: 'XOF',
-      minimumFractionDigits: 0,
-    }).format(amount);
+  const handleDeleteStockage = async (id: number) => {
+    try {
+      await stockageService.deleteStockage(id);
+      loadStockages();
+      toast({
+        title: "Supprimé",
+        description: "Conteneur supprimé du stockage"
+      });
+    } catch (error) {
+      console.error('Erreur lors de la suppression:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de supprimer le stockage",
+        variant: "destructive",
+      });
+    }
   };
+
+  if (loading) {
+    return <div className="text-center py-8">Chargement des stockages...</div>;
+  }
 
   return (
     <div className="space-y-6">
@@ -191,20 +211,20 @@ export function StockageTab({ camions, remorques }: StockageTabProps) {
             <TableBody>
               {filteredStockages.map((item) => (
                 <TableRow key={item.id}>
-                  <TableCell className="font-medium">{item.nomClient}</TableCell>
-                  <TableCell>{item.numeroConteneur}</TableCell>
+                  <TableCell className="font-medium">{item.nom_client}</TableCell>
+                  <TableCell>{item.numero_conteneur}</TableCell>
                   <TableCell>{item.provenance}</TableCell>
-                  <TableCell>{item.dateArrivee}</TableCell>
+                  <TableCell>{item.date_arrivee}</TableCell>
                   <TableCell>
                     <div className="text-xs">
-                      <div>C: {item.plaqueCamion}</div>
-                      <div>R: {item.plaqueRemorque}</div>
+                      <div>C: {item.plaque_camion}</div>
+                      <div>R: {item.plaque_remorque}</div>
                     </div>
                   </TableCell>
                   <TableCell>
                     <div className="text-xs">
-                      <div>{item.joursGratuits} jours</div>
-                      <div>{formatCurrency(item.prixParJour)}/j</div>
+                      <div>{item.jours_gratuits} jours</div>
+                      <div>{item.prix_par_jour_formate}/j</div>
                     </div>
                   </TableCell>
                   <TableCell>{getStatusBadge(item.statut)}</TableCell>
@@ -248,9 +268,9 @@ export function StockageTab({ camions, remorques }: StockageTabProps) {
           </DialogHeader>
           {selectedStockage && (
             <div className="mb-4 p-3 bg-muted rounded-lg">
-              <p><strong>Conteneur:</strong> {selectedStockage.numeroConteneur}</p>
-              <p><strong>Client:</strong> {selectedStockage.nomClient}</p>
-              <p><strong>Date d'arrivée:</strong> {selectedStockage.dateArrivee}</p>
+              <p><strong>Conteneur:</strong> {selectedStockage.numero_conteneur}</p>
+              <p><strong>Client:</strong> {selectedStockage.nom_client}</p>
+              <p><strong>Date d'arrivée:</strong> {selectedStockage.date_arrivee}</p>
             </div>
           )}
           <SortieStockageDialog 
