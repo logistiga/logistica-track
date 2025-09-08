@@ -108,7 +108,6 @@ class ArriveeBaseService {
     return {
       nomClient: arrivee.nom_client,
       numeroConteneur: arrivee.numero_conteneur,
-      provenance: arrivee.armateur?.nom || 'Port de Douala',
     };
   }
 }

@@ -9,7 +9,6 @@ import { Textarea } from "@/components/ui/textarea";
 interface DepotageFormData {
   nomClient: string;
   numeroConteneur: string;
-  provenance: string;
   dateDepotage: string;
   camionProprietaire: boolean;
   plaqueCamion: string;
@@ -30,7 +29,6 @@ export function DepotageForm({ onSubmit, initialData, camionsParc = [], remorque
   const [formData, setFormData] = useState<DepotageFormData>({
     nomClient: initialData?.nomClient || "",
     numeroConteneur: initialData?.numeroConteneur || "",
-    provenance: initialData?.provenance || "",
     dateDepotage: new Date().toISOString().split('T')[0],
     camionProprietaire: true,
     plaqueCamion: "",
@@ -71,17 +69,6 @@ export function DepotageForm({ onSubmit, initialData, camionsParc = [], remorque
       </div>
 
       <div>
-        <Label htmlFor="provenance">Provenance *</Label>
-        <Input
-          id="provenance"
-          value={formData.provenance}
-          onChange={(e) => setFormData({ ...formData, provenance: e.target.value })}
-          placeholder="Ex: Port de Douala"
-          required
-        />
-      </div>
-
-      <div>
         <Label htmlFor="dateDepotage">Date de Dépotage *</Label>
         <Input
           id="dateDepotage"
@@ -94,20 +81,13 @@ export function DepotageForm({ onSubmit, initialData, camionsParc = [], remorque
 
       <div>
         <Label htmlFor="typeMarchandise">Type de Marchandise *</Label>
-        <Select value={formData.typeMarchandise} onValueChange={(value) => setFormData({ ...formData, typeMarchandise: value })}>
-          <SelectTrigger className="bg-background border border-input">
-            <SelectValue placeholder="Sélectionner le type" />
-          </SelectTrigger>
-          <SelectContent className="bg-background border border-input z-50">
-            <SelectItem value="general" className="hover:bg-muted">Marchandise générale</SelectItem>
-            <SelectItem value="alimentaire" className="hover:bg-muted">Produits alimentaires</SelectItem>
-            <SelectItem value="textile" className="hover:bg-muted">Textile</SelectItem>
-            <SelectItem value="electronique" className="hover:bg-muted">Électronique</SelectItem>
-            <SelectItem value="automobile" className="hover:bg-muted">Pièces automobiles</SelectItem>
-            <SelectItem value="chimique" className="hover:bg-muted">Produits chimiques</SelectItem>
-            <SelectItem value="autre" className="hover:bg-muted">Autre</SelectItem>
-          </SelectContent>
-        </Select>
+        <Textarea
+          id="typeMarchandise"
+          value={formData.typeMarchandise}
+          onChange={(e) => setFormData({ ...formData, typeMarchandise: e.target.value })}
+          placeholder="Décrire le type de marchandise..."
+          required
+        />
       </div>
 
       <div className="bg-muted/50 p-4 rounded-lg space-y-4">
