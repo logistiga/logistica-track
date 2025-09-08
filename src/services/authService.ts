@@ -86,7 +86,12 @@ class AuthService {
     try {
       const response = await apiService.get('/auth/user');
       return response.data.user;
-    } catch (error) {
+    } catch (error: any) {
+      // Si c'est une erreur 404 ou 401, l'utilisateur n'est plus valide
+      if (error.response?.status === 404 || error.response?.status === 401) {
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('user');
+      }
       throw new Error('Utilisateur non connecté');
     }
   }
