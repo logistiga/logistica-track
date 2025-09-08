@@ -1,9 +1,10 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Building2, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { StockageTab } from "@/components/base/StockageTab";
 import { DoubleRelevageTab } from "@/components/base/DoubleRelevageTab";
 import { DepotageTab } from "@/components/base/DepotageTab";
 import { ArriveeBaseTab } from "@/components/base/ArriveeBaseTab";
+import { BaseHeader } from "@/components/base/shared/BaseHeader";
 import { useVehicules } from "@/hooks/useVehicules";
 
 export default function Base() {
@@ -37,16 +38,10 @@ export default function Base() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center space-x-3">
-        <div className="p-3 bg-primary rounded-xl">
-          <Building2 className="w-6 h-6 text-primary-foreground" />
-        </div>
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Gestion de la Base</h1>
-          <p className="text-muted-foreground">Stockage, double relevage et dépotage des conteneurs</p>
-        </div>
-      </div>
+      <BaseHeader 
+        title="Gestion de la Base"
+        description="Stockage, double relevage et dépotage des conteneurs"
+      />
 
       {/* Tabs */}
       <Tabs defaultValue="arrivees" className="space-y-6">

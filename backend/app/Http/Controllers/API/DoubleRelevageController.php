@@ -7,37 +7,28 @@ use App\Models\DoubleRelevage;
 use App\Http\Resources\DoubleRelevageResource;
 use App\Http\Requests\StoreDoubleRelevageRequest;
 use App\Http\Requests\UpdateDoubleRelevageRequest;
-use App\Traits\ApiResponseTrait;
+use App\Services\DoubleRelevageService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
 class DoubleRelevageController extends Controller
 {
-    use ApiResponseTrait;
+    protected DoubleRelevageService $doubleRelevageService;
+
+    public function __construct(DoubleRelevageService $doubleRelevageService)
+    {
+        $this->doubleRelevageService = $doubleRelevageService;
+    }
 
     /**
      * Afficher la liste des opérations de double relevage
      */
     public function index(Request $request): JsonResponse
     {
-        $query = DoubleRelevage::with(['createdBy', 'updatedBy']);
-
-        // Filtres
-        if ($request->filled('statut')) {
-            $query->where('statut', $request->statut);
-        }
-
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('numero_conteneur', 'like', "%{$search}%")
-                  ->orWhere('nom_client', 'like', "%{$search}%")
-                  ->orWhere('provenance', 'like', "%{$search}%");
-            });
-        }
-
-        $operations = $query->orderBy('date_creation', 'desc')
-                           ->paginate($request->get('per_page', 15));
+        $filters = $request->only(['statut', 'search', 'date_debut', 'date_fin']);
+        $perPage = $request->get('per_page', 15);
+        
+        $operations = $this->doubleRelevageService->getDoubleRelevages($filters, $perPage);
 
         return $this->successResponse(
             DoubleRelevageResource::collection($operations->items()),
@@ -59,13 +50,10 @@ class DoubleRelevageController extends Controller
      */
     public function store(StoreDoubleRelevageRequest $request): JsonResponse
     {
-        $operation = DoubleRelevage::create(array_merge(
-            $request->validated(),
-            [
-                'created_by' => auth()->id(),
-                'date_creation' => now()->toDateString()
-            ]
-        ));
+        $operation = $this->doubleRelevageService->createDoubleRelevage(
+            $request->validated(), 
+            auth()->id()
+        );
 
         $operation->load(['createdBy', 'updatedBy']);
 
@@ -94,15 +82,14 @@ class DoubleRelevageController extends Controller
      */
     public function update(UpdateDoubleRelevageRequest $request, DoubleRelevage $doubleRelevage): JsonResponse
     {
-        $doubleRelevage->update(array_merge(
+        $operation = $this->doubleRelevageService->updateDoubleRelevage(
+            $doubleRelevage,
             $request->validated(),
-            ['updated_by' => auth()->id()]
-        ));
-
-        $doubleRelevage->load(['createdBy', 'updatedBy']);
+            auth()->id()
+        );
 
         return $this->successResponse(
-            new DoubleRelevageResource($doubleRelevage),
+            new DoubleRelevageResource($operation),
             'Opération mise à jour avec succès'
         );
     }
@@ -125,16 +112,13 @@ class DoubleRelevageController extends Controller
      */
     public function confirmer(DoubleRelevage $doubleRelevage): JsonResponse
     {
-        $doubleRelevage->update([
-            'statut' => 'confirme',
-            'date_confirmation' => now()->toDateString(),
-            'updated_by' => auth()->id()
-        ]);
-
-        $doubleRelevage->load(['createdBy', 'updatedBy']);
+        $operation = $this->doubleRelevageService->confirmerDoubleRelevage(
+            $doubleRelevage,
+            auth()->id()
+        );
 
         return $this->successResponse(
-            new DoubleRelevageResource($doubleRelevage),
+            new DoubleRelevageResource($operation),
             'Opération confirmée avec succès'
         );
     }
@@ -144,15 +128,7 @@ class DoubleRelevageController extends Controller
      */
     public function stats(): JsonResponse
     {
-        $stats = [
-            'total_en_attente' => DoubleRelevage::where('statut', 'en_attente')->count(),
-            'total_confirmees' => DoubleRelevage::where('statut', 'confirme')->count(),
-            'operations_aujourdhui' => DoubleRelevage::whereDate('date_creation', today())->count(),
-            'montant_mensuel' => DoubleRelevage::where('statut', 'confirme')
-                                             ->whereMonth('date_confirmation', now()->month)
-                                             ->whereYear('date_confirmation', now()->year)
-                                             ->sum('montant_operation'),
-        ];
+        $stats = $this->doubleRelevageService->getStats();
 
         return $this->successResponse($stats, 'Statistiques récupérées avec succès');
     }
@@ -162,10 +138,7 @@ class DoubleRelevageController extends Controller
      */
     public function enAttente(): JsonResponse
     {
-        $operations = DoubleRelevage::enAttente()
-                                  ->with(['createdBy', 'updatedBy'])
-                                  ->orderBy('date_creation', 'desc')
-                                  ->get();
+        $operations = $this->doubleRelevageService->getDoubleRelevagesEnAttente();
 
         return $this->successResponse(
             DoubleRelevageResource::collection($operations),

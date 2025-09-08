@@ -2,8 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
+import { CamionSection } from "./shared/CamionSection";
 
 interface DoubleRelevageFormData {
   nomClient: string;
@@ -53,82 +52,6 @@ export function DoubleRelevageForm({ onSubmit, initialData, camionsParc = [], re
     onSubmit(formData);
   };
 
-  const CamionSection = ({ 
-    title, 
-    camionData, 
-    onUpdate 
-  }: { 
-    title: string; 
-    camionData: typeof formData.camionAmeneur; 
-    onUpdate: (data: typeof formData.camionAmeneur) => void;
-  }) => (
-    <div className="bg-muted/50 p-4 rounded-lg space-y-4">
-      <h4 className="font-medium">{title}</h4>
-      
-      <div className="flex items-center space-x-2">
-        <Checkbox
-          checked={camionData.proprietaire}
-          onCheckedChange={(checked) => onUpdate({ ...camionData, proprietaire: checked as boolean })}
-        />
-        <Label>Camion appartenant à notre parc ?</Label>
-      </div>
-
-      {camionData.proprietaire ? (
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <Label>Plaque du camion</Label>
-            <Select value={camionData.plaque} onValueChange={(value) => onUpdate({ ...camionData, plaque: value })}>
-              <SelectTrigger className="bg-background border border-input">
-                <SelectValue placeholder="Sélectionner un camion" />
-              </SelectTrigger>
-              <SelectContent className="bg-background border border-input z-50">
-                {camionsParc.map((camion) => (
-                  <SelectItem key={camion.id} value={camion.numeroParc} className="hover:bg-muted">
-                    {camion.numeroParc}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label>Plaque de la remorque</Label>
-            <Select value={camionData.plaqueRemorque} onValueChange={(value) => onUpdate({ ...camionData, plaqueRemorque: value })}>
-              <SelectTrigger className="bg-background border border-input">
-                <SelectValue placeholder="Sélectionner une remorque" />
-              </SelectTrigger>
-              <SelectContent className="bg-background border border-input z-50">
-                {remorquesParc.map((remorque) => (
-                  <SelectItem key={remorque.id} value={remorque.numeroParc} className="hover:bg-muted">
-                    {remorque.numeroParc}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      ) : (
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <Label>Plaque du camion</Label>
-            <Input
-              value={camionData.plaque}
-              onChange={(e) => onUpdate({ ...camionData, plaque: e.target.value })}
-              placeholder="Ex: CE 123 AB"
-            />
-          </div>
-          <div>
-            <Label>Plaque de la remorque</Label>
-            <Input
-              value={camionData.plaqueRemorque}
-              onChange={(e) => onUpdate({ ...camionData, plaqueRemorque: e.target.value })}
-              placeholder="Ex: CE 456 CD"
-            />
-          </div>
-        </div>
-      )}
-    </div>
-  );
-
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
@@ -168,12 +91,16 @@ export function DoubleRelevageForm({ onSubmit, initialData, camionsParc = [], re
         title="Camion qui amène le conteneur"
         camionData={formData.camionAmeneur}
         onUpdate={(data) => setFormData({ ...formData, camionAmeneur: data })}
+        camionsParc={camionsParc}
+        remorquesParc={remorquesParc}
       />
 
       <CamionSection
         title="Camion qui va récupérer le conteneur"
         camionData={formData.camionRecuperateur}
         onUpdate={(data) => setFormData({ ...formData, camionRecuperateur: data })}
+        camionsParc={camionsParc}
+        remorquesParc={remorquesParc}
       />
 
       <div className="bg-muted/50 p-4 rounded-lg">
