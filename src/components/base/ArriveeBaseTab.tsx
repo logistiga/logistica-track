@@ -53,15 +53,16 @@ export function ArriveeBaseTab({ camions, remorques }: ArriveeBaseTabProps) {
   const handleStockageSubmit = async (formData: any) => {
     try {
       const stockageData = {
-        ...formData,
         nom_client: formData.nomClient,
         numero_conteneur: formData.numeroConteneur,
+        provenance: formData.provenance,
         date_arrivee: formData.dateArrivee,
         camion_proprietaire: formData.camionProprietaire,
         plaque_camion: formData.plaqueCamion,
         plaque_remorque: formData.plaqueRemorque,
         jours_gratuits: formData.joursGratuits,
         prix_par_jour: formData.prixParJour,
+        observations: formData.observations,
       };
 
       await stockageService.createStockage(stockageData);
