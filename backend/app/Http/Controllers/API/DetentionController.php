@@ -45,7 +45,7 @@ class DetentionController extends Controller
                 'Détentions récupérées avec succès'
             );
             
-            \Log::info('📤 Sending response with data count:', count($result['data'] ?? []));
+            \Log::info('📤 Sending response with data count:', ['count' => count($result['data'] ?? [])]);
             return $response;
             
         } catch (\Exception $e) {
