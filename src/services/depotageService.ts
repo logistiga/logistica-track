@@ -113,8 +113,16 @@ class DepotageService {
   }
 
   async getDepotage(id: number): Promise<Depotage> {
-    const response = await apiService.get(`${apiConfig.endpoints.depotages}/${id}`);
-    return response.data;
+    console.log('🔄 Getting depotage (localStorage fallback):', id);
+    
+    const depotages = this.getStoredDepotages();
+    const depotage = depotages.find(d => d.id === id);
+    
+    if (!depotage) {
+      throw new Error('Dépotage non trouvé');
+    }
+    
+    return depotage;
   }
 
   async createDepotage(data: CreateDepotageData): Promise<Depotage> {
@@ -138,8 +146,24 @@ class DepotageService {
   }
 
   async updateDepotage(id: number, data: Partial<CreateDepotageData>): Promise<Depotage> {
-    const response = await apiService.put(`${apiConfig.endpoints.depotages}/${id}`, data);
-    return response.data;
+    console.log('🔄 Updating depotage (localStorage fallback):', id, data);
+    
+    const depotages = this.getStoredDepotages();
+    const depotageIndex = depotages.findIndex(d => d.id === id);
+    
+    if (depotageIndex === -1) {
+      throw new Error('Dépotage non trouvé');
+    }
+    
+    depotages[depotageIndex] = {
+      ...depotages[depotageIndex],
+      ...data,
+      updated_at: new Date().toISOString()
+    };
+    
+    this.saveDepotages(depotages);
+    console.log('✅ Depotage updated successfully');
+    return depotages[depotageIndex];
   }
 
   async deleteDepotage(id: number): Promise<void> {
@@ -174,13 +198,52 @@ class DepotageService {
   }
 
   async getDepotagesEnCours(): Promise<Depotage[]> {
-    const response = await apiService.get(`${apiConfig.endpoints.depotages}/en-cours`);
-    return response.data;
+    console.log('🔄 Getting depotages en cours (localStorage fallback)');
+    
+    const depotages = this.getStoredDepotages();
+    return depotages.filter(d => d.statut === 'en_cours');
   }
 
   async getStats(): Promise<DepotageStats> {
-    const response = await apiService.get(`${apiConfig.endpoints.depotages}/stats`);
-    return response.data;
+    console.log('🔄 Getting depotage stats (localStorage fallback)');
+    
+    try {
+      const depotages = this.getStoredDepotages();
+      const today = new Date().toDateString();
+      const currentMonth = new Date().getMonth();
+      const currentYear = new Date().getFullYear();
+      
+      const stats: DepotageStats = {
+        total_en_cours: depotages.filter(d => d.statut === 'en_cours').length,
+        termines_aujourdhui: depotages.filter(d => 
+          d.statut === 'termine' && 
+          new Date(d.updated_at).toDateString() === today
+        ).length,
+        operations_mois: depotages.filter(d => {
+          const depotageDate = new Date(d.date_depotage);
+          return depotageDate.getMonth() === currentMonth && 
+                 depotageDate.getFullYear() === currentYear;
+        }).length,
+        montant_mensuel: depotages
+          .filter(d => {
+            const depotageDate = new Date(d.date_depotage);
+            return depotageDate.getMonth() === currentMonth && 
+                   depotageDate.getFullYear() === currentYear;
+          })
+          .reduce((total, d) => total + d.prix_depotage, 0)
+      };
+      
+      console.log('✅ Depotage stats loaded from localStorage:', stats);
+      return stats;
+    } catch (error) {
+      console.error('❌ Error loading depotage stats:', error);
+      return {
+        total_en_cours: 0,
+        termines_aujourdhui: 0,
+        operations_mois: 0,
+        montant_mensuel: 0
+      };
+    }
   }
 }
 

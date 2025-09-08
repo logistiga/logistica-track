@@ -7,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Package, Plus, Pencil, Trash2, CheckCircle } from "lucide-react";
 import { DepotageForm } from "./DepotageForm";
+import { DepotageStats } from "./DepotageStats";
 import { depotageService, Depotage } from "@/services/depotageService";
 import { useToast } from "@/components/ui/use-toast";
 
@@ -68,7 +69,20 @@ export function DepotageTab({ camions, remorques }: DepotageTabProps) {
 
   const handleAddDepotage = async (formData: any) => {
     try {
-      await depotageService.createDepotage(formData);
+      // Map form data to service interface
+      const depotageData = {
+        nom_client: formData.nomClient,
+        numero_conteneur: formData.numeroConteneur,
+        date_depotage: formData.dateDepotage,
+        camion_proprietaire: formData.camionProprietaire,
+        plaque_camion: formData.plaqueCamion,
+        plaque_remorque: formData.plaqueRemorque,
+        type_marchandise: formData.typeMarchandise,
+        prix_depotage: formData.prixDepotage,
+        observations: formData.observations,
+      };
+      
+      await depotageService.createDepotage(depotageData);
       setShowDialog(false);
       loadDepotages();
       toast({
@@ -124,6 +138,9 @@ export function DepotageTab({ camions, remorques }: DepotageTabProps) {
 
   return (
     <div className="space-y-6">
+      {/* Stats */}
+      <DepotageStats />
+      
       {/* Search and Add */}
       <div className="flex items-center justify-between">
         <Input
