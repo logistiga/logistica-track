@@ -44,6 +44,16 @@ export function DoubleRelevageTab({ camions, remorques }: DoubleRelevageTabProps
     }
   };
 
+  // Transform data for forms
+  const camionsParc = camions.map(c => ({ id: c.id, numeroParc: c.numeroParc }));
+  const remorquesParc = remorques.map(r => ({ id: r.id, numeroParc: r.numeroParc }));
+
+  const filteredOperations = operations.filter(item =>
+    item.numero_conteneur.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.nom_client.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.provenance.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   const getStatusBadge = (statut: string) => {
     switch (statut) {
       case "en_attente":
@@ -136,16 +146,6 @@ export function DoubleRelevageTab({ camions, remorques }: DoubleRelevageTabProps
       </div>
     );
   }
-
-  // Transform data for forms
-  const camionsParc = camions.map(c => ({ id: c.id, numeroParc: c.numeroParc }));
-  const remorquesParc = remorques.map(r => ({ id: r.id, numeroParc: r.numeroParc }));
-
-  const filteredOperations = operations.filter(item =>
-    item.numero_conteneur.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.nom_client.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.provenance.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
   return (
     <div className="space-y-6">
