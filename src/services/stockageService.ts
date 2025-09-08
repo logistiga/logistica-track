@@ -51,24 +51,6 @@ export interface StockageStats {
 }
 
 class StockageService {
-  private storageKey = 'stockages';
-  private currentId = 1;
-
-  private getFromStorage(): Stockage[] {
-    const data = localStorage.getItem(this.storageKey);
-    return data ? JSON.parse(data) : [];
-  }
-
-  private saveToStorage(stockages: Stockage[]): void {
-    localStorage.setItem(this.storageKey, JSON.stringify(stockages));
-  }
-
-  private generateId(): number {
-    const stockages = this.getFromStorage();
-    const maxId = Math.max(0, ...stockages.map(s => s.id));
-    return maxId + 1;
-  }
-
   async getStockages(params?: {
     statut?: string;
     search?: string;
@@ -83,98 +65,36 @@ class StockageService {
       last_page: number;
     };
   }> {
-    console.log('🔍 Chargement des stockages depuis localStorage');
-    let stockages = this.getFromStorage();
-    
-    // Filtrer par statut si spécifié
-    if (params?.statut) {
-      stockages = stockages.filter(s => s.statut === params.statut);
-    }
-    
-    // Filtrer par recherche si spécifié
-    if (params?.search) {
-      const search = params.search.toLowerCase();
-      stockages = stockages.filter(s => 
-        s.nom_client.toLowerCase().includes(search) ||
-        s.numero_conteneur.toLowerCase().includes(search) ||
-        s.provenance.toLowerCase().includes(search)
-      );
-    }
-
+    // Construire les paramètres query manuellement
+    const queryString = params ? new URLSearchParams(
+      Object.entries(params).filter(([_, value]) => value !== undefined)
+        .map(([key, value]) => [key, String(value)])
+    ).toString() : '';
+    const endpoint = queryString ? `${apiConfig.endpoints.stockages}?${queryString}` : apiConfig.endpoints.stockages;
+    const response = await apiService.get(endpoint);
     return {
-      data: stockages,
-      pagination: {
-        total: stockages.length,
-        per_page: params?.per_page || 50,
-        current_page: params?.page || 1,
-        last_page: 1
-      }
+      data: response.data,
+      pagination: response.pagination
     };
   }
 
   async getStockage(id: number): Promise<Stockage> {
-    const stockages = this.getFromStorage();
-    const stockage = stockages.find(s => s.id === id);
-    if (!stockage) {
-      throw new Error('Stockage non trouvé');
-    }
-    return stockage;
+    const response = await apiService.get(`${apiConfig.endpoints.stockages}/${id}`);
+    return response.data;
   }
 
   async createStockage(data: CreateStockageData): Promise<Stockage> {
-    console.log('📦 Création stockage:', data);
-    const stockages = this.getFromStorage();
-    const now = new Date().toISOString();
-    
-    const newStockage: Stockage = {
-      id: this.generateId(),
-      nom_client: data.nom_client,
-      numero_conteneur: data.numero_conteneur,
-      provenance: data.provenance,
-      date_arrivee: data.date_arrivee,
-      camion_proprietaire: data.camion_proprietaire,
-      plaque_camion: data.plaque_camion,
-      plaque_remorque: data.plaque_remorque,
-      jours_gratuits: data.jours_gratuits,
-      prix_par_jour: data.prix_par_jour,
-      prix_par_jour_formate: `${data.prix_par_jour.toLocaleString()} FCFA`,
-      statut: 'stocke',
-      statut_label: 'Stocké',
-      observations: data.observations,
-      created_at: now,
-      updated_at: now,
-      jours_stockage: 0,
-      jours_detention: 0,
-      montant_detention: 0,
-      montant_detention_formate: '0 FCFA'
-    };
-
-    stockages.push(newStockage);
-    this.saveToStorage(stockages);
-    return newStockage;
+    const response = await apiService.post(apiConfig.endpoints.stockages, data);
+    return response.data;
   }
 
   async updateStockage(id: number, data: Partial<CreateStockageData>): Promise<Stockage> {
-    const stockages = this.getFromStorage();
-    const index = stockages.findIndex(s => s.id === id);
-    if (index === -1) {
-      throw new Error('Stockage non trouvé');
-    }
-
-    stockages[index] = {
-      ...stockages[index],
-      ...data,
-      updated_at: new Date().toISOString()
-    };
-
-    this.saveToStorage(stockages);
-    return stockages[index];
+    const response = await apiService.put(`${apiConfig.endpoints.stockages}/${id}`, data);
+    return response.data;
   }
 
   async deleteStockage(id: number): Promise<void> {
-    const stockages = this.getFromStorage();
-    const filteredStockages = stockages.filter(s => s.id !== id);
-    this.saveToStorage(filteredStockages);
+    await apiService.delete(`${apiConfig.endpoints.stockages}/${id}`);
   }
 
   async sortieStockage(id: number, data: SortieStockageData): Promise<{
@@ -185,66 +105,21 @@ class StockageService {
       montant_formate: string;
     };
   }> {
-    const stockages = this.getFromStorage();
-    const index = stockages.findIndex(s => s.id === id);
-    if (index === -1) {
-      throw new Error('Stockage non trouvé');
-    }
-
-    const stockage = stockages[index];
-    const dateArrivee = new Date(stockage.date_arrivee);
-    const dateSortie = new Date(data.date_sortie);
-    const joursTotal = Math.ceil((dateSortie.getTime() - dateArrivee.getTime()) / (1000 * 3600 * 24));
-    const joursDetention = Math.max(0, joursTotal - stockage.jours_gratuits);
-    const montantDetention = joursDetention * stockage.prix_par_jour;
-
-    stockages[index] = {
-      ...stockage,
-      statut: 'sorti',
-      statut_label: 'Sorti',
-      date_sortie: data.date_sortie,
-      observations: data.observations,
-      jours_stockage: joursTotal,
-      jours_detention: joursDetention,
-      montant_detention: montantDetention,
-      montant_detention_formate: `${montantDetention.toLocaleString()} FCFA`,
-      updated_at: new Date().toISOString()
-    };
-
-    this.saveToStorage(stockages);
-
+    const response = await apiService.post(`${apiConfig.endpoints.stockages}/${id}/sortie`, data);
     return {
-      stockage: stockages[index],
-      detention: {
-        jours: joursDetention,
-        montant: montantDetention,
-        montant_formate: `${montantDetention.toLocaleString()} FCFA`
-      }
+      stockage: response.data,
+      detention: response.detention
     };
   }
 
   async getStockagesActifs(): Promise<Stockage[]> {
-    const stockages = this.getFromStorage();
-    return stockages.filter(s => s.statut === 'stocke');
+    const response = await apiService.get(`${apiConfig.endpoints.stockages}/actifs`);
+    return response.data;
   }
 
   async getStats(): Promise<StockageStats> {
-    const stockages = this.getFromStorage();
-    const totalStockes = stockages.filter(s => s.statut === 'stocke').length;
-    const enAttenteSortie = stockages.filter(s => s.statut === 'en_attente_sortie').length;
-    const sortisAujourdhui = stockages.filter(s => {
-      return s.date_sortie && new Date(s.date_sortie).toDateString() === new Date().toDateString();
-    }).length;
-    const montantDetentionMensuel = stockages
-      .filter(s => s.date_sortie && new Date(s.date_sortie).getMonth() === new Date().getMonth())
-      .reduce((total, s) => total + s.montant_detention, 0);
-
-    return {
-      total_stockes: totalStockes,
-      en_attente_sortie: enAttenteSortie,
-      sortis_aujourdhui: sortisAujourdhui,
-      montant_detention_mensuel: montantDetentionMensuel
-    };
+    const response = await apiService.get(`${apiConfig.endpoints.stockages}/stats`);
+    return response.data;
   }
 }
 
