@@ -42,6 +42,7 @@ class DoubleRelevageController extends Controller
         return $this->successResponse(
             DoubleRelevageResource::collection($operations->items()),
             'Opérations de double relevage récupérées avec succès',
+            200,
             [
                 'pagination' => [
                     'total' => $operations->total(),
@@ -71,7 +72,6 @@ class DoubleRelevageController extends Controller
         return $this->successResponse(
             new DoubleRelevageResource($operation),
             'Opération de double relevage enregistrée avec succès',
-            [],
             201
         );
     }
