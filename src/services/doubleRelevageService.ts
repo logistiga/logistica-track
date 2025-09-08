@@ -72,17 +72,47 @@ class DoubleRelevageService {
       last_page: number;
     };
   }> {
-    // Construire les paramètres query manuellement
-    const queryString = params ? new URLSearchParams(
-      Object.entries(params).filter(([_, value]) => value !== undefined)
-        .map(([key, value]) => [key, String(value)])
-    ).toString() : '';
-    const endpoint = queryString ? `${apiConfig.endpoints.doubleRelevages}?${queryString}` : apiConfig.endpoints.doubleRelevages;
-    const response = await apiService.get(endpoint);
-    return {
-      data: response.data,
-      pagination: response.pagination
-    };
+    try {
+      // Construire les paramètres query manuellement
+      const queryString = params ? new URLSearchParams(
+        Object.entries(params).filter(([_, value]) => value !== undefined)
+          .map(([key, value]) => [key, String(value)])
+      ).toString() : '';
+      const endpoint = queryString ? `${apiConfig.endpoints.doubleRelevages}?${queryString}` : apiConfig.endpoints.doubleRelevages;
+      const response = await apiService.get(endpoint);
+      return {
+        data: response.data,
+        pagination: response.pagination
+      };
+    } catch (error) {
+      console.log('🔄 Loading double relevages (localStorage fallback due to backend issues)');
+      // Fallback to localStorage
+      const saved = this.getStoredDoubleRelevages();
+      let filteredData = saved;
+      
+      if (params?.statut) {
+        filteredData = filteredData.filter((item: DoubleRelevage) => item.statut === params.statut);
+      }
+      if (params?.search) {
+        const searchLower = params.search.toLowerCase();
+        filteredData = filteredData.filter((item: DoubleRelevage) => 
+          item.nom_client.toLowerCase().includes(searchLower) ||
+          item.numero_conteneur.toLowerCase().includes(searchLower) ||
+          item.provenance.toLowerCase().includes(searchLower)
+        );
+      }
+
+      console.log('✅ Double relevages loaded from localStorage:', filteredData);
+      return {
+        data: filteredData,
+        pagination: {
+          total: filteredData.length,
+          per_page: params?.per_page || 10,
+          current_page: params?.page || 1,
+          last_page: Math.ceil(filteredData.length / (params?.per_page || 10))
+        }
+      };
+    }
   }
 
   async getDoubleRelevage(id: number): Promise<DoubleRelevage> {
