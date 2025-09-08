@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,26 +9,7 @@ import { RefreshCw, Plus, Search, Edit, Trash2, CheckCircle } from "lucide-react
 import { DoubleRelevageForm } from "./DoubleRelevageForm";
 import { DoubleRelevageStats } from "./DoubleRelevageStats";
 import { toast } from "@/hooks/use-toast";
-
-interface DoubleRelevageItem {
-  id: string;
-  nomClient: string;
-  numeroConteneur: string;
-  provenance: string;
-  camionAmeneur: {
-    proprietaire: boolean;
-    plaque: string;
-    plaqueRemorque: string;
-  };
-  camionRecuperateur: {
-    proprietaire: boolean;
-    plaque: string;
-    plaqueRemorque: string;
-  };
-  montantOperation: number;
-  statut: "en_attente" | "confirme";
-  dateCreation: string;
-}
+import { doubleRelevageService, type DoubleRelevage } from "@/services/doubleRelevageService";
 
 interface DoubleRelevageTabProps {
   camions: Array<{id: string, numeroParc: string, immatriculation: string, statut: string}>;
@@ -36,40 +17,32 @@ interface DoubleRelevageTabProps {
 }
 
 export function DoubleRelevageTab({ camions, remorques }: DoubleRelevageTabProps) {
-  const [operations, setOperations] = useState<DoubleRelevageItem[]>([
-    {
-      id: "1",
-      nomClient: "Client XYZ",
-      numeroConteneur: "TCLU5678901",
-      provenance: "Port de Douala",
-      camionAmeneur: {
-        proprietaire: true,
-        plaque: "TR 37",
-        plaqueRemorque: "R 01"
-      },
-      camionRecuperateur: {
-        proprietaire: false,
-        plaque: "CE 789 EF",
-        plaqueRemorque: "CE 012 GH"
-      },
-      montantOperation: 75000,
-      statut: "en_attente",
-      dateCreation: "2024-01-15"
-    }
-  ]);
-
+  const [operations, setOperations] = useState<DoubleRelevage[]>([]);
+  const [loading, setLoading] = useState(true);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Transform data for forms
-  const camionsParc = camions.map(c => ({ id: c.id, numeroParc: c.numeroParc }));
-  const remorquesParc = remorques.map(r => ({ id: r.id, numeroParc: r.numeroParc }));
+  // Load data on component mount
+  useEffect(() => {
+    loadDoubleRelevages();
+  }, []);
 
-  const filteredOperations = operations.filter(item =>
-    item.numeroConteneur.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.nomClient.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.provenance.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const loadDoubleRelevages = async () => {
+    try {
+      setLoading(true);
+      const response = await doubleRelevageService.getDoubleRelevages();
+      setOperations(response.data);
+    } catch (error) {
+      console.error('Error loading double relevages:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de charger les opérations",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getStatusBadge = (statut: string) => {
     switch (statut) {
@@ -82,41 +55,69 @@ export function DoubleRelevageTab({ camions, remorques }: DoubleRelevageTabProps
     }
   };
 
-  const handleAddOperation = (data: any) => {
-    const newOperation: DoubleRelevageItem = {
-      id: Date.now().toString(),
-      nomClient: data.nomClient,
-      numeroConteneur: data.numeroConteneur,
-      provenance: data.provenance,
-      camionAmeneur: data.camionAmeneur,
-      camionRecuperateur: data.camionRecuperateur,
-      montantOperation: data.montantOperation,
-      statut: "en_attente",
-      dateCreation: new Date().toISOString().split('T')[0]
-    };
-    setOperations([...operations, newOperation]);
-    setIsAddDialogOpen(false);
-    toast({
-      title: "Succès",
-      description: "Opération de double relevage enregistrée"
-    });
+  const handleAddOperation = async (data: any) => {
+    try {
+      await doubleRelevageService.createDoubleRelevage({
+        nom_client: data.nomClient,
+        numero_conteneur: data.numeroConteneur,
+        provenance: data.provenance,
+        camion_ameneur_proprietaire: data.camionAmeneur.proprietaire,
+        camion_ameneur_plaque: data.camionAmeneur.plaque,
+        camion_ameneur_remorque: data.camionAmeneur.plaqueRemorque,
+        camion_recuperateur_proprietaire: data.camionRecuperateur.proprietaire,
+        camion_recuperateur_plaque: data.camionRecuperateur.plaque,
+        camion_recuperateur_remorque: data.camionRecuperateur.plaqueRemorque,
+        montant_operation: data.montantOperation,
+        observations: data.observations
+      });
+      
+      setIsAddDialogOpen(false);
+      loadDoubleRelevages(); // Reload data
+      toast({
+        title: "Succès",
+        description: "Opération de double relevage enregistrée"
+      });
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible d'enregistrer l'opération",
+        variant: "destructive"
+      });
+    }
   };
 
-  const handleConfirmOperation = (id: string) => {
-    // Remove from operations (move to archives)
-    setOperations(operations.filter(o => o.id !== id));
-    toast({
-      title: "Opération confirmée",
-      description: "L'opération de double relevage a été confirmée et archivée"
-    });
+  const handleConfirmOperation = async (id: number) => {
+    try {
+      await doubleRelevageService.confirmerDoubleRelevage(id);
+      loadDoubleRelevages(); // Reload data
+      toast({
+        title: "Opération confirmée",
+        description: "L'opération de double relevage a été confirmée"
+      });
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible de confirmer l'opération",
+        variant: "destructive"
+      });
+    }
   };
 
-  const handleDeleteOperation = (id: string) => {
-    setOperations(operations.filter(o => o.id !== id));
-    toast({
-      title: "Supprimé",
-      description: "Opération supprimée"
-    });
+  const handleDeleteOperation = async (id: number) => {
+    try {
+      await doubleRelevageService.deleteDoubleRelevage(id);
+      loadDoubleRelevages(); // Reload data
+      toast({
+        title: "Supprimé",
+        description: "Opération supprimée"
+      });
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible de supprimer l'opération",
+        variant: "destructive"
+      });
+    }
   };
 
   const formatCurrency = (amount: number) => {
@@ -126,6 +127,25 @@ export function DoubleRelevageTab({ camions, remorques }: DoubleRelevageTabProps
       minimumFractionDigits: 0,
     }).format(amount);
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <RefreshCw className="w-6 h-6 animate-spin mr-2" />
+        Chargement...
+      </div>
+    );
+  }
+
+  // Transform data for forms
+  const camionsParc = camions.map(c => ({ id: c.id, numeroParc: c.numeroParc }));
+  const remorquesParc = remorques.map(r => ({ id: r.id, numeroParc: r.numeroParc }));
+
+  const filteredOperations = operations.filter(item =>
+    item.numero_conteneur.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.nom_client.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.provenance.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div className="space-y-6">
@@ -186,22 +206,22 @@ export function DoubleRelevageTab({ camions, remorques }: DoubleRelevageTabProps
             <TableBody>
               {filteredOperations.map((item) => (
                 <TableRow key={item.id}>
-                  <TableCell className="font-medium">{item.nomClient}</TableCell>
-                  <TableCell>{item.numeroConteneur}</TableCell>
+                  <TableCell className="font-medium">{item.nom_client}</TableCell>
+                  <TableCell>{item.numero_conteneur}</TableCell>
                   <TableCell>{item.provenance}</TableCell>
                   <TableCell>
                     <div className="text-xs">
-                      <div>C: {item.camionAmeneur.plaque}</div>
-                      <div>R: {item.camionAmeneur.plaqueRemorque}</div>
+                      <div>C: {item.camion_ameneur.plaque}</div>
+                      <div>R: {item.camion_ameneur.plaque_remorque}</div>
                     </div>
                   </TableCell>
                   <TableCell>
                     <div className="text-xs">
-                      <div>C: {item.camionRecuperateur.plaque}</div>
-                      <div>R: {item.camionRecuperateur.plaqueRemorque}</div>
+                      <div>C: {item.camion_recuperateur.plaque}</div>
+                      <div>R: {item.camion_recuperateur.plaque_remorque}</div>
                     </div>
                   </TableCell>
-                  <TableCell className="font-medium">{formatCurrency(item.montantOperation)}</TableCell>
+                  <TableCell className="font-medium">{formatCurrency(item.montant_operation)}</TableCell>
                   <TableCell>{getStatusBadge(item.statut)}</TableCell>
                   <TableCell>
                     <div className="flex space-x-1">

@@ -1,34 +1,15 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { RefreshCw, Clock, CheckCircle, XCircle } from "lucide-react";
-
-interface DoubleRelevageItem {
-  id: string;
-  nomClient: string;
-  numeroConteneur: string;
-  provenance: string;
-  camionAmeneur: {
-    proprietaire: boolean;
-    plaque: string;
-    plaqueRemorque: string;
-  };
-  camionRecuperateur: {
-    proprietaire: boolean;
-    plaque: string;
-    plaqueRemorque: string;
-  };
-  montantOperation: number;
-  statut: "en_attente" | "confirme";
-  dateCreation: string;
-}
+import { type DoubleRelevage } from "@/services/doubleRelevageService";
 
 interface DoubleRelevageStatsProps {
-  operations: DoubleRelevageItem[];
+  operations: DoubleRelevage[];
 }
 
 export function DoubleRelevageStats({ operations }: DoubleRelevageStatsProps) {
   const enAttente = operations.filter(o => o.statut === "en_attente").length;
   const confirmees = operations.filter(o => o.statut === "confirme").length;
-  const totalMontant = operations.reduce((acc, o) => acc + o.montantOperation, 0);
+  const totalMontant = operations.reduce((acc, o) => acc + o.montant_operation, 0);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
