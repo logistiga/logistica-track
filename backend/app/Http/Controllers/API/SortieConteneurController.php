@@ -5,14 +5,9 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreSortieConteneurRequest;
 use App\Http\Requests\UpdateSortieConteneurRequest;
-use App\Http\Requests\RetourSortieRequest;
 use App\Http\Resources\SortieConteneurResource;
 use App\Models\SortieConteneur;
 use App\Services\SortieConteneurService;
-use App\Services\ExportService;
-use App\Services\SortieRetourService;
-use App\Services\SortieStatsService;
-use App\Services\SortieSearchService;
 use App\Services\SortieCacheService;
 use App\Traits\ApiResponseTrait;
 use Illuminate\Http\JsonResponse;
@@ -25,25 +20,13 @@ class SortieConteneurController extends Controller
     use ApiResponseTrait;
 
     protected SortieConteneurService $sortieService;
-    protected ExportService $exportService;
-    protected SortieRetourService $retourService;
-    protected SortieStatsService $statsService;
-    protected SortieSearchService $searchService;
     protected SortieCacheService $cacheService;
 
     public function __construct(
         SortieConteneurService $sortieService,
-        ExportService $exportService,
-        SortieRetourService $retourService,
-        SortieStatsService $statsService,
-        SortieSearchService $searchService,
         SortieCacheService $cacheService
     ) {
         $this->sortieService = $sortieService;
-        $this->exportService = $exportService;
-        $this->retourService = $retourService;
-        $this->statsService = $statsService;
-        $this->searchService = $searchService;
         $this->cacheService = $cacheService;
     }
 
@@ -218,216 +201,4 @@ class SortieConteneurController extends Controller
         }
     }
 
-    /**
-     * Confirmer le retour d'une sortie
-     */
-    public function return(RetourSortieRequest $request, SortieConteneur $sortie): JsonResponse
-    {
-        try {
-            DB::beginTransaction();
-
-            $returnedSortie = $this->retourService->confirmerRetour($sortie, $request->validated());
-
-            $this->cacheService->invalidateAllCaches();
-
-            DB::commit();
-
-            return $this->successResponse(
-                new SortieConteneurResource($returnedSortie->load(['armateur', 'camionRetour', 'remorqueRetour'])),
-                'Retour confirmé avec succès'
-            );
-
-        } catch (ValidationException $e) {
-            DB::rollback();
-            return $this->errorResponse('Données invalides', 422, $e->errors());
-        } catch (\Exception $e) {
-            DB::rollback();
-            return $this->errorResponse('Erreur lors de la confirmation du retour', 500);
-        }
-    }
-
-    /**
-     * Obtenir les statistiques des sorties
-     */
-    public function stats(Request $request): JsonResponse
-    {
-        try {
-            $stats = $this->statsService->getStatistics($request->all());
-
-            return $this->successResponse($stats, 'Statistiques récupérées avec succès');
-
-        } catch (\Exception $e) {
-            return $this->errorResponse('Erreur lors de la récupération des statistiques', 500);
-        }
-    }
-
-    /**
-     * Sorties en cours
-     */
-    public function enCours(Request $request): JsonResponse
-    {
-        try {
-            $sorties = $this->statsService->getSortiesEnCours($request->all());
-
-            return $this->successResponse(
-                SortieConteneurResource::collection($sorties),
-                'Sorties en cours récupérées'
-            );
-
-        } catch (\Exception $e) {
-            return $this->errorResponse('Erreur lors de la récupération des sorties en cours', 500);
-        }
-    }
-
-    /**
-     * Sorties retournées
-     */
-    public function retournees(Request $request): JsonResponse
-    {
-        try {
-            $sorties = $this->statsService->getSortiesRetournees($request->all());
-
-            return $this->successResponse(
-                SortieConteneurResource::collection($sorties),
-                'Sorties retournées récupérées'
-            );
-
-        } catch (\Exception $e) {
-            return $this->errorResponse('Erreur lors de la récupération des sorties retournées', 500);
-        }
-    }
-
-    /**
-     * Recherche avancée
-     */
-    public function search(Request $request): JsonResponse
-    {
-        try {
-            $request->validate([
-                'query' => 'required|string|min:2',
-                'filters' => 'sometimes|array',
-            ]);
-
-            $results = $this->searchService->search(
-                $request->query,
-                $request->filters ?? []
-            );
-
-            return $this->successResponse(
-                SortieConteneurResource::collection($results),
-                'Résultats de recherche récupérés'
-            );
-
-        } catch (ValidationException $e) {
-            return $this->errorResponse('Paramètres de recherche invalides', 422, $e->errors());
-        } catch (\Exception $e) {
-            return $this->errorResponse('Erreur lors de la recherche', 500);
-        }
-    }
-
-    /**
-     * Export des données
-     */
-    public function export(Request $request): JsonResponse
-    {
-        try {
-            $request->validate([
-                'format' => 'required|in:excel,csv,pdf',
-                'filters' => 'sometimes|array',
-            ]);
-
-            $exportData = $this->exportService->exportSorties(
-                $request->format,
-                $request->filters ?? []
-            );
-
-            // Logger l'activité
-            logActivity('sorties_export', null, "Export des sorties en format {$request->format}");
-
-            return $this->successResponse($exportData, 'Export généré avec succès');
-
-        } catch (ValidationException $e) {
-            return $this->errorResponse('Paramètres d\'export invalides', 422, $e->errors());
-        } catch (\Exception $e) {
-            return $this->errorResponse('Erreur lors de l\'export', 500);
-        }
-    }
-
-    /**
-     * Retour en lot
-     */
-    public function bulkReturn(Request $request): JsonResponse
-    {
-        try {
-            $request->validate([
-                'sorties' => 'required|array|min:1',
-                'sorties.*.id' => 'required|exists:sortie_conteneurs,id',
-                'sorties.*.camion_retour_id' => 'required|exists:vehicules,id',
-                'sorties.*.remorque_retour_id' => 'required|exists:vehicules,id',
-                'sorties.*.observations' => 'nullable|string',
-            ]);
-
-            DB::beginTransaction();
-
-            $results = $this->retourService->bulkReturn($request->sorties);
-
-            $this->cacheService->invalidateAllCaches();
-
-            DB::commit();
-
-            return $this->successResponse($results, 'Retours en lot traités avec succès');
-
-        } catch (ValidationException $e) {
-            DB::rollback();
-            return $this->errorResponse('Données invalides', 422, $e->errors());
-        } catch (\Exception $e) {
-            DB::rollback();
-            return $this->errorResponse('Erreur lors du retour en lot', 500);
-        }
-    }
-
-    /**
-     * Timeline d'une sortie
-     */
-    public function timeline(SortieConteneur $sortie): JsonResponse
-    {
-        try {
-            $timeline = $this->statsService->getTimeline($sortie);
-
-            return $this->successResponse($timeline, 'Timeline récupérée avec succès');
-
-        } catch (\Exception $e) {
-            return $this->errorResponse('Erreur lors de la récupération de la timeline', 500);
-        }
-    }
-
-    /**
-     * Informations de détention d'une sortie
-     */
-    public function detention(SortieConteneur $sortie): JsonResponse
-    {
-        try {
-            $detention = $this->statsService->getDetentionInfo($sortie);
-
-            return $this->successResponse($detention, 'Informations de détention récupérées');
-
-        } catch (\Exception $e) {
-            return $this->errorResponse('Erreur lors de la récupération des informations de détention', 500);
-        }
-    }
-
-    /**
-     * Informations de facturation d'une sortie
-     */
-    public function facture(SortieConteneur $sortie): JsonResponse
-    {
-        try {
-            $facturation = $this->statsService->getFacturationInfo($sortie);
-
-            return $this->successResponse($facturation, 'Informations de facturation récupérées');
-
-        } catch (\Exception $e) {
-            return $this->errorResponse('Erreur lors de la récupération des informations de facturation', 500);
-        }
-    }
 }
