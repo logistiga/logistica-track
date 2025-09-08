@@ -60,7 +60,14 @@ class DetentionService {
     const queryString = params.toString();
     const endpoint = queryString ? `/detentions?${queryString}` : '/detentions';
     
-    return apiService.get(endpoint);
+    const response = await apiService.get(endpoint);
+    
+    // Transformer les données du backend vers le format frontend
+    if (response.success && response.data) {
+      response.data = response.data.map((detention: any) => this.transformDetentionData(detention));
+    }
+    
+    return response;
   }
 
   /**
@@ -185,6 +192,47 @@ class DetentionService {
     return apiService.post(`/detentions/${id}/contest`, {
       motif,
     });
+  }
+
+  /**
+   * Transformer les données du backend vers le format frontend
+   */
+  private transformDetentionData(backendData: any): DetentionContainer {
+    const sortieConteneur = backendData.sortie_conteneur || {};
+    
+    return {
+      id: backendData.id.toString(),
+      numeroConteneur: sortieConteneur.numero_conteneur || 'N/A',
+      codeArmateur: sortieConteneur.code_armateur || 'N/A',
+      typeConteneur: sortieConteneur.type_destination || 'Standard',
+      joursBAT: parseInt(sortieConteneur.jours_bad) || 0,
+      joursRealises: backendData.jours_detention || 0,
+      joursDepassement: backendData.jours_detention || 0,
+      dateSortie: sortieConteneur.date_sortie || '',
+      dateRetour: sortieConteneur.date_retour || '',
+      nomClient: sortieConteneur.nom_client || 'Client inconnu',
+      responsabilite: this.mapResponsabilite(backendData.responsabilite),
+      joursClient: backendData.responsabilite === 'client' ? backendData.jours_detention : 0,
+      joursLogistica: backendData.responsabilite === 'transitaire' ? backendData.jours_detention : 0,
+      noteDebitGeneree: backendData.statut === 'resolue',
+      paiementConfirme: backendData.statut === 'resolue',
+    };
+  }
+
+  /**
+   * Mapper la responsabilité du backend vers le frontend
+   */
+  private mapResponsabilite(backendResponsabilite: string): 'client' | 'logistica' | 'partagee' | undefined {
+    switch (backendResponsabilite) {
+      case 'client':
+        return 'client';
+      case 'transitaire':
+      case 'transporteur':
+      case 'autre':
+        return 'logistica';
+      default:
+        return undefined;
+    }
   }
 }
 

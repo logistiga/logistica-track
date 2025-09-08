@@ -13,6 +13,7 @@ class DatabaseSeeder extends Seeder
             ArmateurSeeder::class,
             VehiculeSeeder::class,
             SortieConteneurSeeder::class,
+            DetentionSeeder::class,
         ]);
     }
 }

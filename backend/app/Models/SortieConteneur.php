@@ -81,7 +81,7 @@ class SortieConteneur extends Model
 
     public function detention()
     {
-        return $this->hasOne(Detention::class, 'sortie_conteneur_id');
+        return $this->hasOne(\App\Models\Detention::class, 'sortie_conteneur_id');
     }
 
     public function facturation()

@@ -14,7 +14,7 @@ class DetentionService
      */
     public function getAllDetentions(array $filters = [])
     {
-        $query = Detention::with(['sortieConteneur.armateur']);
+        $query = Detention::with(['sortieConteneur.armateur', 'sortieConteneur.camion', 'sortieConteneur.remorque']);
 
         // Filtres
         if (isset($filters['statut']) && $filters['statut'] !== 'tous') {
