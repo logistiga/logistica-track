@@ -285,20 +285,20 @@ export const SortieForm = ({ formData, setFormData, onSubmit, onCancel }: Sortie
 
               {/* Récapitulatif des conditions armateur pour BAD */}
               {selectedArmateur && (
-                <div className="p-4 bg-muted rounded-lg space-y-4">
-                  <h4 className="font-medium mb-2">Conditions de détention - {selectedArmateur.code}</h4>
+                <div className="p-2 bg-muted rounded border space-y-2">
+                  <h4 className="text-sm font-medium">Conditions de détention - {selectedArmateur.code}</h4>
                   
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="text-center p-3 bg-background rounded border">
-                      <div className="text-2xl font-bold text-primary">{selectedArmateur.jours_gratuits}</div>
-                      <div className="text-sm text-muted-foreground">Jours gratuits</div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="text-center p-2 bg-background rounded text-xs">
+                      <div className="text-lg font-bold text-primary">{selectedArmateur.jours_gratuits}</div>
+                      <div className="text-xs text-muted-foreground">Jours gratuits</div>
                     </div>
-                    <div className="text-center p-3 bg-background rounded border">
-                      <div className="text-2xl font-bold text-destructive">{selectedArmateur.prix_par_jour.toLocaleString()}</div>
-                      <div className="text-sm text-muted-foreground">FCFA / jour</div>
+                    <div className="text-center p-2 bg-background rounded text-xs">
+                      <div className="text-lg font-bold text-destructive">{selectedArmateur.prix_par_jour.toLocaleString()}</div>
+                      <div className="text-xs text-muted-foreground">FCFA / jour</div>
                     </div>
-                    <div className="text-center p-3 bg-background rounded border">
-                      <div className="text-2xl font-bold text-orange-600">
+                    <div className="text-center p-2 bg-background rounded text-xs">
+                      <div className="text-lg font-bold text-orange-600">
                         {(() => {
                           if (dateSortie && selectedArmateur.jours_gratuits) {
                             const dateLimite = new Date(dateSortie);
@@ -308,7 +308,7 @@ export const SortieForm = ({ formData, setFormData, onSubmit, onCancel }: Sortie
                           return "--";
                         })()}
                       </div>
-                      <div className="text-sm text-muted-foreground">Date limite retour</div>
+                      <div className="text-xs text-muted-foreground">Date limite retour</div>
                     </div>
                   </div>
 
@@ -400,20 +400,20 @@ export const SortieForm = ({ formData, setFormData, onSubmit, onCancel }: Sortie
               <DetentionSummary armateurId={selectedArmateur?.id || null} />
               
               {selectedArmateur && (
-                <div className="p-4 bg-muted rounded-lg space-y-4">
-                  <h4 className="font-medium mb-2">Conditions de détention - {selectedArmateur.code}</h4>
+                <div className="p-2 bg-muted rounded border space-y-2">
+                  <h4 className="text-sm font-medium">Conditions de détention - {selectedArmateur.code}</h4>
                   
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="text-center p-3 bg-background rounded border">
-                      <div className="text-2xl font-bold text-primary">{selectedArmateur.jours_gratuits}</div>
-                      <div className="text-sm text-muted-foreground">Jours gratuits</div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="text-center p-2 bg-background rounded text-xs">
+                      <div className="text-lg font-bold text-primary">{selectedArmateur.jours_gratuits}</div>
+                      <div className="text-xs text-muted-foreground">Jours gratuits</div>
                     </div>
-                    <div className="text-center p-3 bg-background rounded border">
-                      <div className="text-2xl font-bold text-destructive">{selectedArmateur.prix_par_jour.toLocaleString()}</div>
-                      <div className="text-sm text-muted-foreground">FCFA / jour</div>
+                    <div className="text-center p-2 bg-background rounded text-xs">
+                      <div className="text-lg font-bold text-destructive">{selectedArmateur.prix_par_jour.toLocaleString()}</div>
+                      <div className="text-xs text-muted-foreground">FCFA / jour</div>
                     </div>
-                    <div className="text-center p-3 bg-background rounded border">
-                      <div className="text-2xl font-bold text-orange-600">
+                    <div className="text-center p-2 bg-background rounded text-xs">
+                      <div className="text-lg font-bold text-orange-600">
                         {(() => {
                           if (dateSortie && selectedArmateur.jours_gratuits) {
                             const dateLimite = new Date(dateSortie);
@@ -423,7 +423,7 @@ export const SortieForm = ({ formData, setFormData, onSubmit, onCancel }: Sortie
                           return "--";
                         })()}
                       </div>
-                      <div className="text-sm text-muted-foreground">Date limite retour</div>
+                      <div className="text-xs text-muted-foreground">Date limite retour</div>
                     </div>
                   </div>
 
