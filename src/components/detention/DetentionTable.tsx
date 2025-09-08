@@ -108,13 +108,15 @@ export function DetentionTable({
                   <TableCell>{getResponsabilityBadge(container)}</TableCell>
                   <TableCell>
                     <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => onIdentifyResponsability(container)}
-                      >
-                        <Users className="w-4 h-4" />
-                      </Button>
+                      {!container.responsabilite && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => onIdentifyResponsability(container)}
+                        >
+                          <Users className="w-4 h-4" />
+                        </Button>
+                      )}
                       <Button
                         variant="outline"
                         size="sm"
