@@ -24,9 +24,9 @@ class DetentionController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        \Log::info('📥 DetentionController@index called with params:', $request->all());
-        \Log::info('🌐 Request URL: ' . $request->url());
-        \Log::info('🔑 User authenticated: ' . (auth()->check() ? auth()->user()->id : 'anonymous'));
+        \Log::info('📥 DetentionController@index called', ['params' => $request->all()]);
+        \Log::info('🌐 Request URL', ['url' => $request->url()]);
+        \Log::info('🔑 User authenticated', ['user_id' => auth()->check() ? auth()->user()->id : 'anonymous']);
         
         try {
             \Log::info('🔍 Starting detention service call');
