@@ -206,6 +206,10 @@ export function useSortieConteneur() {
       const updated = await sortieConteneurService.confirmerRetour(parseInt(selectedSortie.id), retourData);
       const convertedUpdated = convertApiToLocal(updated);
       setSorties(prev => prev.map(s => s.id === selectedSortie.id ? convertedUpdated : s));
+      
+      // Recharger toutes les données pour s'assurer qu'elles sont synchronisées
+      await loadSorties();
+      
       toast({
         title: "Retour confirmé",
         description: "Le retour au port a été enregistré."
@@ -222,7 +226,7 @@ export function useSortieConteneur() {
         variant: "destructive"
       });
     }
-  }, [selectedSortie, returnData, toast]);
+  }, [selectedSortie, returnData, toast, loadSorties]);
 
   const handleCloseAddDialog = useCallback(() => {
     setIsAddDialogOpen(false);
