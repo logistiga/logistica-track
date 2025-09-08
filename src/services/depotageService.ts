@@ -1,4 +1,5 @@
 import { apiService } from './apiService';
+import { apiConfig } from '../config/api';
 
 export interface Depotage {
   id: number;
@@ -58,7 +59,7 @@ class DepotageService {
       Object.entries(params).filter(([_, value]) => value !== undefined)
         .map(([key, value]) => [key, String(value)])
     ).toString() : '';
-    const endpoint = queryString ? `/depotages?${queryString}` : '/depotages';
+    const endpoint = queryString ? `${apiConfig.endpoints.depotages}?${queryString}` : apiConfig.endpoints.depotages;
     const response = await apiService.get(endpoint);
     return {
       data: response.data,
@@ -67,36 +68,36 @@ class DepotageService {
   }
 
   async getDepotage(id: number): Promise<Depotage> {
-    const response = await apiService.get(`/depotages/${id}`);
+    const response = await apiService.get(`${apiConfig.endpoints.depotages}/${id}`);
     return response.data;
   }
 
   async createDepotage(data: CreateDepotageData): Promise<Depotage> {
-    const response = await apiService.post('/depotages', data);
+    const response = await apiService.post(apiConfig.endpoints.depotages, data);
     return response.data;
   }
 
   async updateDepotage(id: number, data: Partial<CreateDepotageData>): Promise<Depotage> {
-    const response = await apiService.put(`/depotages/${id}`, data);
+    const response = await apiService.put(`${apiConfig.endpoints.depotages}/${id}`, data);
     return response.data;
   }
 
   async deleteDepotage(id: number): Promise<void> {
-    await apiService.delete(`/depotages/${id}`);
+    await apiService.delete(`${apiConfig.endpoints.depotages}/${id}`);
   }
 
   async terminerDepotage(id: number): Promise<Depotage> {
-    const response = await apiService.post(`/depotages/${id}/terminer`, {});
+    const response = await apiService.post(`${apiConfig.endpoints.depotages}/${id}/terminer`, {});
     return response.data;
   }
 
   async getDepotagesEnCours(): Promise<Depotage[]> {
-    const response = await apiService.get('/depotages/en-cours');
+    const response = await apiService.get(`${apiConfig.endpoints.depotages}/en-cours`);
     return response.data;
   }
 
   async getStats(): Promise<DepotageStats> {
-    const response = await apiService.get('/depotages/stats');
+    const response = await apiService.get(`${apiConfig.endpoints.depotages}/stats`);
     return response.data;
   }
 }

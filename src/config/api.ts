@@ -34,9 +34,12 @@ export const apiConfig = {
     },
     armateurs: '/armateurs',
     vehicules: '/vehicules',
-    sortieConteneur: '/sortie-conteneur',
+    sortieConteneur: '/sorties',
     operations: '/operations',
     dashboard: '/dashboard',
     notifications: '/notifications',
+    stockages: '/stockages',
+    doubleRelevages: '/double-relevages',
+    depotages: '/depotages',
   }
 };

@@ -16,6 +16,7 @@ use App\Http\Controllers\API\DashboardController;
 use App\Http\Controllers\API\StatistiqueController;
 use App\Http\Controllers\API\StockageController;
 use App\Http\Controllers\API\DoubleRelevageController;
+use App\Http\Controllers\API\DepotageController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -258,6 +259,21 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::put('/', [DoubleRelevageController::class, 'update'])->middleware('role:admin,manager,operator')->name('update');
             Route::delete('/', [DoubleRelevageController::class, 'destroy'])->middleware('role:admin')->name('destroy');
             Route::post('/confirmer', [DoubleRelevageController::class, 'confirmer'])->middleware('role:admin,manager,operator')->name('confirmer');
+        });
+    });
+
+    // Module Dépotage
+    Route::prefix('depotages')->name('depotages.')->group(function () {
+        Route::get('/', [DepotageController::class, 'index'])->name('index');
+        Route::post('/', [DepotageController::class, 'store'])->middleware('role:admin,manager,operator')->name('store');
+        Route::get('/en-cours', [DepotageController::class, 'enCours'])->name('en-cours');
+        Route::get('/stats', [DepotageController::class, 'stats'])->name('stats');
+        
+        Route::prefix('{depotage}')->group(function () {
+            Route::get('/', [DepotageController::class, 'show'])->name('show');
+            Route::put('/', [DepotageController::class, 'update'])->middleware('role:admin,manager,operator')->name('update');
+            Route::delete('/', [DepotageController::class, 'destroy'])->middleware('role:admin')->name('destroy');
+            Route::post('/terminer', [DepotageController::class, 'terminer'])->middleware('role:admin,manager,operator')->name('terminer');
         });
     });
 });

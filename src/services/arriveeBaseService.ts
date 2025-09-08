@@ -1,4 +1,5 @@
 import { sortieConteneurService, SortieConteneur } from './sortieConteneurService';
+import { apiConfig } from '../config/api';
 
 export interface ArriveeBase {
   id: number;

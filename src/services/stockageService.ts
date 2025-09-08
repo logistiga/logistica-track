@@ -1,4 +1,5 @@
 import { apiService } from './apiService';
+import { apiConfig } from '../config/api';
 
 export interface Stockage {
   id: number;
@@ -69,7 +70,7 @@ class StockageService {
       Object.entries(params).filter(([_, value]) => value !== undefined)
         .map(([key, value]) => [key, String(value)])
     ).toString() : '';
-    const endpoint = queryString ? `/stockages?${queryString}` : '/stockages';
+    const endpoint = queryString ? `${apiConfig.endpoints.stockages}?${queryString}` : apiConfig.endpoints.stockages;
     const response = await apiService.get(endpoint);
     return {
       data: response.data,
@@ -78,22 +79,22 @@ class StockageService {
   }
 
   async getStockage(id: number): Promise<Stockage> {
-    const response = await apiService.get(`/stockages/${id}`);
+    const response = await apiService.get(`${apiConfig.endpoints.stockages}/${id}`);
     return response.data;
   }
 
   async createStockage(data: CreateStockageData): Promise<Stockage> {
-    const response = await apiService.post('/stockages', data);
+    const response = await apiService.post(apiConfig.endpoints.stockages, data);
     return response.data;
   }
 
   async updateStockage(id: number, data: Partial<CreateStockageData>): Promise<Stockage> {
-    const response = await apiService.put(`/stockages/${id}`, data);
+    const response = await apiService.put(`${apiConfig.endpoints.stockages}/${id}`, data);
     return response.data;
   }
 
   async deleteStockage(id: number): Promise<void> {
-    await apiService.delete(`/stockages/${id}`);
+    await apiService.delete(`${apiConfig.endpoints.stockages}/${id}`);
   }
 
   async sortieStockage(id: number, data: SortieStockageData): Promise<{
@@ -104,7 +105,7 @@ class StockageService {
       montant_formate: string;
     };
   }> {
-    const response = await apiService.post(`/stockages/${id}/sortie`, data);
+    const response = await apiService.post(`${apiConfig.endpoints.stockages}/${id}/sortie`, data);
     return {
       stockage: response.data,
       detention: response.detention
@@ -112,12 +113,12 @@ class StockageService {
   }
 
   async getStockagesActifs(): Promise<Stockage[]> {
-    const response = await apiService.get('/stockages/actifs');
+    const response = await apiService.get(`${apiConfig.endpoints.stockages}/actifs`);
     return response.data;
   }
 
   async getStats(): Promise<StockageStats> {
-    const response = await apiService.get('/stockages/stats');
+    const response = await apiService.get(`${apiConfig.endpoints.stockages}/stats`);
     return response.data;
   }
 }

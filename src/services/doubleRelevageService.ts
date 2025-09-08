@@ -1,4 +1,5 @@
 import { apiService } from './apiService';
+import { apiConfig } from '../config/api';
 
 export interface DoubleRelevage {
   id: number;
@@ -67,7 +68,7 @@ class DoubleRelevageService {
       Object.entries(params).filter(([_, value]) => value !== undefined)
         .map(([key, value]) => [key, String(value)])
     ).toString() : '';
-    const endpoint = queryString ? `/double-relevages?${queryString}` : '/double-relevages';
+    const endpoint = queryString ? `${apiConfig.endpoints.doubleRelevages}?${queryString}` : apiConfig.endpoints.doubleRelevages;
     const response = await apiService.get(endpoint);
     return {
       data: response.data,
@@ -76,36 +77,36 @@ class DoubleRelevageService {
   }
 
   async getDoubleRelevage(id: number): Promise<DoubleRelevage> {
-    const response = await apiService.get(`/double-relevages/${id}`);
+    const response = await apiService.get(`${apiConfig.endpoints.doubleRelevages}/${id}`);
     return response.data;
   }
 
   async createDoubleRelevage(data: CreateDoubleRelevageData): Promise<DoubleRelevage> {
-    const response = await apiService.post('/double-relevages', data);
+    const response = await apiService.post(apiConfig.endpoints.doubleRelevages, data);
     return response.data;
   }
 
   async updateDoubleRelevage(id: number, data: Partial<CreateDoubleRelevageData>): Promise<DoubleRelevage> {
-    const response = await apiService.put(`/double-relevages/${id}`, data);
+    const response = await apiService.put(`${apiConfig.endpoints.doubleRelevages}/${id}`, data);
     return response.data;
   }
 
   async deleteDoubleRelevage(id: number): Promise<void> {
-    await apiService.delete(`/double-relevages/${id}`);
+    await apiService.delete(`${apiConfig.endpoints.doubleRelevages}/${id}`);
   }
 
   async confirmerDoubleRelevage(id: number): Promise<DoubleRelevage> {
-    const response = await apiService.post(`/double-relevages/${id}/confirmer`, {});
+    const response = await apiService.post(`${apiConfig.endpoints.doubleRelevages}/${id}/confirmer`, {});
     return response.data;
   }
 
   async getDoubleRelevagesEnAttente(): Promise<DoubleRelevage[]> {
-    const response = await apiService.get('/double-relevages/en-attente');
+    const response = await apiService.get(`${apiConfig.endpoints.doubleRelevages}/en-attente`);
     return response.data;
   }
 
   async getStats(): Promise<DoubleRelevageStats> {
-    const response = await apiService.get('/double-relevages/stats');
+    const response = await apiService.get(`${apiConfig.endpoints.doubleRelevages}/stats`);
     return response.data;
   }
 }
