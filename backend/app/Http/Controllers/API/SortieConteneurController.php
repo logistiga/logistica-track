@@ -10,10 +10,13 @@ use App\Http\Resources\SortieConteneurResource;
 use App\Models\SortieConteneur;
 use App\Services\SortieConteneurService;
 use App\Services\ExportService;
+use App\Services\SortieRetourService;
+use App\Services\SortieStatsService;
+use App\Services\SortieSearchService;
+use App\Services\SortieCacheService;
 use App\Traits\ApiResponseTrait;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -23,13 +26,25 @@ class SortieConteneurController extends Controller
 
     protected SortieConteneurService $sortieService;
     protected ExportService $exportService;
+    protected SortieRetourService $retourService;
+    protected SortieStatsService $statsService;
+    protected SortieSearchService $searchService;
+    protected SortieCacheService $cacheService;
 
     public function __construct(
         SortieConteneurService $sortieService,
-        ExportService $exportService
+        ExportService $exportService,
+        SortieRetourService $retourService,
+        SortieStatsService $statsService,
+        SortieSearchService $searchService,
+        SortieCacheService $cacheService
     ) {
         $this->sortieService = $sortieService;
         $this->exportService = $exportService;
+        $this->retourService = $retourService;
+        $this->statsService = $statsService;
+        $this->searchService = $searchService;
+        $this->cacheService = $cacheService;
     }
 
     /**
@@ -38,10 +53,9 @@ class SortieConteneurController extends Controller
     public function index(Request $request): JsonResponse
     {
         try {
-            // Temporairement désactiver le cache basé sur l'utilisateur
-            $cacheKey = 'sorties_' . md5(serialize($request->all()));
+            $cacheKey = $this->cacheService->generateCacheKey('sorties', $request->all());
             
-            $result = Cache::remember($cacheKey, CACHE_SHORT, function () use ($request) {
+            $result = $this->cacheService->remember($cacheKey, CACHE_SHORT, function () use ($request) {
                 return $this->sortieService->getAllSorties($request->all());
             });
 
@@ -68,10 +82,7 @@ class SortieConteneurController extends Controller
 
             $sortie = $this->sortieService->createSortie($request->validated());
 
-            // Invalider le cache simple
-            Cache::forget('sorties_all');
-            Cache::forget('sorties_en_cours');
-            Cache::forget('sorties_retournees');
+            $this->cacheService->invalidateAllCaches();
 
             // Logger l'activité
             try {
@@ -156,10 +167,7 @@ class SortieConteneurController extends Controller
             $oldData = $sortie->toArray();
             $updatedSortie = $this->sortieService->updateSortie($sortie, $request->validated());
 
-            // Invalider le cache simple
-            Cache::forget('sorties_all');
-            Cache::forget('sorties_en_cours');
-            Cache::forget('sorties_retournees');
+            $this->cacheService->invalidateAllCaches();
 
             // Logger l'activité
             logActivity('sortie_updated', $updatedSortie, 'Mise à jour d\'une sortie');
@@ -195,10 +203,7 @@ class SortieConteneurController extends Controller
 
             $this->sortieService->deleteSortie($sortie);
 
-            // Invalider le cache simple
-            Cache::forget('sorties_all');
-            Cache::forget('sorties_en_cours');
-            Cache::forget('sorties_retournees');
+            $this->cacheService->invalidateAllCaches();
 
             // Logger l'activité
             logActivity('sortie_deleted', null, "Suppression de la sortie {$sortie->numero_conteneur}");
@@ -219,40 +224,11 @@ class SortieConteneurController extends Controller
     public function return(RetourSortieRequest $request, SortieConteneur $sortie): JsonResponse
     {
         try {
-            if ($sortie->statut === 'retourne_port') {
-                return $this->errorResponse('Cette sortie est déjà retournée', 400);
-            }
-
             DB::beginTransaction();
 
-            $returnedSortie = $this->sortieService->confirmerRetour($sortie, $request->validated());
+            $returnedSortie = $this->retourService->confirmerRetour($sortie, $request->validated());
 
-            // Invalider le cache simple
-            Cache::forget('sorties_all');
-            Cache::forget('sorties_en_cours');
-            Cache::forget('sorties_retournees');
-
-            // Logger l'activité
-            try {
-                logActivity('sortie_returned', $returnedSortie, 'Retour de conteneur confirmé');
-            } catch (\Exception $e) {
-                // Silently fail to avoid breaking the application
-            }
-
-            // Envoyer une notification
-            try {
-                if (\Illuminate\Support\Facades\Auth::check()) {
-                    sendNotification(
-                        \Illuminate\Support\Facades\Auth::id(),
-                        'sortie_returned',
-                        'Retour de conteneur',
-                        "Le conteneur {$sortie->numero_conteneur} est retourné au port",
-                        ['sortie_id' => $sortie->id]
-                    );
-                }
-            } catch (\Exception $e) {
-                // Silently fail to avoid breaking the application
-            }
+            $this->cacheService->invalidateAllCaches();
 
             DB::commit();
 
@@ -276,11 +252,7 @@ class SortieConteneurController extends Controller
     public function stats(Request $request): JsonResponse
     {
         try {
-            $cacheKey = 'sorties_stats_' . md5(serialize($request->all()));
-            
-            $stats = Cache::remember($cacheKey, CACHE_MEDIUM, function () use ($request) {
-                return $this->sortieService->getStatistics($request->all());
-            });
+            $stats = $this->statsService->getStatistics($request->all());
 
             return $this->successResponse($stats, 'Statistiques récupérées avec succès');
 
@@ -295,7 +267,7 @@ class SortieConteneurController extends Controller
     public function enCours(Request $request): JsonResponse
     {
         try {
-            $sorties = $this->sortieService->getSortiesEnCours($request->all());
+            $sorties = $this->statsService->getSortiesEnCours($request->all());
 
             return $this->successResponse(
                 SortieConteneurResource::collection($sorties),
@@ -313,7 +285,7 @@ class SortieConteneurController extends Controller
     public function retournees(Request $request): JsonResponse
     {
         try {
-            $sorties = $this->sortieService->getSortiesRetournees($request->all());
+            $sorties = $this->statsService->getSortiesRetournees($request->all());
 
             return $this->successResponse(
                 SortieConteneurResource::collection($sorties),
@@ -336,7 +308,7 @@ class SortieConteneurController extends Controller
                 'filters' => 'sometimes|array',
             ]);
 
-            $results = $this->sortieService->searchSorties(
+            $results = $this->searchService->search(
                 $request->query,
                 $request->filters ?? []
             );
@@ -397,15 +369,9 @@ class SortieConteneurController extends Controller
 
             DB::beginTransaction();
 
-            $results = $this->sortieService->bulkReturn($request->sorties);
+            $results = $this->retourService->bulkReturn($request->sorties);
 
-            // Invalider le cache simple
-            Cache::forget('sorties_all');
-            Cache::forget('sorties_en_cours');
-            Cache::forget('sorties_retournees');
-
-            // Logger l'activité
-            logActivity('bulk_return', null, 'Retour en lot de ' . count($request->sorties) . ' conteneurs');
+            $this->cacheService->invalidateAllCaches();
 
             DB::commit();
 
@@ -426,7 +392,7 @@ class SortieConteneurController extends Controller
     public function timeline(SortieConteneur $sortie): JsonResponse
     {
         try {
-            $timeline = $this->sortieService->getTimeline($sortie);
+            $timeline = $this->statsService->getTimeline($sortie);
 
             return $this->successResponse($timeline, 'Timeline récupérée avec succès');
 
@@ -441,7 +407,7 @@ class SortieConteneurController extends Controller
     public function detention(SortieConteneur $sortie): JsonResponse
     {
         try {
-            $detention = $this->sortieService->getDetentionInfo($sortie);
+            $detention = $this->statsService->getDetentionInfo($sortie);
 
             return $this->successResponse($detention, 'Informations de détention récupérées');
 
@@ -456,7 +422,7 @@ class SortieConteneurController extends Controller
     public function facture(SortieConteneur $sortie): JsonResponse
     {
         try {
-            $facturation = $this->sortieService->getFacturationInfo($sortie);
+            $facturation = $this->statsService->getFacturationInfo($sortie);
 
             return $this->successResponse($facturation, 'Informations de facturation récupérées');
 
