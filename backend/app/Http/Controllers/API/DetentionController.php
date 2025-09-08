@@ -25,19 +25,34 @@ class DetentionController extends Controller
     public function index(Request $request): JsonResponse
     {
         \Log::info('📥 DetentionController@index called with params:', $request->all());
+        \Log::info('🌐 Request URL:', $request->url());
+        \Log::info('🔑 User authenticated:', auth()->check() ? auth()->user()->id : 'anonymous');
+        
         try {
             \Log::info('🔍 Starting detention service call');
             $result = $this->detentionService->getAllDetentions($request->all());
-            \Log::info('📊 DetentionService result:', ['count' => count($result['data'] ?? [])]);
+            \Log::info('📊 DetentionService result:', [
+                'count' => count($result['data'] ?? []), 
+                'meta' => $result['meta'] ?? null,
+                'sample_data' => array_slice($result['data'] ?? [], 0, 2)
+            ]);
 
-            return $this->successResponse(
+            $response = $this->successResponse(
                 DetentionResource::collection($result['data'])->additional([
                     'meta' => $result['meta'],
                     'links' => $result['links'] ?? null,
                 ]),
                 'Détentions récupérées avec succès'
             );
+            
+            \Log::info('📤 Sending response with data count:', count($result['data'] ?? []));
+            return $response;
+            
         } catch (\Exception $e) {
+            \Log::error('❌ Exception in DetentionController@index:', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
             return $this->errorResponse('Erreur lors de la récupération des détentions: ' . $e->getMessage(), 500);
         }
     }

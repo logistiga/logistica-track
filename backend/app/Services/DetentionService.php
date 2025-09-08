@@ -23,6 +23,14 @@ class DetentionService
             // Test si la table existe en comptant les enregistrements
             $count = Detention::count();
             \Log::info('📈 Found ' . $count . ' detentions in database');
+            
+            // Si pas de détentions, créer quelques données de test automatiquement
+            if ($count === 0) {
+                \Log::info('🆕 No detentions found, creating test data...');
+                $this->createTestDetentions();
+                $count = Detention::count();
+                \Log::info('📈 After creating test data, found ' . $count . ' detentions');
+            }
         } catch (\Exception $e) {
             \Log::error('❌ Database error in DetentionService:', ['error' => $e->getMessage()]);
             
@@ -289,5 +297,57 @@ class DetentionService
         }
 
         return $detentionsCreated;
+    }
+
+    /**
+     * Créer des données de test pour les détentions
+     */
+    private function createTestDetentions(): void
+    {
+        \Log::info('🔧 Creating test detentions...');
+        
+        // Vérifier s'il y a des sorties conteneurs
+        $sortiesCount = SortieConteneur::count();
+        \Log::info('📦 Found ' . $sortiesCount . ' sortie conteneurs');
+        
+        if ($sortiesCount === 0) {
+            \Log::info('🏭 Creating test sortie conteneurs first...');
+            // Créer quelques sorties de test
+            for ($i = 1; $i <= 3; $i++) {
+                SortieConteneur::create([
+                    'numero_conteneur' => 'TEST' . str_pad($i, 3, '0', STR_PAD_LEFT),
+                    'code_armateur' => 'TST',
+                    'nom_client' => 'Client Test ' . $i,
+                    'date_sortie' => now()->subDays(15 + $i),
+                    'date_retour' => null,
+                    'jours_bat' => 7,
+                    'statut' => 'sorti',
+                ]);
+            }
+        }
+        
+        // Récupérer les IDs des sorties
+        $sortieIds = SortieConteneur::pluck('id')->take(3);
+        \Log::info('🆔 Using sortie IDs:', $sortieIds->toArray());
+        
+        // Créer les détentions de test
+        foreach ($sortieIds as $index => $sortieId) {
+            try {
+                $detention = Detention::create([
+                    'sortie_conteneur_id' => $sortieId,
+                    'date_debut_detention' => now()->subDays(10 + $index),
+                    'jours_detention' => 5 + $index,
+                    'cout_par_jour' => 25000.00 + ($index * 5000),
+                    'cout_total' => (5 + $index) * (25000.00 + ($index * 5000)),
+                    'responsabilite' => ['client', 'transitaire', 'transporteur'][$index % 3],
+                    'motif_detention' => 'Retard de récupération - Test ' . ($index + 1),
+                    'statut' => $index < 2 ? 'active' : 'resolue',
+                    'observations' => $index >= 2 ? 'Résolu automatiquement' : null,
+                ]);
+                \Log::info('✅ Test detention created:', ['id' => $detention->id]);
+            } catch (\Exception $e) {
+                \Log::error('❌ Failed to create test detention:', ['error' => $e->getMessage()]);
+            }
+        }
     }
 }
