@@ -137,8 +137,15 @@ class SortieConteneurService {
         }
         
         return response.data;
-      } catch (apiError) {
-        console.error('❌ Service: API call failed, falling back to localStorage:', apiError);
+      } catch (apiError: any) {
+        console.error('❌ Service: API call failed with detailed error:', {
+          message: apiError.message,
+          status: apiError.response?.status,
+          statusText: apiError.response?.statusText,
+          data: apiError.response?.data,
+          url: apiError.config?.url,
+          method: apiError.config?.method
+        });
         
         // Fallback to localStorage
         let sorties = this.getStoredSorties();

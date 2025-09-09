@@ -79,7 +79,9 @@ class ApiService {
       body: JSON.stringify(data),
     });
 
-    return await response.json();
+    const result = await response.json();
+    console.log('✅ POST Response data:', JSON.stringify(result, null, 2));
+    return result;
   }
 
   async put(endpoint: string, data: any) {
