@@ -79,8 +79,25 @@ class SortieConteneurService {
     localStorage.setItem('sorties_conteneurs', JSON.stringify(sorties));
   }
   async getSorties(): Promise<SortieConteneur[]> {
-    const response = await apiService.get('/sorties');
-    return response.data;
+    try {
+      console.log('📡 Service: Fetching sorties from API...');
+      const response = await apiService.get('/sorties');
+      console.log('📥 Service: API response received with', response.data.length, 'sorties');
+      console.log('📊 Service: Sorties statuses:', response.data.map((s: SortieConteneur) => ({ id: s.id, statut: s.statut })));
+      return response.data;
+    } catch (error) {
+      console.error('❌ Service: API call failed, trying localStorage fallback:', error);
+      
+      // Fallback to localStorage
+      const stored = this.getStoredSorties();
+      console.log('📊 Service: localStorage fallback data:', stored.map(s => ({ id: s.id, statut: s.statut })));
+      
+      if (stored.length === 0) {
+        console.warn('⚠️ Service: No data in localStorage either');
+      }
+      
+      return stored;
+    }
   }
 
   async getSortie(id: number): Promise<SortieConteneur> {
@@ -103,43 +120,73 @@ class SortieConteneurService {
   }
 
   async confirmerRetour(id: number, retourData: RetourData): Promise<SortieConteneur> {
-    console.log('🔄 Confirming return (localStorage fallback due to backend issues):', id, retourData);
+    console.log('🔄 Service: Confirming return for sortie ID:', id);
+    console.log('📤 Service: Return data received:', retourData);
     
     try {
-      // Get current sorties data (try API first, fallback to localStorage)
-      let sorties;
+      // Try API first
       try {
-        const response = await apiService.get('/sorties');
-        sorties = response.data;
-        console.log('📥 Got sorties from API for return update');
+        console.log('📡 Service: Attempting API call for return confirmation...');
+        const response = await apiService.put(`/sorties/${id}/retour`, retourData);
+        console.log('📥 Service: API response received:', response.data);
+        console.log('📈 Service: API returned status:', response.data.statut);
+        
+        // Verify the API actually updated the status
+        if (response.data.statut !== 'retourne_port') {
+          console.warn('⚠️ Service: API did not set status to retourne_port, status is:', response.data.statut);
+        }
+        
+        return response.data;
       } catch (apiError) {
-        console.log('⚠️ API failed, using localStorage only');
-        sorties = this.getStoredSorties();
+        console.error('❌ Service: API call failed, falling back to localStorage:', apiError);
+        
+        // Fallback to localStorage
+        let sorties = this.getStoredSorties();
+        console.log('📊 Service: Current localStorage sorties:', sorties.map(s => ({ id: s.id, statut: s.statut })));
+        
+        // If localStorage is empty, try to get fresh data from API
+        if (sorties.length === 0) {
+          try {
+            const response = await apiService.get('/sorties');
+            sorties = response.data;
+            console.log('📥 Service: Retrieved fresh data from API for localStorage update');
+          } catch (getError) {
+            console.error('❌ Service: Could not retrieve data from API:', getError);
+            throw new Error('Impossible de récupérer les données pour la mise à jour');
+          }
+        }
+        
+        // Update the sortie with return data
+        const sortieIndex = sorties.findIndex((s: SortieConteneur) => s.id === id);
+        if (sortieIndex === -1) {
+          console.error('❌ Service: Sortie not found in data:', id);
+          throw new Error('Sortie non trouvée');
+        }
+        
+        console.log('📊 Service: Found sortie at index:', sortieIndex);
+        console.log('📈 Service: Current sortie status:', sorties[sortieIndex].statut);
+        
+        const updatedSortie = {
+          ...sorties[sortieIndex],
+          date_retour: retourData.date_retour,
+          heure_retour: retourData.heure_retour || "12:00",
+          statut: 'retourne_port' as const,
+          updated_at: new Date().toISOString()
+        };
+        
+        console.log('🔄 Service: Updated sortie object:', updatedSortie);
+        console.log('📈 Service: New status:', updatedSortie.statut);
+        
+        sorties[sortieIndex] = updatedSortie;
+        
+        // Save to localStorage
+        this.saveSorties(sorties);
+        console.log('💾 Service: Saved updated data to localStorage');
+        
+        return updatedSortie;
       }
-      
-      // Update the sortie with return data
-      const sortieIndex = sorties.findIndex((s: SortieConteneur) => s.id === id);
-      if (sortieIndex === -1) {
-        throw new Error('Sortie non trouvée');
-      }
-      
-      const updatedSortie = {
-        ...sorties[sortieIndex],
-        date_retour: retourData.date_retour,
-        heure_retour: retourData.heure_retour,
-        statut: 'retourne_port' as const,
-        updated_at: new Date().toISOString()
-      };
-      
-      sorties[sortieIndex] = updatedSortie;
-      
-      // Always save to localStorage as primary storage
-      this.saveSorties(sorties);
-      
-      console.log('✅ Return confirmed successfully');
-      return updatedSortie;
     } catch (error) {
-      console.error('❌ Error confirming return:', error);
+      console.error('❌ Service: Critical error in confirmerRetour:', error);
       throw error;
     }
   }
