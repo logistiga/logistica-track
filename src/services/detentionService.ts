@@ -207,14 +207,14 @@ class DetentionService {
       id: backendData.id.toString(),
       numeroConteneur: sortieConteneur.numero_conteneur || 'N/A',
       codeArmateur: sortieConteneur.code_armateur || 'N/A',
-      typeConteneur: sortieConteneur.type_destination || 'Standard',
-      joursBAT: parseInt(sortieConteneur.jours_bad) || 0,
-      joursRealises: backendData.jours_detention || 0,
-      joursDepassement: backendData.jours_detention || 0,
+      typeConteneur: this.mapTypeConteneur(sortieConteneur.type_destination),
+      joursBAT: this.calculateJoursBAT(sortieConteneur),
+      joursRealises: this.calculateJoursRealises(sortieConteneur),
+      joursDepassement: Math.max(0, this.calculateJoursRealises(sortieConteneur) - this.calculateJoursBAT(sortieConteneur)),
       dateSortie: sortieConteneur.date_sortie || '',
       dateRetour: sortieConteneur.date_retour || '',
       nomClient: sortieConteneur.nom_client || 'Client inconnu',
-      responsabilite: this.mapResponsabilite(backendData.responsabilite),
+      responsabilite: this.mapResponsabilite(backendData.responsabilite) || undefined,
       joursClient: backendData.responsabilite === 'client' ? backendData.jours_detention : 0,
       joursLogistica: backendData.responsabilite === 'transitaire' ? backendData.jours_detention : 0,
       coutParJour: backendData.cout_par_jour || 15000,
@@ -238,6 +238,45 @@ class DetentionService {
       default:
         return undefined;
     }
+  }
+
+  /**
+   * Mapper le type de conteneur
+   */
+  private mapTypeConteneur(typeDestination: string): string {
+    if (typeDestination === 'bad') {
+      return 'BAT';
+    }
+    return typeDestination || 'Standard';
+  }
+
+  /**
+   * Calculer les jours BAT autorisés (gratuits depuis la création)
+   */
+  private calculateJoursBAT(sortieConteneur: any): number {
+    // Si c'est un conteneur BAT, il y a généralement 7 jours gratuits
+    // Sinon, utiliser jours_bad du conteneur ou 0 par défaut
+    if (sortieConteneur.type_destination === 'bad') {
+      return parseInt(sortieConteneur.jours_bad) || 7;
+    }
+    return 0;
+  }
+
+  /**
+   * Calculer les jours réalisés (entre sortie et retour)
+   */
+  private calculateJoursRealises(sortieConteneur: any): number {
+    if (!sortieConteneur.date_sortie) return 0;
+    
+    const dateSortie = new Date(sortieConteneur.date_sortie);
+    const dateRetour = sortieConteneur.date_retour 
+      ? new Date(sortieConteneur.date_retour) 
+      : new Date(); // Si pas de retour, utiliser la date actuelle
+    
+    const diffTime = Math.abs(dateRetour.getTime() - dateSortie.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    return diffDays;
   }
 }
 

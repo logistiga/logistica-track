@@ -99,7 +99,7 @@ export function DetentionTable({
                 <TableRow key={container.id}>
                   <TableCell className="font-medium">{container.numeroConteneur}</TableCell>
                   <TableCell>{container.codeArmateur}</TableCell>
-                  <TableCell>{container.typeConteneur}</TableCell>
+                  <TableCell>{container.typeConteneur.toUpperCase()}</TableCell>
                   <TableCell>{container.joursBAT} jours</TableCell>
                   <TableCell>{container.joursRealises} jours</TableCell>
                   <TableCell>
