@@ -3,6 +3,8 @@
 namespace App\Services;
 
 use App\Models\Armateur;
+use App\Models\Detention;
+use Illuminate\Support\Facades\DB;
 
 class ArmateurService
 {
@@ -61,5 +63,71 @@ class ArmateurService
                     'label' => "{$armateur->code} - {$armateur->nom} ({$armateur->type_conteneur})"
                 ];
             });
+    }
+
+    /**
+     * Créer un nouvel armateur
+     */
+    public function createArmateur(array $data)
+    {
+        return Armateur::create($data);
+    }
+
+    /**
+     * Mettre à jour un armateur
+     */
+    public function updateArmateur(Armateur $armateur, array $data)
+    {
+        $armateur->update($data);
+        return $armateur->fresh();
+    }
+
+    /**
+     * Supprimer un armateur
+     */
+    public function deleteArmateur(Armateur $armateur)
+    {
+        return $armateur->delete();
+    }
+
+    /**
+     * Statistiques de détention pour un armateur
+     */
+    public function getDetentionStats(Armateur $armateur)
+    {
+        $detentions = Detention::whereHas('sortieConteneur', function ($query) use ($armateur) {
+            $query->where('armateur_code', $armateur->code);
+        });
+
+        $totalDetentions = $detentions->count();
+        $detentionActive = $detentions->where('statut', 'active')->count();
+        $totalMontant = $detentions->sum('montant');
+        $moyenneJours = $detentions->avg('jours_realises') ?? 0;
+        $derniereDetention = $detentions->latest('created_at')->first()?->created_at;
+
+        return [
+            'total_detentions' => $totalDetentions,
+            'detention_active' => $detentionActive,
+            'total_montant' => round($totalMontant, 2),
+            'moyenne_jours' => round($moyenneJours, 1),
+            'derniere_detention' => $derniereDetention?->format('Y-m-d H:i:s'),
+        ];
+    }
+
+    /**
+     * Statistiques générales d'un armateur
+     */
+    public function getArmateurStats(Armateur $armateur)
+    {
+        $totalSorties = $armateur->sorties()->count();
+        $sortiesActives = $armateur->sorties()->whereNull('date_retour_effectif')->count();
+        $sortiesTerminees = $armateur->sorties()->whereNotNull('date_retour_effectif')->count();
+
+        return [
+            'total_sorties' => $totalSorties,
+            'sorties_actives' => $sortiesActives,
+            'sorties_terminees' => $sortiesTerminees,
+            'taux_retour' => $totalSorties > 0 ? round(($sortiesTerminees / $totalSorties) * 100, 1) : 0,
+        ];
     }
 }

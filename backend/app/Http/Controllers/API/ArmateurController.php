@@ -137,4 +137,30 @@ class ArmateurController extends Controller
             return $this->errorResponse('Erreur lors de la récupération des armateurs actifs', 500);
         }
     }
+
+    /**
+     * Statistiques de détention pour un armateur
+     */
+    public function detentionStats(Armateur $armateur): JsonResponse
+    {
+        try {
+            $stats = $this->armateurService->getDetentionStats($armateur);
+            return $this->successResponse($stats, 'Statistiques de détention récupérées');
+        } catch (\Exception $e) {
+            return $this->errorResponse('Erreur lors de la récupération des statistiques', 500);
+        }
+    }
+
+    /**
+     * Statistiques générales d'un armateur
+     */
+    public function stats(Armateur $armateur): JsonResponse
+    {
+        try {
+            $stats = $this->armateurService->getArmateurStats($armateur);
+            return $this->successResponse($stats, 'Statistiques récupérées');
+        } catch (\Exception $e) {
+            return $this->errorResponse('Erreur lors de la récupération des statistiques', 500);
+        }
+    }
 }

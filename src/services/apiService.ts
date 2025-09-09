@@ -19,8 +19,10 @@ class ApiService {
     const fullUrl = `${this.currentBaseUrl}${endpoint}`;
     console.log('🌐 Making request to:', fullUrl);
     console.log('📤 Request method:', options.method);
-    console.log('📦 Request headers:', this.getAuthHeaders());
-    console.log('📝 Request body:', options.body);
+    console.log('📦 Request headers:', JSON.stringify(this.getAuthHeaders(), null, 2));
+    if (options.body) {
+      console.log('📝 Request body:', JSON.stringify(JSON.parse(options.body as string), null, 2));
+    }
     
     const response = await fetch(fullUrl, {
       ...options,
@@ -31,21 +33,23 @@ class ApiService {
     });
 
     console.log('📥 Response status:', response.status);
-    console.log('📥 Response headers:', response.headers);
+    console.log('📥 Response headers:', Object.fromEntries(response.headers.entries()));
 
     if (!response.ok) {
       const errorText = await response.text();
       console.error('❌ Error response:', errorText);
       
-      // Si erreur 401, nettoyer l'authentification
+      // Si erreur 401, nettoyer l'authentification sans essayer de faire logout
       if (response.status === 401) {
+        console.log('🔒 Token expired or invalid, cleaning local storage');
         localStorage.removeItem('auth_token');
         localStorage.removeItem('user');
         // Rediriger vers login seulement si on n'y est pas déjà
         if (!window.location.pathname.includes('/login')) {
+          console.log('🔄 Redirecting to login page');
           window.location.href = '/login';
         }
-        return;
+        throw new Error('Session expirée');
       }
       
       try {
@@ -64,7 +68,9 @@ class ApiService {
       method: 'GET',
     });
 
-    return await response.json();
+    const result = await response.json();
+    console.log('✅ GET Response data:', JSON.stringify(result, null, 2));
+    return result;
   }
 
   async post(endpoint: string, data: any) {

@@ -19,5 +19,6 @@ Route::prefix('armateurs')->name('armateurs.')->group(function () {
         Route::post('/deactivate', [ArmateurController::class, 'deactivate'])->middleware('role:admin,manager')->name('deactivate');
         Route::get('/sorties', [ArmateurController::class, 'sorties'])->name('sorties');
         Route::get('/stats', [ArmateurController::class, 'stats'])->name('stats');
+        Route::get('/detention-stats', [ArmateurController::class, 'detentionStats'])->name('detention.stats');
     });
 });
