@@ -244,10 +244,15 @@ class DetentionService {
    * Mapper le type de conteneur
    */
   private mapTypeConteneur(typeDestination: string): string {
-    if (typeDestination === 'bad') {
-      return 'BAD';
-    }
-    return typeDestination || 'Standard';
+    const types = {
+      'bad': 'BAD',
+      'fix': 'FIX', 
+      'detention': 'BAD', // Les détentions sont des BAD qui ont dépassé
+      'stockage': 'STOCKAGE',
+      'base': 'BASE'
+    };
+    
+    return types[typeDestination] || 'BAD';
   }
 
   /**
