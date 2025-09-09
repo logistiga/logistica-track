@@ -6,25 +6,43 @@ import { useToast } from "@/hooks/use-toast";
 import { validateFormData, getEmptyFormData } from "@/utils/sortieUtils";
 
 // Fonction pour convertir l'API response vers le type local
-const convertApiToLocal = (apiSortie: APISortieConteneur): SortieConteneur => ({
-  id: apiSortie.id.toString(),
-  numeroConteneur: apiSortie.numero_conteneur,
-  numeroBL: apiSortie.numero_bl,
-  codeArmateur: apiSortie.armateur?.code || apiSortie.armateur_id.toString(),
-  camion: apiSortie.vehicule_camion?.numero_parc || apiSortie.vehicule_camion_id?.toString() || "",
-  remorque: apiSortie.vehicule_remorque?.numero_parc || apiSortie.vehicule_remorque_id?.toString() || "",
-  primeChauffeur: apiSortie.prime_chauffeur || 0,
-  nomClient: apiSortie.nom_client,
-  destination: apiSortie.destination as "base" | "client",
-  adresseClient: apiSortie.adresse_client,
-  typeDestination: apiSortie.type_destination as "bad" | "detention",
-  joursBAD: apiSortie.jours_bad,
-  dateFinFranchise: apiSortie.date_fin_franchise,
-  nomTransitaire: apiSortie.nom_transitaire,
-  dateSortie: apiSortie.date_sortie,
-  dateRetour: apiSortie.date_retour,
-  statut: apiSortie.statut as "en_cours" | "a_la_base" | "livre_client" | "retourne_port"
-});
+const convertApiToLocal = (apiSortie: APISortieConteneur): SortieConteneur => {
+  console.log('🔄 Converting API sortie:', { id: apiSortie.id, statut: apiSortie.statut, date_retour: apiSortie.date_retour });
+  
+  // Mapper les statuts de l'API vers les statuts locaux
+  let mappedStatus: "en_cours" | "a_la_base" | "livre_client" | "retourne_port";
+  
+  if (apiSortie.date_retour) {
+    // Si une date de retour existe, le conteneur est retourné au port
+    mappedStatus = "retourne_port";
+    console.log('📅 Date retour exists, mapping to retourne_port');
+  } else {
+    // Sinon, mapper directement le statut de l'API
+    mappedStatus = apiSortie.statut as "en_cours" | "a_la_base" | "livre_client" | "retourne_port";
+  }
+  
+  console.log('📈 Status mapping:', { original: apiSortie.statut, mapped: mappedStatus });
+  
+  return {
+    id: apiSortie.id.toString(),
+    numeroConteneur: apiSortie.numero_conteneur,
+    numeroBL: apiSortie.numero_bl,
+    codeArmateur: apiSortie.armateur?.code || apiSortie.armateur_id.toString(),
+    camion: apiSortie.vehicule_camion?.numero_parc || apiSortie.vehicule_camion_id?.toString() || "",
+    remorque: apiSortie.vehicule_remorque?.numero_parc || apiSortie.vehicule_remorque_id?.toString() || "",
+    primeChauffeur: apiSortie.prime_chauffeur || 0,
+    nomClient: apiSortie.nom_client,
+    destination: apiSortie.destination as "base" | "client",
+    adresseClient: apiSortie.adresse_client,
+    typeDestination: apiSortie.type_destination as "bad" | "detention",
+    joursBAD: apiSortie.jours_bad,
+    dateFinFranchise: apiSortie.date_fin_franchise,
+    nomTransitaire: apiSortie.nom_transitaire,
+    dateSortie: apiSortie.date_sortie,
+    dateRetour: apiSortie.date_retour,
+    statut: mappedStatus
+  };
+};
 
 export function useSortieConteneur() {
   const { toast } = useToast();
@@ -265,10 +283,17 @@ export function useSortieConteneur() {
   }, []);
 
   const getSortiesEnCours = useCallback(() => {
-    return sorties.filter(s => s.statut !== "retourne_port");
+    const filtered = sorties.filter(s => {
+      const isNotReturned = s.statut !== "retourne_port";
+      console.log('🔍 Filtering sortie:', { id: s.id, statut: s.statut, isNotReturned, dateRetour: s.dateRetour });
+      return isNotReturned;
+    });
+    console.log('📊 Sorties en cours filtered:', filtered.map(s => ({ id: s.id, statut: s.statut })));
+    return filtered;
   }, [sorties]);
 
   const getHistorique = useCallback(() => {
+    console.log('📚 Historique includes all sorties:', sorties.map(s => ({ id: s.id, statut: s.statut })));
     return sorties;
   }, [sorties]);
 
