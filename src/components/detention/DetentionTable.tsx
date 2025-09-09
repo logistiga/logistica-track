@@ -27,7 +27,7 @@ export function DetentionTable({
   });
   const getResponsabilityBadge = (container: DetentionContainer) => {
     if (!container.responsabilite) {
-      return <Badge variant="outline">Non définie</Badge>;
+      return <Badge variant="outline" className="text-orange-600 border-orange-300">À définir</Badge>;
     }
     const variants = {
       client: "destructive",
@@ -103,9 +103,17 @@ export function DetentionTable({
                   <TableCell>{getResponsabilityBadge(container)}</TableCell>
                   <TableCell>
                     <div className="flex gap-2">
-                      {!container.responsabilite && <Button variant="outline" size="sm" onClick={() => onIdentifyResponsability(container)}>
+                      {/* Toujours afficher le bouton de responsabilité si pas définie */}
+                      {!container.responsabilite && (
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => onIdentifyResponsability(container)}
+                          className="text-orange-600 border-orange-300 hover:bg-orange-50"
+                        >
                           <Users className="w-4 h-4" />
-                        </Button>}
+                        </Button>
+                      )}
                       <Button variant="outline" size="sm" onClick={() => onGeneratePDF(container)}>
                         <FileText className="w-4 h-4" />
                       </Button>
