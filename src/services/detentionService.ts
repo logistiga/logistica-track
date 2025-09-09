@@ -201,16 +201,50 @@ class DetentionService {
    * Transformer les données du backend vers le format frontend
    */
   private transformDetentionData(backendData: any): DetentionContainer {
+    console.log('🔄 Transforming detention data:', backendData);
+    
+    // Si le backend a déjà calculé toutes les valeurs (DetentionResource), les utiliser directement
+    if (backendData.numero_conteneur && backendData.jours_bat !== undefined) {
+      console.log('✅ Using backend DetentionResource calculated data');
+      return {
+        id: backendData.id.toString(),
+        numeroConteneur: backendData.numero_conteneur,
+        codeArmateur: backendData.code_armateur || 'N/A',
+        typeConteneur: backendData.type_conteneur_label || 'BAD',
+        joursBAT: backendData.jours_bat || 0,
+        joursRealises: backendData.jours_realises || 0,
+        joursDepassement: backendData.jours_depassement || 0,
+        dateSortie: backendData.date_sortie || '',
+        dateRetour: backendData.date_retour || '',
+        nomClient: backendData.nom_client || 'N/A',
+        responsabilite: backendData.responsabilite && backendData.responsabilite !== '' ? this.mapResponsabilite(backendData.responsabilite) : undefined,
+        joursClient: backendData.jours_client || 0,
+        joursLogistica: backendData.jours_logistica || 0,
+        coutParJour: backendData.cout_par_jour || 0,
+        montantTotal: backendData.cout_total || 0,
+        noteDebitGeneree: backendData.note_debit_generee || false,
+        paiementConfirme: backendData.paiement_confirme || false,
+      };
+    }
+    
+    // Fallback: utiliser les données de sortie_conteneur si nécessaire
     const sortieConteneur = backendData.sortie_conteneur || {};
+    console.log('⚠️ Fallback - using sortie_conteneur data:', sortieConteneur);
+    
+    const joursBAT = this.calculateJoursBAT(sortieConteneur);
+    const joursRealises = this.calculateJoursRealises(sortieConteneur);
+    const joursDepassement = Math.max(0, joursRealises - joursBAT);
+    
+    console.log('📊 Calculated values:', { joursBAT, joursRealises, joursDepassement });
     
     return {
       id: backendData.id.toString(),
       numeroConteneur: sortieConteneur.numero_conteneur || 'N/A',
       codeArmateur: sortieConteneur.code_armateur || 'N/A',
       typeConteneur: this.mapTypeConteneur(sortieConteneur.type_destination),
-      joursBAT: this.calculateJoursBAT(sortieConteneur),
-      joursRealises: this.calculateJoursRealises(sortieConteneur),
-      joursDepassement: Math.max(0, this.calculateJoursRealises(sortieConteneur) - this.calculateJoursBAT(sortieConteneur)),
+      joursBAT,
+      joursRealises,
+      joursDepassement,
       dateSortie: sortieConteneur.date_sortie || '',
       dateRetour: sortieConteneur.date_retour || '',
       nomClient: sortieConteneur.nom_client || 'Client inconnu',

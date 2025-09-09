@@ -12,6 +12,27 @@ class DetentionResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $sortieConteneur = $this->sortieConteneur;
+        $armateur = $sortieConteneur?->armateur;
+        
+        // Calculer les jours BAT autorisés depuis l'armateur
+        $joursBAT = 0;
+        if ($armateur && $armateur->jours_gratuits) {
+            $joursBAT = $armateur->jours_gratuits;
+        } elseif ($sortieConteneur && in_array($sortieConteneur->type_destination, ['bad', 'fix'])) {
+            $joursBAT = 7; // Valeur par défaut
+        }
+        
+        // Calculer les jours réalisés
+        $joursRealises = 0;
+        if ($sortieConteneur && $sortieConteneur->date_sortie) {
+            $dateSortie = $sortieConteneur->date_sortie;
+            $dateRetour = $sortieConteneur->date_retour_effectif ?? now();
+            $joursRealises = $dateSortie->diffInDays($dateRetour);
+        }
+        
+        $joursDepassement = max(0, $joursRealises - $joursBAT);
+        
         return [
             'id' => $this->id,
             'sortie_conteneur_id' => $this->sortie_conteneur_id,
@@ -30,6 +51,22 @@ class DetentionResource extends JsonResource
             'observations' => $this->observations,
             'created_at' => $this->created_at->format('Y-m-d H:i:s'),
             'updated_at' => $this->updated_at->format('Y-m-d H:i:s'),
+            
+            // Données calculées pour le frontend
+            'numero_conteneur' => $sortieConteneur?->numero_conteneur,
+            'code_armateur' => $sortieConteneur?->code_armateur,
+            'nom_client' => $sortieConteneur?->nom_client,
+            'type_conteneur_label' => $sortieConteneur?->type_destination === 'bad' ? 'BAD' : 
+                                    ($sortieConteneur?->type_destination === 'fix' ? 'FIX' : 'BAD'),
+            'date_sortie' => $sortieConteneur?->date_sortie?->format('Y-m-d'),
+            'date_retour' => $sortieConteneur?->date_retour_effectif?->format('Y-m-d'),
+            'jours_bat' => $joursBAT,
+            'jours_realises' => $joursRealises,
+            'jours_depassement' => $joursDepassement,
+            'jours_client' => $this->responsabilite === 'client' ? $this->jours_detention : 0,
+            'jours_logistica' => in_array($this->responsabilite, ['transitaire', 'transporteur', 'autre']) ? $this->jours_detention : 0,
+            'note_debit_generee' => $this->statut === 'resolue',
+            'paiement_confirme' => $this->statut === 'resolue',
             
             // Relations
             'sortie_conteneur' => new SortieConteneurResource($this->whenLoaded('sortieConteneur')),
