@@ -20,6 +20,11 @@ export function DetentionTable({
   onGeneratePDF,
   onConfirmPayment
 }: DetentionTableProps) {
+  console.log('🔍 DetentionTable rendered with:', { 
+    containerCount: containers.length, 
+    containers: containers,
+    loading 
+  });
   const getResponsabilityBadge = (container: DetentionContainer) => {
     if (!container.responsabilite) {
       return <Badge variant="outline">Non définie</Badge>;

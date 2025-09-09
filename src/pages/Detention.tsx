@@ -130,6 +130,13 @@ export default function Detention() {
     }
   };
 
+  console.log('🎯 Detention page rendering with:', { 
+    detentionsCount: detentions.length, 
+    detentions, 
+    loading, 
+    stats 
+  });
+
   return (
     <div className="space-y-6">
       <div>
