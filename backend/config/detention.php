@@ -28,7 +28,7 @@ return [
         'position' => 'after', // 'before' ou 'after'
     ],
 
-    'responsabilite_defaut' => 'client',
+    'responsabilite_defaut' => null,
 
     'motifs' => [
         'automatique' => 'Dépassement automatique calculé après retour',

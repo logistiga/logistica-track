@@ -53,7 +53,7 @@ class CreateMissingDetentions extends Command
                     $detention->jours_detention = $joursDepassement;
                     $detention->cout_par_jour = $sortie->armateur->prix_par_jour ?? config('detention.tarifs_par_jour.default', 15000);
                     $detention->cout_total = $joursDepassement * $detention->cout_par_jour;
-                    $detention->responsabilite = config('detention.responsabilite_defaut', 'client');
+                    $detention->responsabilite = null; // Laisser l'utilisateur choisir manuellement
                     $detention->motif_detention = 'Dépassement automatique calculé après retour';
                     $detention->statut = 'active';
                     $detention->save();

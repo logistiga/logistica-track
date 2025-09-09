@@ -293,7 +293,7 @@ class SortieConteneurService
                 'jours_detention' => $joursDepassement,
                 'cout_par_jour' => $coutParJour,
                 'cout_total' => $coutTotal,
-                'responsabilite' => 'client', // Par défaut, peut être modifié manuellement
+                'responsabilite' => null, // Laisser l'utilisateur choisir manuellement
                 'motif_detention' => "Dépassement de franchise de {$joursDepassement} jour(s)",
                 'statut' => 'active',
                 'observations' => "Détention créée automatiquement lors du retour du conteneur {$sortie->numero_conteneur}",
