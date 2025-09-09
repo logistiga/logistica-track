@@ -127,7 +127,7 @@ class SortieConteneurService {
       // Try API first
       try {
         console.log('📡 Service: Attempting API call for return confirmation...');
-        const response = await apiService.put(`/sorties/${id}/retour`, retourData);
+        const response = await apiService.post(`/sorties/${id}/return`, retourData);
         console.log('📥 Service: API response received:', response.data);
         console.log('📈 Service: API returned status:', response.data.statut);
         
