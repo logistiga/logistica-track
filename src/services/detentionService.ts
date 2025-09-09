@@ -313,7 +313,7 @@ class DetentionService {
   }
 
   /**
-   * Calculer les jours réalisés (entre sortie et retour)
+   * Calculer les jours réalisés (entre sortie et retour) en nombres entiers
    */
   private calculateJoursRealises(sortieConteneur: any): number {
     if (!sortieConteneur.date_sortie) return 0;
@@ -324,7 +324,7 @@ class DetentionService {
       : new Date(); // Si pas de retour, utiliser la date actuelle
     
     const diffTime = Math.abs(dateRetour.getTime() - dateSortie.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)); // Utiliser Math.floor pour des jours entiers
     
     return diffDays;
   }

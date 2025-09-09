@@ -23,12 +23,12 @@ class DetentionResource extends JsonResource
             $joursBAT = 7; // Valeur par défaut
         }
         
-        // Calculer les jours réalisés
+        // Calculer les jours réalisés (en jours entiers)
         $joursRealises = 0;
         if ($sortieConteneur && $sortieConteneur->date_sortie) {
             $dateSortie = $sortieConteneur->date_sortie;
             $dateRetour = $sortieConteneur->date_retour_effectif ?? now();
-            $joursRealises = $dateSortie->diffInDays($dateRetour);
+            $joursRealises = (int) $dateSortie->diffInDays($dateRetour);
         }
         
         $joursDepassement = max(0, $joursRealises - $joursBAT);
