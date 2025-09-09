@@ -3,191 +3,47 @@
 namespace App\Services;
 
 use App\Models\SortieConteneur;
-use App\Models\Vehicule;
-use App\Services\DetentionService;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 
 class SortieConteneurService
 {
-    /**
-     * Récupérer toutes les sorties avec filtres
-     */
+    protected SortieQueryService $queryService;
+    protected SortieCreationService $creationService;
+    protected SortieStatisticsService $statisticsService;
+    protected VehiculeManagementService $vehiculeService;
+    protected DetentionCalculationService $detentionService;
+
+    public function __construct(
+        SortieQueryService $queryService,
+        SortieCreationService $creationService,
+        SortieStatisticsService $statisticsService,
+        VehiculeManagementService $vehiculeService,
+        DetentionCalculationService $detentionService
+    ) {
+        $this->queryService = $queryService;
+        $this->creationService = $creationService;
+        $this->statisticsService = $statisticsService;
+        $this->vehiculeService = $vehiculeService;
+        $this->detentionService = $detentionService;
+    }
+    // Déléguer aux services spécialisés
     public function getAllSorties(array $filters = [])
     {
-        $query = SortieConteneur::with(['armateur', 'camion', 'remorque']);
-
-        // Filtres
-        if (isset($filters['statut']) && $filters['statut'] !== 'tous') {
-            $query->where('statut', $filters['statut']);
-        }
-
-        if (isset($filters['code_armateur'])) {
-            $query->where('code_armateur', $filters['code_armateur']);
-        }
-
-        if (isset($filters['date_debut'])) {
-            $query->whereDate('date_sortie', '>=', $filters['date_debut']);
-        }
-
-        if (isset($filters['date_fin'])) {
-            $query->whereDate('date_sortie', '<=', $filters['date_fin']);
-        }
-
-        if (isset($filters['search'])) {
-            $search = $filters['search'];
-            $query->where(function ($q) use ($search) {
-                $q->where('numero_conteneur', 'like', "%{$search}%")
-                  ->orWhere('numero_bl', 'like', "%{$search}%")
-                  ->orWhere('nom_client', 'like', "%{$search}%")
-                  ->orWhere('nom_transitaire', 'like', "%{$search}%");
-            });
-        }
-
-        // Pagination
-        $perPage = $filters['per_page'] ?? 15;
-        
-        $paginatedResult = $query->orderBy('date_sortie', 'desc')->paginate($perPage);
-        
-        // Retourner dans le format attendu par le controller
-        return [
-            'data' => $paginatedResult->items(),
-            'meta' => [
-                'current_page' => $paginatedResult->currentPage(),
-                'last_page' => $paginatedResult->lastPage(),
-                'per_page' => $paginatedResult->perPage(),
-                'total' => $paginatedResult->total(),
-            ],
-            'links' => [
-                'first' => $paginatedResult->url(1),
-                'last' => $paginatedResult->url($paginatedResult->lastPage()),
-                'prev' => $paginatedResult->previousPageUrl(),
-                'next' => $paginatedResult->nextPageUrl(),
-            ]
-        ];
+        return $this->queryService->getAllSorties($filters);
     }
 
-    /**
-     * Créer une nouvelle sortie
-     */
     public function createSortie(array $data)
     {
-        DB::beginTransaction();
-
-        try {
-            // Log des données reçues
-            \Log::info('Données reçues pour création sortie:', $data);
-
-            // Vérifier la disponibilité des véhicules
-            if (isset($data['camion_id']) && isset($data['remorque_id'])) {
-                \Log::info('Vérification des véhicules:', [
-                    'camion_id' => $data['camion_id'],
-                    'remorque_id' => $data['remorque_id']
-                ]);
-                $this->checkVehiculeDisponibilite($data['camion_id'], $data['remorque_id']);
-            }
-
-            // Préparer les données pour création
-            $sortieData = [
-                'numero_conteneur' => $data['numero_conteneur'],
-                'numero_bl' => $data['numero_bl'],
-                'code_armateur' => $data['code_armateur'],
-                'camion_id' => $data['camion_id'] ?? null,
-                'remorque_id' => $data['remorque_id'] ?? null,
-                'prime_chauffeur' => $data['prime_chauffeur'] ?? null,
-                'nom_client' => $data['nom_client'],
-                'destination' => $data['destination'],
-                'adresse_client' => $data['adresse_client'] ?? null,
-                'type_destination' => $data['type_destination'],
-                'jours_bad' => $data['jours_bad'] ?? null,
-                'date_fin_franchise' => $data['date_fin_franchise'] ?? null,
-                'nom_transitaire' => $data['nom_transitaire'],
-                'statut' => $data['destination'] === 'base' ? 'a_la_base' : 'livre_client',
-                'date_sortie' => $data['date_sortie'] ?? now()->format('Y-m-d'),
-            ];
-
-            \Log::info('Données préparées pour création:', $sortieData);
-
-            // Créer la sortie
-            $sortie = SortieConteneur::create($sortieData);
-
-            \Log::info('Sortie créée avec succès:', ['id' => $sortie->id]);
-
-            // Mettre à jour le statut des véhicules (temporairement désactivé)
-            // $this->updateVehiculeStatut($data['camion_id'], 'en_mission');
-            // $this->updateVehiculeStatut($data['remorque_id'], 'en_mission');
-
-            DB::commit();
-
-            return $sortie->load(['armateur', 'camion', 'remorque']);
-        } catch (\Exception $e) {
-            \Log::error('Erreur lors de la création de la sortie:', [
-                'message' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            DB::rollback();
-            throw $e;
-        }
+        return $this->creationService->createSortie($data);
     }
 
-    /**
-     * Mettre à jour une sortie
-     */
     public function updateSortie(SortieConteneur $sortie, array $data)
     {
-        DB::beginTransaction();
-
-        try {
-            // Si changement de véhicules, vérifier la disponibilité
-            if (isset($data['camion_id']) && $data['camion_id'] !== $sortie->camion_id) {
-                $this->checkVehiculeDisponibilite($data['camion_id']);
-                $this->updateVehiculeStatut($sortie->camion_id, 'disponible');
-                $this->updateVehiculeStatut($data['camion_id'], 'en_mission');
-            }
-
-            if (isset($data['remorque_id']) && $data['remorque_id'] !== $sortie->remorque_id) {
-                $this->checkVehiculeDisponibilite($data['remorque_id']);
-                $this->updateVehiculeStatut($sortie->remorque_id, 'disponible');
-                $this->updateVehiculeStatut($data['remorque_id'], 'en_mission');
-            }
-
-            $sortie->update([
-                ...$data,
-                // 'updated_by' => Auth::id(), // Temporairement désactivé
-            ]);
-
-            DB::commit();
-
-            return $sortie->load(['armateur', 'camion', 'remorque']);
-        } catch (\Exception $e) {
-            DB::rollback();
-            throw $e;
-        }
+        return $this->creationService->updateSortie($sortie, $data);
     }
 
-    /**
-     * Supprimer une sortie
-     */
     public function deleteSortie(SortieConteneur $sortie)
     {
-        DB::beginTransaction();
-
-        try {
-            // Libérer les véhicules si la sortie n'est pas terminée
-            if ($sortie->statut !== 'retourne_port') {
-                $this->updateVehiculeStatut($sortie->camion_id, 'disponible');
-                $this->updateVehiculeStatut($sortie->remorque_id, 'disponible');
-            }
-
-            $sortie->delete();
-
-            DB::commit();
-        } catch (\Exception $e) {
-            DB::rollback();
-            throw $e;
-        }
+        return $this->creationService->deleteSortie($sortie);
     }
 
     /**
@@ -354,92 +210,19 @@ class SortieConteneurService
         return $tarifs['default'];
     }
 
-    /**
-     * Obtenir les statistiques
-     */
     public function getStatistics(array $filters = [])
     {
-        $query = SortieConteneur::query();
-        
-        // Appliquer les filtres si fournis
-        if (!empty($filters['date_debut'])) {
-            $query->whereDate('date_sortie', '>=', $filters['date_debut']);
-        }
-
-        if (!empty($filters['date_fin'])) {
-            $query->whereDate('date_sortie', '<=', $filters['date_fin']);
-        }
-
-        if (!empty($filters['code_armateur'])) {
-            $query->where('code_armateur', $filters['code_armateur']);
-        }
-
-        $today = now()->format('Y-m-d');
-        $currentMonth = now()->month;
-        $currentYear = now()->year;
-
-        return [
-            'total_sorties' => $query->count(),
-            'sorties_en_cours' => (clone $query)->where('statut', 'en_cours')->count(),
-            'sorties_retournees' => (clone $query)->where('statut', 'retourne_port')->count(),
-            'sorties_livrees' => (clone $query)->where('statut', 'livre_client')->count(),
-            'sorties_base' => (clone $query)->where('statut', 'a_la_base')->count(),
-            'conteneurs_hors_port' => SortieConteneur::enCours()->count(),
-            'sorties_aujourdhui' => SortieConteneur::whereDate('date_sortie', $today)->count(),
-            'sorties_mois' => SortieConteneur::parMois($currentYear, $currentMonth)->count(),
-            'retours_mois' => SortieConteneur::whereNotNull('date_retour')
-                ->whereYear('date_retour', $currentYear)
-                ->whereMonth('date_retour', $currentMonth)
-                ->count(),
-            'vehicules_disponibles' => Vehicule::where('statut', 'disponible')->count(),
-            'vehicules_en_mission' => Vehicule::where('statut', 'en_mission')->count(),
-            'moyenne_jours_hors_port' => $this->calculateAverageJoursHorsPort($filters),
-            'total_prime_chauffeur' => (clone $query)->sum('prime_chauffeur'),
-        ];
+        return $this->statisticsService->getStatistics($filters);
     }
 
     public function getSortiesEnCours(array $filters = [])
     {
-        $query = SortieConteneur::with(['armateur', 'camion', 'remorque'])
-            ->where('statut', 'en_cours');
-
-        // Appliquer les mêmes filtres que getAllSorties
-        if (!empty($filters['code_armateur'])) {
-            $query->where('code_armateur', $filters['code_armateur']);
-        }
-
-        if (!empty($filters['search'])) {
-            $search = $filters['search'];
-            $query->where(function ($q) use ($search) {
-                $q->where('numero_conteneur', 'like', "%{$search}%")
-                  ->orWhere('numero_bl', 'like', "%{$search}%")
-                  ->orWhere('nom_client', 'like', "%{$search}%");
-            });
-        }
-
-        return $query->orderBy('date_sortie', 'desc')->get();
+        return $this->queryService->getSortiesEnCours($filters);
     }
 
     public function getSortiesRetournees(array $filters = [])
     {
-        $query = SortieConteneur::with(['armateur', 'camion', 'remorque', 'camionRetour', 'remorqueRetour'])
-            ->where('statut', 'retourne_port');
-
-        // Appliquer les mêmes filtres
-        if (!empty($filters['code_armateur'])) {
-            $query->where('code_armateur', $filters['code_armateur']);
-        }
-
-        if (!empty($filters['search'])) {
-            $search = $filters['search'];
-            $query->where(function ($q) use ($search) {
-                $q->where('numero_conteneur', 'like', "%{$search}%")
-                  ->orWhere('numero_bl', 'like', "%{$search}%")
-                  ->orWhere('nom_client', 'like', "%{$search}%");
-            });
-        }
-
-        return $query->orderBy('date_retour', 'desc')->get();
+        return $this->queryService->getSortiesRetournees($filters);
     }
 
     private function calculateAverageJoursHorsPort(array $filters = [])
