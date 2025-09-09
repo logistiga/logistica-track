@@ -37,7 +37,8 @@ class SortieRetourController extends Controller
         try {
             DB::beginTransaction();
 
-            $returnedSortie = $this->retourService->confirmerRetour($sortie, $request->validated());
+            $data = $request->validated();
+            $returnedSortie = $this->retourService->confirmerRetour($sortie, $data);
 
             $this->cacheService->invalidateAllCaches();
 

@@ -53,10 +53,11 @@ export function useSortieConteneur() {
   const [selectedSortie, setSelectedSortie] = useState<SortieConteneur | null>(null);
   const [editingSortie, setEditingSortie] = useState<SortieConteneur | null>(null);
   const [formData, setFormData] = useState<SortieFormData>(getEmptyFormData());
-  const [returnData, setReturnData] = useState<ReturnData>({
+  const [returnData, setReturnData] = useState<ReturnData & { responsabilite?: string }>({
     dateRetour: "",
     camionRetour: "",
-    remorqueRetour: ""
+    remorqueRetour: "",
+    responsabilite: ""
   });
 
   // Chargement initial des données
@@ -229,7 +230,8 @@ export function useSortieConteneur() {
         date_retour: returnData.dateRetour,
         heure_retour: "12:00",
         camion_retour_id: returnData.camionRetour ? parseInt(returnData.camionRetour) : undefined,
-        remorque_retour_id: returnData.remorqueRetour ? parseInt(returnData.remorqueRetour) : undefined
+        remorque_retour_id: returnData.remorqueRetour ? parseInt(returnData.remorqueRetour) : undefined,
+        responsabilite: returnData.responsabilite
       };
 
       console.log('📤 Sending return data to service:', retourData);
@@ -263,7 +265,7 @@ export function useSortieConteneur() {
       // Reset
       setIsReturnDialogOpen(false);
       setSelectedSortie(null);
-      setReturnData({ dateRetour: "", camionRetour: "", remorqueRetour: "" });
+      setReturnData({ dateRetour: "", camionRetour: "", remorqueRetour: "", responsabilite: "" });
       
       console.log('✅ Return confirmation completed successfully');
     } catch (error) {

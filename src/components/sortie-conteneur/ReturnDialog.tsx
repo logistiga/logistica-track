@@ -7,12 +7,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Truck, ArrowLeft } from "lucide-react";
 import { SortieConteneur, ReturnData } from "@/types/sortie-conteneur";
 import { useVehicules } from "@/hooks/useVehicules";
+import { ResponsabiliteSelector } from "@/components/detention/ResponsabiliteSelector";
 
 interface ReturnDialogProps {
   open: boolean;
   sortie: SortieConteneur | null;
-  returnData: ReturnData;
-  setReturnData: (data: ReturnData) => void;
+  returnData: ReturnData & { responsabilite?: string };
+  setReturnData: (data: ReturnData & { responsabilite?: string }) => void;
   onConfirm: () => void;
   onCancel: () => void;
 }
@@ -141,6 +142,13 @@ export const ReturnDialog = ({
               </Select>
             </div>
           </div>
+
+          <div>
+            <ResponsabiliteSelector 
+              value={returnData.responsabilite || ""} 
+              onChange={(value) => setReturnData({ ...returnData, responsabilite: value })}
+            />
+          </div>
         </div>
         
         <div className="flex justify-end gap-3 pt-4">
@@ -149,7 +157,7 @@ export const ReturnDialog = ({
           </Button>
           <Button 
             onClick={onConfirm}
-            disabled={!returnData.dateRetour || !returnData.camionRetour || !returnData.remorqueRetour}
+            disabled={!returnData.dateRetour || !returnData.camionRetour || !returnData.remorqueRetour || !returnData.responsabilite}
           >
             Confirmer le retour
           </Button>

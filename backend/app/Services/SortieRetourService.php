@@ -34,7 +34,7 @@ class SortieRetourService
         $returnedSortie = $this->sortieService->confirmerRetour($sortie, $data);
 
         // Créer automatiquement une détention si nécessaire
-        $this->creerDetentionSiNecessaire($returnedSortie);
+        $this->creerDetentionSiNecessaire($returnedSortie, $data['responsabilite'] ?? null);
 
         // Logger l'activité
         try {
@@ -77,7 +77,7 @@ class SortieRetourService
     /**
      * Créer une détention automatiquement si nécessaire
      */
-    private function creerDetentionSiNecessaire(SortieConteneur $sortie)
+    private function creerDetentionSiNecessaire(SortieConteneur $sortie, ?string $responsabilite = null)
     {
         // Vérifier si une détention existe déjà
         if ($sortie->detention) {
@@ -104,7 +104,7 @@ class SortieRetourService
             $detention->jours_detention = $joursDepassement;
             $detention->cout_par_jour = $sortie->armateur->prix_par_jour ?? config('detention.tarifs_par_jour.default');
             $detention->cout_total = $joursDepassement * $detention->cout_par_jour;
-            $detention->responsabilite = null; // Laisser l'utilisateur choisir manuellement
+            $detention->responsabilite = $responsabilite; // Responsabilité choisie par l'utilisateur
             $detention->motif_detention = 'Dépassement automatique calculé après retour';
             $detention->statut = 'active';
             $detention->save();
