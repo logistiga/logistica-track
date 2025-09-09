@@ -12,14 +12,10 @@ return [
     */
 
     'tarifs_par_jour' => [
-        // Tarif par défaut en FCFA (Franc CFA)
+        // Tarif de fallback en FCFA (Franc CFA) 
+        // Utilisé uniquement si l'armateur n'a pas de prix_par_jour défini
+        // Les vrais tarifs sont configurés dans la page Armateurs (table: armateurs.prix_par_jour)
         'default' => 15000,
-        
-        // Tarifs spécifiques par armateur (code armateur => tarif en FCFA)
-        'MSC' => 20000,
-        'CMA' => 18000,
-        'COSCO' => 16000,
-        'MAERSK' => 22000,
     ],
 
     'devise' => [
