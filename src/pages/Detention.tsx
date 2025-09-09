@@ -5,6 +5,7 @@ import { DetentionStats } from "@/components/detention/DetentionStats";
 import { DetentionTable } from "@/components/detention/DetentionTable";
 import { useDetention } from "@/hooks/useDetention";
 import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
 
 console.log('🔄 Detention.tsx file loaded');
 
@@ -35,6 +36,7 @@ export default function Detention() {
 
   const [selectedContainer, setSelectedContainer] = useState<DetentionContainer | null>(null);
   const [isResponsabiliteDialogOpen, setIsResponsabiliteDialogOpen] = useState(false);
+  const [isFixingMissing, setIsFixingMissing] = useState(false);
 
   // Test direct de l'API
   useEffect(() => {
@@ -130,6 +132,50 @@ export default function Detention() {
     }
   };
 
+  const handleFixMissingDetentions = async () => {
+    console.log('🔧 Fixing missing detentions...')
+    setIsFixingMissing(true)
+    
+    try {
+      const response = await fetch('http://127.0.0.1:8000/api/detentions/fix-missing', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+          'Accept': 'application/json',
+        },
+      })
+
+      const result = await response.json()
+      console.log('🔧 Fix missing detentions result:', result)
+
+      if (result.success) {
+        toast({
+          title: "Détentions créées",
+          description: `${result.data.total_created} détention(s) créée(s) avec succès`,
+        })
+        // Recharger les données
+        fetchDetentions()
+        fetchStats()
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Erreur",
+          description: result.message || "Erreur lors de la création des détentions",
+        })
+      }
+    } catch (error) {
+      console.error('❌ Error fixing missing detentions:', error)
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: "Erreur lors de la création des détentions manquantes",
+      })
+    } finally {
+      setIsFixingMissing(false)
+    }
+  };
+
   console.log('🎯 Detention page rendering with:', { 
     detentionsCount: detentions.length, 
     detentions, 
@@ -139,11 +185,21 @@ export default function Detention() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Détention</h1>
-        <p className="text-muted-foreground">
-          Gestion des conteneurs ayant dépassé leur franchise
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Détention</h1>
+          <p className="text-muted-foreground">
+            Gestion des conteneurs ayant dépassé leur franchise
+          </p>
+        </div>
+        <Button 
+          onClick={handleFixMissingDetentions}
+          disabled={isFixingMissing}
+          variant="outline"
+          className="ml-4"
+        >
+          {isFixingMissing ? "Création..." : "Créer détentions manquantes"}
+        </Button>
       </div>
 
       <DetentionStats stats={stats} loading={loading} />

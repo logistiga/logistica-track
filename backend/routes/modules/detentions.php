@@ -19,4 +19,7 @@ Route::prefix('detentions')->name('detentions.')->group(function () {
         Route::post('/resolve', [DetentionController::class, 'resolve'])->middleware('role:admin,manager,operator')->name('resolve');
         Route::post('/contest', [DetentionController::class, 'contest'])->middleware('role:admin,manager,operator')->name('contest');
     });
+    
+    // Route pour créer les détentions manquantes
+    Route::post('/fix-missing', [\App\Http\Controllers\API\DetentionFixController::class, 'createMissingDetentions'])->middleware('role:admin,manager,operator')->name('fix-missing');
 });
