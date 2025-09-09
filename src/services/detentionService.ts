@@ -214,7 +214,7 @@ class DetentionService {
       dateSortie: sortieConteneur.date_sortie || '',
       dateRetour: sortieConteneur.date_retour || '',
       nomClient: sortieConteneur.nom_client || 'Client inconnu',
-      responsabilite: this.mapResponsabilite(backendData.responsabilite) || undefined,
+      responsabilite: backendData.responsabilite && backendData.responsabilite !== '' ? this.mapResponsabilite(backendData.responsabilite) : undefined,
       joursClient: backendData.responsabilite === 'client' ? backendData.jours_detention : 0,
       joursLogistica: backendData.responsabilite === 'transitaire' ? backendData.jours_detention : 0,
       coutParJour: backendData.cout_par_jour || 15000,
@@ -254,10 +254,21 @@ class DetentionService {
    * Calculer les jours BAT autorisés (gratuits depuis la création)
    */
   private calculateJoursBAT(sortieConteneur: any): number {
-    // Si c'est un conteneur BAT, il y a généralement 7 jours gratuits
-    // Sinon, utiliser jours_bad du conteneur ou 0 par défaut
+    // Si c'est un conteneur BAD, utiliser les jours gratuits de l'armateur
     if (sortieConteneur.type_destination === 'bad') {
-      return parseInt(sortieConteneur.jours_bad) || 7;
+      // Utiliser les jours gratuits de l'armateur ou jours_bad du conteneur
+      const joursArmateur = sortieConteneur.armateur?.jours_gratuits;
+      const joursBad = sortieConteneur.jours_bad;
+      
+      if (joursBad && parseInt(joursBad) > 0) {
+        return parseInt(joursBad);
+      }
+      
+      if (joursArmateur && parseInt(joursArmateur) > 0) {
+        return parseInt(joursArmateur);
+      }
+      
+      return 0; // Pas de jours gratuits par défaut
     }
     return 0;
   }
