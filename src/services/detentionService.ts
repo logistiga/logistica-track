@@ -245,7 +245,7 @@ class DetentionService {
    */
   private mapTypeConteneur(typeDestination: string): string {
     if (typeDestination === 'bad') {
-      return 'BAT';
+      return 'BAD';
     }
     return typeDestination || 'Standard';
   }
