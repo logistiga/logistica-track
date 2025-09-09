@@ -53,7 +53,14 @@ class SortieRetourController extends Controller
             return $this->errorResponse('Données invalides', 422, $e->errors());
         } catch (\Exception $e) {
             DB::rollback();
-            return $this->errorResponse('Erreur lors de la confirmation du retour', 500);
+            \Log::error('Erreur lors de la confirmation du retour:', [
+                'sortie_id' => $sortie->id,
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return $this->errorResponse('Erreur lors de la confirmation du retour: ' . $e->getMessage(), 500);
         }
     }
 

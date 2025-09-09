@@ -344,13 +344,13 @@ class SortieConteneurService
      */
     private function getCoutDetentionParJour(SortieConteneur $sortie): float
     {
-        $tarifs = config('detention.tarifs_par_jour', ['default' => 15000]);
-
-        // Récupérer le tarif spécifique à l'armateur si configuré
-        if ($sortie->armateur && isset($tarifs[$sortie->armateur->code])) {
-            return $tarifs[$sortie->armateur->code];
+        // Utiliser le prix_par_jour de l'armateur si disponible
+        if ($sortie->armateur && $sortie->armateur->prix_par_jour) {
+            return (float) $sortie->armateur->prix_par_jour;
         }
 
+        // Sinon utiliser le tarif de fallback de la configuration
+        $tarifs = config('detention.tarifs_par_jour', ['default' => 15000]);
         return $tarifs['default'];
     }
 
@@ -455,16 +455,56 @@ class SortieConteneurService
         }
 
         $sorties = $query->get();
-        
+
         if ($sorties->isEmpty()) {
             return 0;
         }
 
         $totalJours = $sorties->sum(function ($sortie) {
-            return $sortie->jours_hors_port;
+            return $sortie->date_sortie->diffInDays($sortie->date_retour);
         });
 
         return round($totalJours / $sorties->count(), 1);
+    }
+
+    /**
+     * Vérifier la disponibilité des véhicules
+     */
+    private function checkVehiculeDisponibilite($camionId = null, $remorqueId = null)
+    {
+        if ($camionId) {
+            $camion = Vehicule::find($camionId);
+            if (!$camion) {
+                throw new \Exception("Camion introuvable (ID: {$camionId})");
+            }
+            // Note: La vérification du statut est désactivée pour le moment
+            // car tous les véhicules sont marqués comme 'disponible' par défaut
+        }
+
+        if ($remorqueId) {
+            $remorque = Vehicule::find($remorqueId);
+            if (!$remorque) {
+                throw new \Exception("Remorque introuvable (ID: {$remorqueId})");
+            }
+            // Note: La vérification du statut est désactivée pour le moment
+        }
+    }
+
+    /**
+     * Mettre à jour le statut d'un véhicule
+     */
+    private function updateVehiculeStatut($vehiculeId, $statut)
+    {
+        if (!$vehiculeId) {
+            return;
+        }
+
+        try {
+            Vehicule::where('id', $vehiculeId)->update(['statut' => $statut]);
+        } catch (\Exception $e) {
+            \Log::warning("Impossible de mettre à jour le statut du véhicule {$vehiculeId}: " . $e->getMessage());
+            // Ne pas faire échouer l'opération principale si la mise à jour du statut échoue
+        }
     }
 
     public function searchSorties(string $query, array $filters = [])
@@ -567,29 +607,5 @@ class SortieConteneurService
             'destination' => $sortie->destination,
             'jours_facturation' => $sortie->jours_hors_port,
         ];
-    }
-
-    /**
-     * Vérifier la disponibilité d'un ou plusieurs véhicules
-     */
-    private function checkVehiculeDisponibilite(...$vehiculeIds)
-    {
-        foreach ($vehiculeIds as $vehiculeId) {
-            if ($vehiculeId) {
-                $vehicule = Vehicule::find($vehiculeId);
-                if (!$vehicule || !$vehicule->actif) {
-                    throw new \Exception("Le véhicule avec l'ID {$vehiculeId} n'est pas disponible");
-                }
-            }
-        }
-    }
-
-    /**
-     * Mettre à jour le statut d'un véhicule (pour l'instant, on ne fait rien car le modèle n'a pas de statut)
-     */
-    private function updateVehiculeStatut($vehiculeId, $statut)
-    {
-        // Pour l'instant, on ne met pas à jour de statut car le modèle Vehicule n'a que le champ 'actif'
-        // Cette méthode pourrait être utilisée plus tard si on ajoute un système de statut aux véhicules
     }
 }
