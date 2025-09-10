@@ -9,10 +9,19 @@ class ApiService {
   
   private getAuthHeaders() {
     const token = localStorage.getItem('auth_token');
-    return {
+    const headers = {
       ...apiConfig.defaultHeaders,
       ...(token && { 'Authorization': `Bearer ${token}` })
     };
+    
+    // Debug: Log token being used
+    if (token) {
+      console.log('🔑 Using token:', token.substring(0, 20) + '...');
+    } else {
+      console.log('🔑 No token available');
+    }
+    
+    return headers;
   }
 
   private async makeRequest(endpoint: string, options: RequestInit) {
