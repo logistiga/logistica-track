@@ -104,7 +104,7 @@ class SortieRetourService
             $detention->jours_detention = $joursDepassement;
             $detention->cout_par_jour = $sortie->armateur->prix_par_jour ?? config('detention.tarifs_par_jour.default');
             $detention->cout_total = $joursDepassement * $detention->cout_par_jour;
-            $detention->responsabilite = $responsabilite ?? 'client'; // Valeur par défaut
+            $detention->responsabilite = $responsabilite; // Laisser vide, sera défini après
             $detention->motif_detention = 'Dépassement automatique calculé après retour';
             $detention->statut = 'active';
             $detention->save();
