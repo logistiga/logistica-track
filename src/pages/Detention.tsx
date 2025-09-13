@@ -6,6 +6,7 @@ import { DetentionTable } from "@/components/detention/DetentionTable";
 import { useDetention } from "@/hooks/useDetention";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
+import { detentionService } from "@/services/detentionService";
 
 console.log('🔄 Detention.tsx file loaded');
 
@@ -72,9 +73,29 @@ export default function Detention() {
     if (!selectedContainer) return;
 
     try {
-      // Mettre à jour via l'API
-      // Ici on devrait appeler une méthode pour mettre à jour la responsabilité
-      // Pour l'instant, on simule juste la mise à jour
+      // Mapper la responsabilité du formulaire vers le backend
+      let backendResponsabilite: 'client' | 'transitaire' | 'transporteur' | 'autre' | undefined;
+      switch (data.responsabilite) {
+        case 'client':
+          backendResponsabilite = 'client';
+          break;
+        case 'logistica':
+          backendResponsabilite = 'transitaire'; // côté backend: non-client
+          break;
+        case 'partagee':
+          backendResponsabilite = 'autre';
+          break;
+      }
+
+      const observations = data.responsabilite === 'partagee'
+        ? `Responsabilité partagée: ${data.joursClient}j client / ${data.joursLogistica}j logistica`
+        : undefined;
+
+      // Appel API pour enregistrer la responsabilité
+      await detentionService.updateDetention(selectedContainer.id, {
+        responsabilite: backendResponsabilite,
+        observations,
+      });
       
       setIsResponsabiliteDialogOpen(false);
       setSelectedContainer(null);

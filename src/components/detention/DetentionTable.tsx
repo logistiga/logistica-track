@@ -51,15 +51,11 @@ export function DetentionTable({
       partagee: `Partagée (${container.joursClient}j / ${container.joursLogistica}j)`
     };
 
+    // Afficher une étiquette non cliquable une fois définie
     return (
-      <Button 
-        variant={variants[container.responsabilite] as any}
-        size="sm"
-        onClick={() => onIdentifyResponsability(container)}
-        className="cursor-pointer"
-      >
+      <Badge variant={variants[container.responsabilite] as any}>
         {labels[container.responsabilite]}
-      </Button>
+      </Badge>
     );
   };
   return <Card>
