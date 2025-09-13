@@ -37,37 +37,39 @@ class DetentionPdfService {
 
     // === EN-TÊTE ULTRA-MODERNE AVEC GRADIENT VISUEL ===
     yPosition = this.addUltraModernHeader(doc, pageWidth, yPosition, primaryColor, accentColor);
-    yPosition += 5;
+    yPosition += 10; // Plus d'espace après l'en-tête
 
-    // === LAYOUT EN DEUX COLONNES ===
-    const leftColWidth = (pageWidth - 40) * 0.6; // 60% pour la gauche
-    const rightColWidth = (pageWidth - 40) * 0.4; // 40% pour la droite
-    const leftX = 20;
-    const rightX = leftX + leftColWidth + 10;
+    // === LAYOUT EN DEUX COLONNES AVEC ESPACEMENT OPTIMISÉ ===
+    const margin = 20;
+    const columnGap = 15;
+    const leftColWidth = (pageWidth - (2 * margin) - columnGap) * 0.55; // 55% pour la gauche
+    const rightColWidth = (pageWidth - (2 * margin) - columnGap) * 0.45; // 45% pour la droite
+    const leftX = margin;
+    const rightX = leftX + leftColWidth + columnGap;
 
     // COLONNE GAUCHE: Informations détaillées
     let leftY = yPosition;
     
-    // Carte d'informations conteneur
-    leftY = this.addModernContainerCard(doc, container, leftX, leftY, leftColWidth, lightBg, primaryColor);
+    // Carte d'informations conteneur - compacte
+    leftY = this.addCompactContainerCard(doc, container, leftX, leftY, leftColWidth, lightBg, primaryColor);
     leftY += 8;
 
-    // Chronologie visuelle des dates
-    leftY = this.addVisualTimeline(doc, container, leftX, leftY, leftColWidth, successColor, accentColor);
+    // Chronologie visuelle des dates - compacte
+    leftY = this.addCompactTimeline(doc, container, leftX, leftY, leftColWidth, successColor, accentColor);
     leftY += 8;
 
-    // Analyse détaillée de la détention
-    leftY = this.addDetentionAnalysis(doc, container, leftX, leftY, leftColWidth, primaryColor, warningColor);
+    // Analyse détaillée de la détention - compacte
+    leftY = this.addCompactDetentionAnalysis(doc, container, leftX, leftY, leftColWidth, primaryColor, warningColor);
 
     // COLONNE DROITE: Calculs et totaux
     let rightY = yPosition;
     
-    // Carte de calcul moderne
-    rightY = this.addModernCalculationCard(doc, container, rightX, rightY, rightColWidth, accentColor, primaryColor);
+    // Carte de calcul moderne - compacte
+    rightY = this.addCompactCalculationCard(doc, container, rightX, rightY, rightColWidth, accentColor, primaryColor);
     rightY += 8;
 
-    // Tableau récapitulatif des montants par responsabilité
-    rightY = this.addResponsibilityBreakdown(doc, container, rightX, rightY, rightColWidth, primaryColor, accentColor);
+    // Tableau récapitulatif des montants par responsabilité - compacte
+    rightY = this.addCompactResponsibilityBreakdown(doc, container, rightX, rightY, rightColWidth, primaryColor, accentColor);
 
     // === FOOTER MODERNE EN BAS ===
     this.addUltraModernFooter(doc, pageWidth, pageHeight, primaryColor);
@@ -94,11 +96,11 @@ class DetentionPdfService {
     doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
     doc.circle(25, 20, 6, 'F');
 
-    // Nom entreprise moderne
+    // Nom entreprise moderne - LOGISTIGA
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(22);
     doc.setFont('helvetica', 'bold');
-    doc.text(this.companyInfo.name, 40, 18);
+    doc.text('LOGISTIGA GABON', 40, 18);
     
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
@@ -121,85 +123,85 @@ class DetentionPdfService {
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(9);
     doc.setFont('helvetica', 'normal');
-    const docNumber = `ND-${new Date().getFullYear()}`;
+    const docNumber = `N° ND-${new Date().getFullYear()}`;
     const currentDate = new Date().toLocaleDateString('fr-FR');
-    doc.text(`N° ${docNumber}`, pageWidth - 80, 27);
-    doc.text(`${currentDate}`, pageWidth - 80, 32);
+    doc.text(docNumber, pageWidth - 80, 27);
+    doc.text(currentDate, pageWidth - 80, 32);
 
     return yPos + 40;
   }
 
-  private addModernContainerCard(doc: jsPDF, container: DetentionContainer, x: number, y: number, width: number, bgColor: [number, number, number], primaryColor: [number, number, number]): number {
-    const cardHeight = 45;
+  private addCompactContainerCard(doc: jsPDF, container: DetentionContainer, x: number, y: number, width: number, bgColor: [number, number, number], primaryColor: [number, number, number]): number {
+    const cardHeight = 35; // Réduit de 45 à 35
     
     // Fond de carte avec ombre
     doc.setFillColor(255, 255, 255);
-    doc.roundedRect(x + 2, y + 2, width, cardHeight, 3, 3, 'F'); // Ombre
+    doc.roundedRect(x + 1, y + 1, width, cardHeight, 3, 3, 'F'); // Ombre réduite
     doc.setFillColor(bgColor[0], bgColor[1], bgColor[2]);
     doc.roundedRect(x, y, width, cardHeight, 3, 3, 'F');
 
     // En-tête de carte
     doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-    doc.roundedRect(x, y, width, 12, 3, 3, 'F');
-    doc.rect(x, y + 9, width, 3, 'F'); // Pour garder les coins carrés en bas
+    doc.roundedRect(x, y, width, 10, 3, 3, 'F'); // Réduit de 12 à 10
+    doc.rect(x, y + 7, width, 3, 'F');
 
     doc.setTextColor(255, 255, 255);
-    doc.setFontSize(10);
+    doc.setFontSize(9); // Réduit de 10 à 9
     doc.setFont('helvetica', 'bold');
-    doc.text('CONTENEUR & CLIENT', x + 5, y + 8);
+    doc.text('CONTENEUR & CLIENT', x + 5, y + 7);
 
-    // Contenu en deux colonnes
+    // Contenu en deux colonnes - plus compact
     doc.setTextColor(0, 0, 0);
-    doc.setFontSize(9);
+    doc.setFontSize(8); // Réduit de 9 à 8
     doc.setFont('helvetica', 'normal');
     
     const leftCol = x + 5;
     const rightCol = x + width/2 + 5;
-    let contentY = y + 18;
+    let contentY = y + 16; // Ajusté
 
-    // Colonne gauche
+    // Colonne gauche - espacement réduit
     doc.setFont('helvetica', 'bold');
     doc.text('Conteneur:', leftCol, contentY);
     doc.setFont('helvetica', 'normal');
     doc.text(container.numeroConteneur, leftCol + 25, contentY);
     
-    contentY += 6;
+    contentY += 5; // Réduit de 6 à 5
     doc.setFont('helvetica', 'bold');
     doc.text('Armateur:', leftCol, contentY);
     doc.setFont('helvetica', 'normal');
     doc.text(container.codeArmateur, leftCol + 25, contentY);
 
-    contentY += 6;
+    contentY += 5;
     doc.setFont('helvetica', 'bold');
     doc.text('Type:', leftCol, contentY);
     doc.setFont('helvetica', 'normal');
     doc.text(container.typeConteneur, leftCol + 25, contentY);
 
     // Colonne droite
-    contentY = y + 18;
+    contentY = y + 16;
     doc.setFont('helvetica', 'bold');
     doc.text('Client:', rightCol, contentY);
     doc.setFont('helvetica', 'normal');
-    const clientName = container.nomClient.length > 15 ? container.nomClient.substring(0, 15) + '...' : container.nomClient;
+    const clientName = container.nomClient.length > 12 ? container.nomClient.substring(0, 12) + '...' : container.nomClient;
     doc.text(clientName, rightCol + 15, contentY);
 
-    contentY += 6;
+    contentY += 5;
     doc.setFont('helvetica', 'bold');
     doc.text('Sortie:', rightCol, contentY);
     doc.setFont('helvetica', 'normal');
     doc.text(container.dateSortie, rightCol + 15, contentY);
 
-    contentY += 6;
+    contentY += 5;
     doc.setFont('helvetica', 'bold');
     doc.text('Retour:', rightCol, contentY);
     doc.setFont('helvetica', 'normal');
     doc.text(container.dateRetour || 'En cours', rightCol + 15, contentY);
 
-    return y + cardHeight + 5;
+    return y + cardHeight + 3; // Espacement réduit
   }
 
-  private addVisualTimeline(doc: jsPDF, container: DetentionContainer, x: number, y: number, width: number, successColor: [number, number, number], accentColor: [number, number, number]): number {
-    const timelineHeight = 35;
+  private addCompactTimeline(doc: jsPDF, container: DetentionContainer, x: number, y: number, width: number, successColor: [number, number, number], accentColor: [number, number, number]): number {
+    const timelineHeight = 25; // Réduit de 35 à 25
     
     // Fond de timeline
     doc.setFillColor(255, 255, 255);
@@ -209,45 +211,46 @@ class DetentionPdfService {
 
     // Titre
     doc.setTextColor(0, 0, 0);
-    doc.setFontSize(10);
+    doc.setFontSize(9); // Réduit
     doc.setFont('helvetica', 'bold');
-    doc.text('CHRONOLOGIE DES JOURS', x + 5, y + 10);
+    doc.text('CHRONOLOGIE DES JOURS', x + 5, y + 8);
 
     // Barre de progression visuelle
-    const barY = y + 15;
-    const barHeight = 8;
+    const barY = y + 12; // Ajusté
+    const barHeight = 6; // Réduit de 8 à 6
     const barWidth = width - 20;
     const barX = x + 10;
 
     // Fond de la barre
     doc.setFillColor(240, 240, 240);
-    doc.roundedRect(barX, barY, barWidth, barHeight, 4, 4, 'F');
+    doc.roundedRect(barX, barY, barWidth, barHeight, 3, 3, 'F');
 
     // Jours autorisés (vert)
-    const authorizedRatio = container.joursBAT / Math.max(container.joursRealises, container.joursBAT);
+    const totalJours = Math.max(container.joursRealises, container.joursBAT);
+    const authorizedRatio = container.joursBAT / totalJours;
     const authorizedWidth = barWidth * authorizedRatio;
     doc.setFillColor(successColor[0], successColor[1], successColor[2]);
-    doc.roundedRect(barX, barY, authorizedWidth, barHeight, 4, 4, 'F');
+    doc.roundedRect(barX, barY, authorizedWidth, barHeight, 3, 3, 'F');
 
     // Jours de dépassement (rouge)
     if (container.joursDepassement > 0) {
-      const excessRatio = container.joursDepassement / Math.max(container.joursRealises, container.joursBAT);
+      const excessRatio = container.joursDepassement / totalJours;
       const excessWidth = barWidth * excessRatio;
       doc.setFillColor(accentColor[0], accentColor[1], accentColor[2]);
-      doc.roundedRect(barX + authorizedWidth, barY, excessWidth, barHeight, 4, 4, 'F');
+      doc.roundedRect(barX + authorizedWidth, barY, excessWidth, barHeight, 3, 3, 'F');
     }
 
-    // Labels
-    doc.setFontSize(8);
+    // Labels - plus compacts
+    doc.setFontSize(7); // Réduit
     doc.setTextColor(0, 0, 0);
-    doc.text(`${container.joursBAT}j autorisés`, barX, barY + barHeight + 5);
-    doc.text(`${container.joursDepassement}j dépassement`, barX + barWidth - 50, barY + barHeight + 5);
+    doc.text(`${container.joursBAT}j autorisés`, barX, barY + barHeight + 3);
+    doc.text(`${container.joursDepassement}j dépassement`, barX + barWidth - 40, barY + barHeight + 3);
 
-    return y + timelineHeight + 5;
+    return y + timelineHeight + 3;
   }
 
-  private addDetentionAnalysis(doc: jsPDF, container: DetentionContainer, x: number, y: number, width: number, primaryColor: [number, number, number], warningColor: [number, number, number]): number {
-    const analysisHeight = 55;
+  private addCompactDetentionAnalysis(doc: jsPDF, container: DetentionContainer, x: number, y: number, width: number, primaryColor: [number, number, number], warningColor: [number, number, number]): number {
+    const analysisHeight = 40; // Réduit de 55 à 40
     
     // Carte d'analyse
     doc.setFillColor(255, 255, 255);
@@ -257,48 +260,50 @@ class DetentionPdfService {
 
     // En-tête
     doc.setFillColor(warningColor[0], warningColor[1], warningColor[2]);
-    doc.roundedRect(x, y, width, 12, 3, 3, 'F');
-    doc.rect(x, y + 9, width, 3, 'F');
+    doc.roundedRect(x, y, width, 10, 3, 3, 'F'); // Réduit
+    doc.rect(x, y + 7, width, 3, 'F');
 
     doc.setTextColor(255, 255, 255);
-    doc.setFontSize(10);
+    doc.setFontSize(9); // Réduit
     doc.setFont('helvetica', 'bold');
-    doc.text('ANALYSE DE LA DÉTENTION', x + 5, y + 8);
+    doc.text('ANALYSE DE LA DÉTENTION', x + 5, y + 7);
 
-    // Statistiques clés
+    // Statistiques clés - format compact
     doc.setTextColor(0, 0, 0);
-    doc.setFontSize(9);
-    let statsY = y + 20;
+    doc.setFontSize(8); // Réduit
+    let statsY = y + 16;
 
     const stats = [
-      { label: 'Durée totale hors port', value: `${container.joursRealises} jours`, icon: '⏱️' },
-      { label: 'Franchise utilisée', value: `${container.joursBAT} jours`, icon: '✅' },
-      { label: 'Dépassement facturé', value: `${container.joursDepassement} jours`, icon: '⚠️' },
-      { label: 'Coût journalier', value: `${this.formatCurrency(container.coutParJour)} FCFA`, icon: '💰' }
+      { label: 'Durée hors port', value: `${container.joursRealises} jours`, icon: '⏱️' },
+      { label: 'Dépassement', value: `${container.joursDepassement} jours`, icon: '⚠️' },
+      { label: 'Coût/jour', value: `${this.formatCurrency(container.coutParJour)} FCFA`, icon: '💰' }
     ];
 
     stats.forEach((stat, index) => {
-      const statY = statsY + (index * 8);
+      const statY = statsY + (index * 6); // Espacement réduit
       doc.setFont('helvetica', 'normal');
       doc.text(`${stat.icon} ${stat.label}:`, x + 5, statY);
       doc.setFont('helvetica', 'bold');
-      doc.text(stat.value, x + 80, statY);
+      doc.text(stat.value, x + 70, statY); // Position ajustée
     });
 
-    // Responsabilité si définie
+    // Responsabilité si définie - plus compact
     if (container.responsabilite) {
-      statsY += 35;
+      statsY += 22;
       doc.setFont('helvetica', 'bold');
+      doc.setFontSize(7);
       doc.text('🎯 Responsabilité:', x + 5, statsY);
       doc.setFont('helvetica', 'normal');
-      doc.text(this.getResponsabiliteText(container), x + 5, statsY + 6);
+      const respText = this.getResponsabiliteText(container);
+      const shortRespText = respText.length > 35 ? respText.substring(0, 35) + '...' : respText;
+      doc.text(shortRespText, x + 5, statsY + 4);
     }
 
-    return y + analysisHeight + 5;
+    return y + analysisHeight + 3;
   }
 
-  private addModernCalculationCard(doc: jsPDF, container: DetentionContainer, x: number, y: number, width: number, accentColor: [number, number, number], primaryColor: [number, number, number]): number {
-    const cardHeight = 80;
+  private addCompactCalculationCard(doc: jsPDF, container: DetentionContainer, x: number, y: number, width: number, accentColor: [number, number, number], primaryColor: [number, number, number]): number {
+    const cardHeight = 60; // Réduit de 80 à 60
     
     // Carte de calcul avec design moderne
     doc.setFillColor(255, 255, 255);
@@ -308,56 +313,56 @@ class DetentionPdfService {
 
     // En-tête rouge pour le montant
     doc.setFillColor(accentColor[0], accentColor[1], accentColor[2]);
-    doc.roundedRect(x, y, width, 15, 3, 3, 'F');
-    doc.rect(x, y + 12, width, 3, 'F');
+    doc.roundedRect(x, y, width, 12, 3, 3, 'F');
+    doc.rect(x, y + 9, width, 3, 'F');
 
     doc.setTextColor(255, 255, 255);
-    doc.setFontSize(11);
+    doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
-    doc.text('CALCUL DU MONTANT', x + 5, y + 10);
+    doc.text('CALCUL DU MONTANT', x + 5, y + 8);
 
-    // Détail du calcul
+    // Détail du calcul - plus compact
     doc.setTextColor(0, 0, 0);
-    doc.setFontSize(9);
-    let calcY = y + 25;
+    doc.setFontSize(8); // Réduit
+    let calcY = y + 18;
 
     // Base de calcul
     doc.setFont('helvetica', 'normal');
     doc.text('Base de calcul:', x + 5, calcY);
-    calcY += 6;
+    calcY += 4;
     doc.setFont('helvetica', 'bold');
     doc.text(`${container.joursDepassement} jours × ${this.formatCurrency(container.coutParJour)} FCFA`, x + 8, calcY);
 
-    calcY += 10;
+    calcY += 8;
     // Ligne de séparation
     doc.setDrawColor(200, 200, 200);
     doc.line(x + 5, calcY, x + width - 5, calcY);
 
-    calcY += 8;
+    calcY += 6;
     // Sous-total
     doc.setFont('helvetica', 'normal');
     doc.text('Sous-total HT:', x + 5, calcY);
     doc.setFont('helvetica', 'bold');
-    doc.text(`${this.formatCurrency(container.montantTotal)} FCFA`, x + width - 60, calcY);
+    doc.text(`${this.formatCurrency(container.montantTotal)} FCFA`, x + width - 55, calcY);
 
-    calcY += 8;
+    calcY += 6;
     // Total final avec design spécial
-    const totalBoxHeight = 15;
+    const totalBoxHeight = 12; // Réduit
     doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
     doc.roundedRect(x + 5, calcY, width - 10, totalBoxHeight, 2, 2, 'F');
     
     doc.setTextColor(255, 255, 255);
-    doc.setFontSize(12);
+    doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
-    doc.text('TOTAL À PAYER', x + 10, calcY + 6);
-    doc.setFontSize(14);
-    doc.text(`${this.formatCurrency(container.montantTotal)} FCFA`, x + 10, calcY + 12);
+    doc.text('TOTAL À PAYER', x + 8, calcY + 4);
+    doc.setFontSize(12);
+    doc.text(`${this.formatCurrency(container.montantTotal)} FCFA`, x + 8, calcY + 9);
 
-    return y + cardHeight + 5;
+    return y + cardHeight + 3;
   }
 
-  private addResponsibilityBreakdown(doc: jsPDF, container: DetentionContainer, x: number, y: number, width: number, primaryColor: [number, number, number], accentColor: [number, number, number]): number {
-    const breakdownHeight = 70;
+  private addCompactResponsibilityBreakdown(doc: jsPDF, container: DetentionContainer, x: number, y: number, width: number, primaryColor: [number, number, number], accentColor: [number, number, number]): number {
+    const breakdownHeight = 55; // Réduit de 70 à 55
     
     // Carte de répartition
     doc.setFillColor(255, 255, 255);
@@ -368,13 +373,13 @@ class DetentionPdfService {
 
     // En-tête
     doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-    doc.roundedRect(x, y, width, 12, 3, 3, 'F');
-    doc.rect(x, y + 9, width, 3, 'F');
+    doc.roundedRect(x, y, width, 10, 3, 3, 'F'); // Réduit
+    doc.rect(x, y + 7, width, 3, 'F');
 
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(9);
     doc.setFont('helvetica', 'bold');
-    doc.text('RÉPARTITION', x + 5, y + 8);
+    doc.text('RÉPARTITION', x + 5, y + 7);
 
     // Calcul des montants selon la responsabilité
     let montantClient = 0;
@@ -392,68 +397,68 @@ class DetentionPdfService {
       montantLogistiga = (container.joursLogistiga || 0) * coutParJour;
     }
 
-    // Contenu du tableau
+    // Contenu du tableau - plus compact
     doc.setTextColor(0, 0, 0);
     doc.setFontSize(8);
-    let contentY = y + 18;
+    let contentY = y + 15;
 
     // Ligne Client
     doc.setFont('helvetica', 'bold');
     doc.text('CLIENT:', x + 5, contentY);
     doc.setFont('helvetica', 'normal');
     
+    let joursText = '0 jour';
     if (container.responsabilite === 'partagee') {
-      doc.text(`${container.joursClient || 0} jours`, x + 25, contentY);
+      joursText = `${container.joursClient || 0} jours`;
     } else if (container.responsabilite === 'client') {
-      doc.text(`${container.joursDepassement} jours`, x + 25, contentY);
-    } else {
-      doc.text('0 jour', x + 25, contentY);
+      joursText = `${container.joursDepassement} jours`;
     }
+    doc.text(joursText, x + 25, contentY);
     
     // Montant client
     doc.setFont('helvetica', 'bold');
     if (montantClient > 0) {
       doc.setTextColor(accentColor[0], accentColor[1], accentColor[2]);
     }
-    doc.text(`${this.formatCurrency(montantClient)} FCFA`, x + width - 60, contentY);
+    doc.text(`${this.formatCurrency(montantClient)} FCFA`, x + width - 50, contentY);
 
-    contentY += 8;
+    contentY += 6; // Espacement réduit
     // Ligne Logistiga
     doc.setTextColor(0, 0, 0);
     doc.setFont('helvetica', 'bold');
     doc.text('LOGISTIGA:', x + 5, contentY);
     doc.setFont('helvetica', 'normal');
     
+    joursText = '0 jour';
     if (container.responsabilite === 'partagee') {
-      doc.text(`${container.joursLogistiga || 0} jours`, x + 25, contentY);
+      joursText = `${container.joursLogistiga || 0} jours`;
     } else if (container.responsabilite === 'logistiga') {
-      doc.text(`${container.joursDepassement} jours`, x + 25, contentY);
-    } else {
-      doc.text('0 jour', x + 25, contentY);
+      joursText = `${container.joursDepassement} jours`;
     }
+    doc.text(joursText, x + 25, contentY);
     
     // Montant Logistiga
     doc.setFont('helvetica', 'bold');
     if (montantLogistiga > 0) {
       doc.setTextColor(accentColor[0], accentColor[1], accentColor[2]);
     }
-    doc.text(`${this.formatCurrency(montantLogistiga)} FCFA`, x + width - 60, contentY);
+    doc.text(`${this.formatCurrency(montantLogistiga)} FCFA`, x + width - 50, contentY);
 
-    contentY += 12;
+    contentY += 8;
     // Ligne de séparation
     doc.setDrawColor(200, 200, 200);
     doc.line(x + 5, contentY, x + width - 5, contentY);
 
-    contentY += 8;
+    contentY += 6;
     // Total final
     doc.setTextColor(0, 0, 0);
     doc.setFont('helvetica', 'bold');
     doc.text('TOTAL:', x + 5, contentY);
-    doc.setFontSize(10);
+    doc.setFontSize(9);
     doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-    doc.text(`${this.formatCurrency(container.montantTotal)} FCFA`, x + width - 60, contentY);
+    doc.text(`${this.formatCurrency(container.montantTotal)} FCFA`, x + width - 50, contentY);
 
-    return y + breakdownHeight + 5;
+    return y + breakdownHeight + 3;
   }
 
   private addUltraModernFooter(doc: jsPDF, pageWidth: number, pageHeight: number, primaryColor: [number, number, number]): void {
