@@ -329,9 +329,10 @@ class DetentionPdfService {
     // Base de calcul
     doc.setFont('helvetica', 'normal');
     doc.text('Base de calcul:', x + 5, calcY);
-    calcY += 4;
+    calcY += 5;
     doc.setFont('helvetica', 'bold');
-    doc.text(`${container.joursDepassement} jours × ${this.formatCurrency(container.coutParJour)} FCFA`, x + 8, calcY);
+    const calcText = `${container.joursDepassement} jours × ${this.formatCurrency(container.coutParJour)} FCFA`;
+    doc.text(calcText, x + 5, calcY);
 
     calcY += 8;
     // Ligne de séparation
@@ -343,20 +344,20 @@ class DetentionPdfService {
     doc.setFont('helvetica', 'normal');
     doc.text('Sous-total HT:', x + 5, calcY);
     doc.setFont('helvetica', 'bold');
-    doc.text(`${this.formatCurrency(container.montantTotal)} FCFA`, x + width - 55, calcY);
+    doc.text(`${this.formatCurrency(container.montantTotal)} FCFA`, x + width - 70, calcY);
 
     calcY += 6;
     // Total final avec design spécial
-    const totalBoxHeight = 12; // Réduit
+    const totalBoxHeight = 14; // Légèrement plus grand pour la lisibilité
     doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
     doc.roundedRect(x + 5, calcY, width - 10, totalBoxHeight, 2, 2, 'F');
     
     doc.setTextColor(255, 255, 255);
-    doc.setFontSize(10);
+    doc.setFontSize(9);
     doc.setFont('helvetica', 'bold');
-    doc.text('TOTAL À PAYER', x + 8, calcY + 4);
-    doc.setFontSize(12);
-    doc.text(`${this.formatCurrency(container.montantTotal)} FCFA`, x + 8, calcY + 9);
+    doc.text('TOTAL À PAYER', x + 8, calcY + 5);
+    doc.setFontSize(10);
+    doc.text(`${this.formatCurrency(container.montantTotal)} FCFA`, x + 8, calcY + 11);
 
     return y + cardHeight + 3;
   }
@@ -413,14 +414,14 @@ class DetentionPdfService {
     } else if (container.responsabilite === 'client') {
       joursText = `${container.joursDepassement} jours`;
     }
-    doc.text(joursText, x + 25, contentY);
+    doc.text(joursText, x + 35, contentY);
     
     // Montant client
     doc.setFont('helvetica', 'bold');
     if (montantClient > 0) {
       doc.setTextColor(accentColor[0], accentColor[1], accentColor[2]);
     }
-    doc.text(`${this.formatCurrency(montantClient)} FCFA`, x + width - 50, contentY);
+    doc.text(`${this.formatCurrency(montantClient)} FCFA`, x + width - 60, contentY);
 
     contentY += 6; // Espacement réduit
     // Ligne Logistiga
@@ -435,14 +436,14 @@ class DetentionPdfService {
     } else if (container.responsabilite === 'logistiga') {
       joursText = `${container.joursDepassement} jours`;
     }
-    doc.text(joursText, x + 25, contentY);
+    doc.text(joursText, x + 35, contentY);
     
     // Montant Logistiga
     doc.setFont('helvetica', 'bold');
     if (montantLogistiga > 0) {
       doc.setTextColor(accentColor[0], accentColor[1], accentColor[2]);
     }
-    doc.text(`${this.formatCurrency(montantLogistiga)} FCFA`, x + width - 50, contentY);
+    doc.text(`${this.formatCurrency(montantLogistiga)} FCFA`, x + width - 60, contentY);
 
     contentY += 8;
     // Ligne de séparation
@@ -456,7 +457,7 @@ class DetentionPdfService {
     doc.text('TOTAL:', x + 5, contentY);
     doc.setFontSize(9);
     doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-    doc.text(`${this.formatCurrency(container.montantTotal)} FCFA`, x + width - 50, contentY);
+    doc.text(`${this.formatCurrency(container.montantTotal)} FCFA`, x + width - 60, contentY);
 
     return y + breakdownHeight + 3;
   }
@@ -512,11 +513,12 @@ class DetentionPdfService {
 
   private formatCurrency(amount: number | string): string {
     const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+    // Utiliser l'espace insécable pour les milliers (comme en français)
     return new Intl.NumberFormat('fr-FR', {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
       useGrouping: true
-    }).format(numAmount);
+    }).format(numAmount).replace(/\s/g, ' '); // Remplacer l'espace par un espace insécable
   }
 }
 
