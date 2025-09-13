@@ -27,7 +27,7 @@ class DetentionResource extends JsonResource
         $joursRealises = 0;
         if ($sortieConteneur && $sortieConteneur->date_sortie) {
             $dateSortie = $sortieConteneur->date_sortie;
-            $dateRetour = $sortieConteneur->date_retour_effectif ?? now();
+            $dateRetour = $sortieConteneur->date_retour ?? now();
             $joursRealises = (int) $dateSortie->diffInDays($dateRetour);
         }
         
@@ -59,7 +59,7 @@ class DetentionResource extends JsonResource
             'type_conteneur_label' => $sortieConteneur?->type_destination === 'bad' ? 'BAD' : 
                                     ($sortieConteneur?->type_destination === 'fix' ? 'FIX' : 'BAD'),
             'date_sortie' => $sortieConteneur?->date_sortie?->format('Y-m-d'),
-            'date_retour' => $sortieConteneur?->date_retour_effectif?->format('Y-m-d'),
+            'date_retour' => $sortieConteneur?->date_retour?->format('Y-m-d'),
             'jours_bat' => $joursBAT,
             'jours_realises' => $joursRealises,
             'jours_depassement' => $joursDepassement,
