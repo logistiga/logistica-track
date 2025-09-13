@@ -285,21 +285,21 @@ class DetentionPdfService {
 
     // Ligne 1: Durée hors port
     doc.setFont('helvetica', 'normal');
-    doc.text('⏱️ Durée totale hors port:', leftMargin, statsY);
+    doc.text('Duree totale hors port:', leftMargin, statsY);
     doc.setFont('helvetica', 'bold');
     doc.text(`${container.joursRealises} jours`, valueMargin, statsY);
 
     statsY += 7;
     // Ligne 2: Dépassement
     doc.setFont('helvetica', 'normal');
-    doc.text('⚠️ Dépassement facturé:', leftMargin, statsY);
+    doc.text('Depassement facture:', leftMargin, statsY);
     doc.setFont('helvetica', 'bold');
     doc.text(`${container.joursDepassement} jours`, valueMargin, statsY);
 
     statsY += 7;
     // Ligne 3: Coût journalier
     doc.setFont('helvetica', 'normal');
-    doc.text('💰 Coût journalier:', leftMargin, statsY);
+    doc.text('Cout journalier:', leftMargin, statsY);
     doc.setFont('helvetica', 'bold');
     doc.text(`${this.formatCurrency(container.coutParJour)} FCFA`, valueMargin, statsY);
 
@@ -308,7 +308,7 @@ class DetentionPdfService {
       statsY += 10;
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(8);
-      doc.text('🎯 Responsabilité:', leftMargin, statsY);
+      doc.text('Responsabilite:', leftMargin, statsY);
       statsY += 5;
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(7);
