@@ -301,8 +301,14 @@ export const SortieForm = ({ formData, setFormData, onSubmit, onCancel }: Sortie
                       <div className="text-lg font-bold text-orange-600">
                         {(() => {
                           if (dateSortie && selectedArmateur.jours_gratuits) {
-                            const dateLimite = new Date(dateSortie);
-                            dateLimite.setDate(dateLimite.getDate() + selectedArmateur.jours_gratuits);
+                            // Utiliser la date de fin de franchise si fournie, sinon calculer automatiquement
+                            const dateLimite = formData.dateFinFranchise 
+                              ? new Date(formData.dateFinFranchise)
+                              : (() => {
+                                  const date = new Date(dateSortie);
+                                  date.setDate(date.getDate() + selectedArmateur.jours_gratuits);
+                                  return date;
+                                })();
                             return format(dateLimite, "dd/MM", { locale: fr });
                           }
                           return "--";
@@ -319,14 +325,20 @@ export const SortieForm = ({ formData, setFormData, onSubmit, onCancel }: Sortie
                         <span className="font-medium">
                           Le conteneur doit être retourné au port avant le{" "}
                           {(() => {
-                            const dateLimite = new Date(dateSortie);
-                            dateLimite.setDate(dateLimite.getDate() + selectedArmateur.jours_gratuits);
+                            // Utiliser la date de fin de franchise si fournie, sinon calculer automatiquement
+                            const dateLimite = formData.dateFinFranchise 
+                              ? new Date(formData.dateFinFranchise)
+                              : (() => {
+                                  const date = new Date(dateSortie);
+                                  date.setDate(date.getDate() + selectedArmateur.jours_gratuits);
+                                  return date;
+                                })();
                             return format(dateLimite, "dd MMMM yyyy", { locale: fr });
                           })()}
                         </span>
                       </div>
                       
-                      {(() => {
+                  {(() => {
                         // Utiliser la date de fin de franchise si fournie, sinon calculer automatiquement
                         const dateLimite = formData.dateFinFranchise 
                           ? new Date(formData.dateFinFranchise)
@@ -337,13 +349,14 @@ export const SortieForm = ({ formData, setFormData, onSubmit, onCancel }: Sortie
                             })();
                         
                         const today = new Date();
+                        today.setHours(0, 0, 0, 0); // Normaliser à minuit pour une comparaison de date exacte
+                        dateLimite.setHours(0, 0, 0, 0);
+                        
                         const diffTime = dateLimite.getTime() - today.getTime();
                         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
                         
-                        // Calculer les jours de détention si date de fin de franchise fournie
-                        const detentionDays = formData.dateFinFranchise 
-                          ? Math.max(0, Math.ceil((today.getTime() - dateLimite.getTime()) / (1000 * 60 * 60 * 24)))
-                          : Math.max(0, Math.abs(diffDays));
+                        // Calculer les jours de détention pour les retards
+                        const detentionDays = Math.max(0, Math.abs(diffDays));
                         
                         if (diffDays < 0) {
                           return (
@@ -384,6 +397,11 @@ export const SortieForm = ({ formData, setFormData, onSubmit, onCancel }: Sortie
                           return (
                             <div className="mt-2 p-2 bg-green-100 border border-green-300 rounded text-green-700 text-sm">
                               ✅ <strong>OK:</strong> Encore {diffDays} jour(s) de franchise
+                              {formData.dateFinFranchise && (
+                                <div className="mt-1 text-xs">
+                                  📅 Date de fin personnalisée: {format(dateLimite, "dd/MM/yyyy", { locale: fr })}
+                                </div>
+                              )}
                             </div>
                           );
                         }
