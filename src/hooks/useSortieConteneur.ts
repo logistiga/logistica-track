@@ -230,8 +230,7 @@ export function useSortieConteneur() {
         date_retour: returnData.dateRetour,
         heure_retour: "12:00",
         camion_retour_id: returnData.camionRetour ? parseInt(returnData.camionRetour) : undefined,
-        remorque_retour_id: returnData.remorqueRetour ? parseInt(returnData.remorqueRetour) : undefined,
-        responsabilite: returnData.responsabilite
+        remorque_retour_id: returnData.remorqueRetour ? parseInt(returnData.remorqueRetour) : undefined
       };
 
       console.log('📤 Sending return data to service:', retourData);
@@ -265,7 +264,7 @@ export function useSortieConteneur() {
       // Reset
       setIsReturnDialogOpen(false);
       setSelectedSortie(null);
-      setReturnData({ dateRetour: "", camionRetour: "", remorqueRetour: "", responsabilite: "" });
+      setReturnData({ dateRetour: "", camionRetour: "", remorqueRetour: "" });
       
       console.log('✅ Return confirmation completed successfully');
     } catch (error) {
