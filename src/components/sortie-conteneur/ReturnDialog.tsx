@@ -143,12 +143,6 @@ export const ReturnDialog = ({
             </div>
           </div>
 
-          <div>
-            <ResponsabiliteSelector 
-              value={returnData.responsabilite || ""} 
-              onChange={(value) => setReturnData({ ...returnData, responsabilite: value })}
-            />
-          </div>
         </div>
         
         <div className="flex justify-end gap-3 pt-4">
@@ -157,7 +151,7 @@ export const ReturnDialog = ({
           </Button>
           <Button 
             onClick={onConfirm}
-            disabled={!returnData.dateRetour || !returnData.camionRetour || !returnData.remorqueRetour || !returnData.responsabilite}
+            disabled={!returnData.dateRetour || !returnData.camionRetour || !returnData.remorqueRetour}
           >
             Confirmer le retour
           </Button>
