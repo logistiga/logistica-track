@@ -66,8 +66,8 @@ class DetentionPdfService {
     rightY = this.addModernCalculationCard(doc, container, rightX, rightY, rightColWidth, accentColor, primaryColor);
     rightY += 8;
 
-    // QR Code et informations de paiement
-    rightY = this.addPaymentInfo(doc, rightX, rightY, rightColWidth, primaryColor);
+    // Tableau récapitulatif des montants par responsabilité
+    rightY = this.addResponsibilityBreakdown(doc, container, rightX, rightY, rightColWidth, primaryColor, accentColor);
 
     // === FOOTER MODERNE EN BAS ===
     this.addUltraModernFooter(doc, pageWidth, pageHeight, primaryColor);
@@ -356,15 +356,15 @@ class DetentionPdfService {
     return y + cardHeight + 5;
   }
 
-  private addPaymentInfo(doc: jsPDF, x: number, y: number, width: number, primaryColor: [number, number, number]): number {
-    const infoHeight = 60;
+  private addResponsibilityBreakdown(doc: jsPDF, container: DetentionContainer, x: number, y: number, width: number, primaryColor: [number, number, number], accentColor: [number, number, number]): number {
+    const breakdownHeight = 70;
     
-    // Carte d'informations de paiement
+    // Carte de répartition
     doc.setFillColor(255, 255, 255);
-    doc.roundedRect(x, y, width, infoHeight, 3, 3, 'F');
+    doc.roundedRect(x, y, width, breakdownHeight, 3, 3, 'F');
     doc.setDrawColor(primaryColor[0], primaryColor[1], primaryColor[2]);
     doc.setLineWidth(1);
-    doc.roundedRect(x, y, width, infoHeight, 3, 3, 'S');
+    doc.roundedRect(x, y, width, breakdownHeight, 3, 3, 'S');
 
     // En-tête
     doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
@@ -374,48 +374,86 @@ class DetentionPdfService {
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(9);
     doc.setFont('helvetica', 'bold');
-    doc.text('MODALITÉS', x + 5, y + 8);
+    doc.text('RÉPARTITION', x + 5, y + 8);
 
-    // Contenu
-    doc.setTextColor(0, 0, 0);
-    doc.setFontSize(8);
-    doc.setFont('helvetica', 'normal');
-    
-    const paymentInfo = [
-      '• Paiement immédiat',
-      '• Chèque ou virement',
-      '• Pénalités: 1.5%/mois',
-      '• Tribunaux: Libreville'
-    ];
+    // Calcul des montants selon la responsabilité
+    let montantClient = 0;
+    let montantLogistiga = 0;
 
-    let infoY = y + 18;
-    paymentInfo.forEach(info => {
-      doc.text(info, x + 5, infoY);
-      infoY += 7;
-    });
-
-    // QR Code simulé (carré avec motif)
-    const qrSize = 20;
-    const qrX = x + width - qrSize - 5;
-    const qrY = y + 35;
-    
-    doc.setFillColor(0, 0, 0);
-    doc.rect(qrX, qrY, qrSize, qrSize, 'F');
-    doc.setFillColor(255, 255, 255);
-    for (let i = 0; i < 4; i++) {
-      for (let j = 0; j < 4; j++) {
-        if ((i + j) % 2 === 0) {
-          doc.rect(qrX + i * 5, qrY + j * 5, 2, 2, 'F');
-        }
-      }
+    if (container.responsabilite === 'client') {
+      montantClient = container.montantTotal;
+      montantLogistiga = 0;
+    } else if (container.responsabilite === 'logistiga') {
+      montantClient = 0;
+      montantLogistiga = container.montantTotal;
+    } else if (container.responsabilite === 'partagee') {
+      const coutParJour = typeof container.coutParJour === 'string' ? parseFloat(container.coutParJour) : container.coutParJour;
+      montantClient = (container.joursClient || 0) * coutParJour;
+      montantLogistiga = (container.joursLogistiga || 0) * coutParJour;
     }
 
-    doc.setFontSize(6);
-    doc.setTextColor(100, 100, 100);
-    doc.text('Scan pour', qrX - 5, qrY + qrSize + 4);
-    doc.text('payer', qrX, qrY + qrSize + 8);
+    // Contenu du tableau
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(8);
+    let contentY = y + 18;
 
-    return y + infoHeight + 5;
+    // Ligne Client
+    doc.setFont('helvetica', 'bold');
+    doc.text('CLIENT:', x + 5, contentY);
+    doc.setFont('helvetica', 'normal');
+    
+    if (container.responsabilite === 'partagee') {
+      doc.text(`${container.joursClient || 0} jours`, x + 25, contentY);
+    } else if (container.responsabilite === 'client') {
+      doc.text(`${container.joursDepassement} jours`, x + 25, contentY);
+    } else {
+      doc.text('0 jour', x + 25, contentY);
+    }
+    
+    // Montant client
+    doc.setFont('helvetica', 'bold');
+    if (montantClient > 0) {
+      doc.setTextColor(accentColor[0], accentColor[1], accentColor[2]);
+    }
+    doc.text(`${this.formatCurrency(montantClient)} FCFA`, x + width - 60, contentY);
+
+    contentY += 8;
+    // Ligne Logistiga
+    doc.setTextColor(0, 0, 0);
+    doc.setFont('helvetica', 'bold');
+    doc.text('LOGISTIGA:', x + 5, contentY);
+    doc.setFont('helvetica', 'normal');
+    
+    if (container.responsabilite === 'partagee') {
+      doc.text(`${container.joursLogistiga || 0} jours`, x + 25, contentY);
+    } else if (container.responsabilite === 'logistiga') {
+      doc.text(`${container.joursDepassement} jours`, x + 25, contentY);
+    } else {
+      doc.text('0 jour', x + 25, contentY);
+    }
+    
+    // Montant Logistiga
+    doc.setFont('helvetica', 'bold');
+    if (montantLogistiga > 0) {
+      doc.setTextColor(accentColor[0], accentColor[1], accentColor[2]);
+    }
+    doc.text(`${this.formatCurrency(montantLogistiga)} FCFA`, x + width - 60, contentY);
+
+    contentY += 12;
+    // Ligne de séparation
+    doc.setDrawColor(200, 200, 200);
+    doc.line(x + 5, contentY, x + width - 5, contentY);
+
+    contentY += 8;
+    // Total final
+    doc.setTextColor(0, 0, 0);
+    doc.setFont('helvetica', 'bold');
+    doc.text('TOTAL:', x + 5, contentY);
+    doc.setFontSize(10);
+    doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+    doc.text(`${this.formatCurrency(container.montantTotal)} FCFA`, x + width - 60, contentY);
+
+    return y + breakdownHeight + 5;
   }
 
   private addUltraModernFooter(doc: jsPDF, pageWidth: number, pageHeight: number, primaryColor: [number, number, number]): void {
@@ -451,7 +489,7 @@ class DetentionPdfService {
     // Colonne 3: Document info
     const docInfoX = pageWidth - 120;
     doc.text(`Généré le ${new Date().toLocaleString('fr-FR')}`, docInfoX, footerY + 12);
-    doc.text('Document confidentiel - Usage interne', docInfoX, footerY + 18);
+    doc.text('Document confidentiel - Répartition des coûts', docInfoX, footerY + 18);
   }
 
   private getResponsabiliteText(container: DetentionContainer): string {
