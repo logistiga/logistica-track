@@ -7,6 +7,7 @@ import { useDetention } from "@/hooks/useDetention";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { detentionService } from "@/services/detentionService";
+import { detentionPdfService } from "@/services/detentionPdfService";
 
 console.log('🔄 Detention.tsx file loaded');
 
@@ -119,8 +120,8 @@ export default function Detention() {
 
   const handleGeneratePDF = async (container: DetentionContainer) => {
     try {
-      // Logique pour générer le PDF via l'API
-      await exportDetentions({ search: container.numeroConteneur });
+      // Générer le PDF moderne directement côté client
+      detentionPdfService.generateDebitNote(container);
       
       toast({
         title: "PDF généré",
