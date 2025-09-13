@@ -132,7 +132,7 @@ class DetentionPdfService {
   }
 
   private addCompactContainerCard(doc: jsPDF, container: DetentionContainer, x: number, y: number, width: number, bgColor: [number, number, number], primaryColor: [number, number, number]): number {
-    const cardHeight = 35; // Réduit de 45 à 35
+    const cardHeight = 50; // Augmenté pour accommoder toutes les lignes
     
     // Fond de carte avec ombre
     doc.setFillColor(255, 255, 255);
@@ -150,52 +150,60 @@ class DetentionPdfService {
     doc.setFont('helvetica', 'bold');
     doc.text('CONTENEUR & CLIENT', x + 5, y + 7);
 
-    // Contenu en deux colonnes - avec alignement corrigé
+    // Contenu organisé ligne par ligne
     doc.setTextColor(0, 0, 0);
     doc.setFontSize(8);
     doc.setFont('helvetica', 'normal');
     
-    const leftCol = x + 5;
-    const rightCol = x + width * 0.6; // Position fixe à 60% de la largeur
     let contentY = y + 18;
+    const leftMargin = x + 8;
+    const valueMargin = x + 70; // Position fixe pour toutes les valeurs
 
-    // Colonne gauche - avec espacement fixe
+    // Ligne 1: Conteneur
     doc.setFont('helvetica', 'bold');
-    doc.text('Conteneur:', leftCol, contentY);
+    doc.text('Conteneur:', leftMargin, contentY);
     doc.setFont('helvetica', 'normal');
-    doc.text(container.numeroConteneur, leftCol + 30, contentY); // Position fixe
+    doc.text(container.numeroConteneur, valueMargin, contentY);
     
-    contentY += 6;
+    contentY += 7; // Espacement entre lignes
+    
+    // Ligne 2: Armateur
     doc.setFont('helvetica', 'bold');
-    doc.text('Armateur:', leftCol, contentY);
+    doc.text('Armateur:', leftMargin, contentY);
     doc.setFont('helvetica', 'normal');
-    doc.text(container.codeArmateur, leftCol + 30, contentY);
+    doc.text(container.codeArmateur, valueMargin, contentY);
 
-    contentY += 6;
+    contentY += 7;
+    
+    // Ligne 3: Type
     doc.setFont('helvetica', 'bold');
-    doc.text('Type:', leftCol, contentY);
+    doc.text('Type:', leftMargin, contentY);
     doc.setFont('helvetica', 'normal');
-    doc.text(container.typeConteneur, leftCol + 30, contentY);
+    doc.text(container.typeConteneur, valueMargin, contentY);
 
-    // Colonne droite - avec positions fixes
-    contentY = y + 18; // Reset position
+    contentY += 7;
+    
+    // Ligne 4: Client
     doc.setFont('helvetica', 'bold');
-    doc.text('Client:', rightCol, contentY);
+    doc.text('Client:', leftMargin, contentY);
     doc.setFont('helvetica', 'normal');
-    const clientName = container.nomClient.length > 10 ? container.nomClient.substring(0, 10) + '...' : container.nomClient;
-    doc.text(clientName, rightCol + 20, contentY); // Position fixe
+    doc.text(container.nomClient, valueMargin, contentY);
 
-    contentY += 6;
+    contentY += 7;
+    
+    // Ligne 5: Date sortie
     doc.setFont('helvetica', 'bold');
-    doc.text('Sortie:', rightCol, contentY);
+    doc.text('Date sortie:', leftMargin, contentY);
     doc.setFont('helvetica', 'normal');
-    doc.text(container.dateSortie, rightCol + 20, contentY);
+    doc.text(container.dateSortie, valueMargin, contentY);
 
-    contentY += 6;
+    contentY += 7;
+    
+    // Ligne 6: Date retour
     doc.setFont('helvetica', 'bold');
-    doc.text('Retour:', rightCol, contentY);
+    doc.text('Date retour:', leftMargin, contentY);
     doc.setFont('helvetica', 'normal');
-    doc.text(container.dateRetour || 'En cours', rightCol + 20, contentY);
+    doc.text(container.dateRetour || 'En cours', valueMargin, contentY);
 
     return y + cardHeight + 5; // Plus d'espace après la carte
   }
@@ -268,35 +276,61 @@ class DetentionPdfService {
     doc.setFont('helvetica', 'bold');
     doc.text('ANALYSE DE LA DÉTENTION', x + 5, y + 7);
 
-    // Statistiques clés - format compact
+    // Statistiques clés - format ligne par ligne
     doc.setTextColor(0, 0, 0);
-    doc.setFontSize(8); // Réduit
+    doc.setFontSize(8);
     let statsY = y + 16;
+    const leftMargin = x + 8;
+    const valueMargin = x + width - 50; // Alignement à droite pour les valeurs
 
-    const stats = [
-      { label: 'Durée hors port', value: `${container.joursRealises} jours`, icon: '⏱️' },
-      { label: 'Dépassement', value: `${container.joursDepassement} jours`, icon: '⚠️' },
-      { label: 'Coût/jour', value: `${this.formatCurrency(container.coutParJour)} FCFA`, icon: '💰' }
-    ];
+    // Ligne 1: Durée hors port
+    doc.setFont('helvetica', 'normal');
+    doc.text('⏱️ Durée totale hors port:', leftMargin, statsY);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`${container.joursRealises} jours`, valueMargin, statsY);
 
-    stats.forEach((stat, index) => {
-      const statY = statsY + (index * 6); // Espacement réduit
-      doc.setFont('helvetica', 'normal');
-      doc.text(`${stat.icon} ${stat.label}:`, x + 5, statY);
-      doc.setFont('helvetica', 'bold');
-      doc.text(stat.value, x + 70, statY); // Position ajustée
-    });
+    statsY += 7;
+    // Ligne 2: Dépassement
+    doc.setFont('helvetica', 'normal');
+    doc.text('⚠️ Dépassement facturé:', leftMargin, statsY);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`${container.joursDepassement} jours`, valueMargin, statsY);
 
-    // Responsabilité si définie - plus compact
+    statsY += 7;
+    // Ligne 3: Coût journalier
+    doc.setFont('helvetica', 'normal');
+    doc.text('💰 Coût journalier:', leftMargin, statsY);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`${this.formatCurrency(container.coutParJour)} FCFA`, valueMargin, statsY);
+
+    // Responsabilité si définie - sur une ligne séparée
     if (container.responsabilite) {
-      statsY += 22;
+      statsY += 10;
       doc.setFont('helvetica', 'bold');
-      doc.setFontSize(7);
-      doc.text('🎯 Responsabilité:', x + 5, statsY);
+      doc.setFontSize(8);
+      doc.text('🎯 Responsabilité:', leftMargin, statsY);
+      statsY += 5;
       doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7);
       const respText = this.getResponsabiliteText(container);
-      const shortRespText = respText.length > 35 ? respText.substring(0, 35) + '...' : respText;
-      doc.text(shortRespText, x + 5, statsY + 4);
+      // Découper le texte si trop long
+      const maxWidth = width - 20;
+      const words = respText.split(' ');
+      let currentLine = '';
+      for (const word of words) {
+        const testLine = currentLine + (currentLine ? ' ' : '') + word;
+        const textWidth = doc.getTextWidth(testLine);
+        if (textWidth < maxWidth) {
+          currentLine = testLine;
+        } else {
+          doc.text(currentLine, leftMargin, statsY);
+          statsY += 4;
+          currentLine = word;
+        }
+      }
+      if (currentLine) {
+        doc.text(currentLine, leftMargin, statsY);
+      }
     }
 
     return y + analysisHeight + 3;
@@ -321,43 +355,46 @@ class DetentionPdfService {
     doc.setFont('helvetica', 'bold');
     doc.text('CALCUL DU MONTANT', x + 5, y + 8);
 
-    // Détail du calcul - plus compact
+    // Détail du calcul - organisé ligne par ligne
     doc.setTextColor(0, 0, 0);
-    doc.setFontSize(8); // Réduit
+    doc.setFontSize(8);
     let calcY = y + 18;
+    const leftMargin = x + 8;
 
-    // Base de calcul
+    // Ligne 1: Titre base de calcul
     doc.setFont('helvetica', 'normal');
-    doc.text('Base de calcul:', x + 5, calcY);
-    calcY += 5;
+    doc.text('Base de calcul:', leftMargin, calcY);
+    
+    calcY += 6;
+    // Ligne 2: Formule de calcul
     doc.setFont('helvetica', 'bold');
     const calcText = `${container.joursDepassement} jours × ${this.formatCurrency(container.coutParJour)} FCFA`;
-    doc.text(calcText, x + 5, calcY);
+    doc.text(calcText, leftMargin, calcY);
 
-    calcY += 8;
+    calcY += 10;
     // Ligne de séparation
     doc.setDrawColor(200, 200, 200);
-    doc.line(x + 5, calcY, x + width - 5, calcY);
+    doc.line(leftMargin, calcY, x + width - 8, calcY);
 
-    calcY += 6;
-    // Sous-total
+    calcY += 8;
+    // Ligne 3: Sous-total
     doc.setFont('helvetica', 'normal');
-    doc.text('Sous-total HT:', x + 5, calcY);
+    doc.text('Sous-total HT:', leftMargin, calcY);
     doc.setFont('helvetica', 'bold');
     doc.text(`${this.formatCurrency(container.montantTotal)} FCFA`, x + width - 70, calcY);
 
-    calcY += 6;
-    // Total final avec design spécial
-    const totalBoxHeight = 14; // Légèrement plus grand pour la lisibilité
+    calcY += 8;
+    // Ligne 4: Total final avec design spécial
+    const totalBoxHeight = 16; // Plus grand pour plus de lisibilité
     doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-    doc.roundedRect(x + 5, calcY, width - 10, totalBoxHeight, 2, 2, 'F');
+    doc.roundedRect(leftMargin, calcY, width - 16, totalBoxHeight, 2, 2, 'F');
     
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(9);
     doc.setFont('helvetica', 'bold');
-    doc.text('TOTAL À PAYER', x + 8, calcY + 5);
-    doc.setFontSize(10);
-    doc.text(`${this.formatCurrency(container.montantTotal)} FCFA`, x + 8, calcY + 11);
+    doc.text('TOTAL À PAYER', leftMargin + 5, calcY + 6);
+    doc.setFontSize(11);
+    doc.text(`${this.formatCurrency(container.montantTotal)} FCFA`, leftMargin + 5, calcY + 13);
 
     return y + cardHeight + 3;
   }
@@ -398,15 +435,16 @@ class DetentionPdfService {
       montantLogistiga = (container.joursLogistiga || 0) * coutParJour;
     }
 
-    // Contenu du tableau - plus compact
+    // Contenu du tableau - organisé ligne par ligne
     doc.setTextColor(0, 0, 0);
     doc.setFontSize(8);
     let contentY = y + 15;
+    const leftMargin = x + 8;
+    const valueMargin = x + width - 80; // Position pour les montants
 
-    // Ligne Client
+    // Ligne 1: CLIENT
     doc.setFont('helvetica', 'bold');
-    doc.text('CLIENT:', x + 5, contentY);
-    doc.setFont('helvetica', 'normal');
+    doc.text('CLIENT:', leftMargin, contentY);
     
     let joursText = '0 jour';
     if (container.responsabilite === 'partagee') {
@@ -414,21 +452,23 @@ class DetentionPdfService {
     } else if (container.responsabilite === 'client') {
       joursText = `${container.joursDepassement} jours`;
     }
-    doc.text(joursText, x + 35, contentY);
+    
+    doc.setFont('helvetica', 'normal');
+    doc.text(joursText, leftMargin + 40, contentY);
     
     // Montant client
     doc.setFont('helvetica', 'bold');
     if (montantClient > 0) {
       doc.setTextColor(accentColor[0], accentColor[1], accentColor[2]);
     }
-    doc.text(`${this.formatCurrency(montantClient)} FCFA`, x + width - 60, contentY);
+    doc.text(`${this.formatCurrency(montantClient)} FCFA`, valueMargin, contentY);
 
-    contentY += 6; // Espacement réduit
-    // Ligne Logistiga
+    contentY += 8;
+    
+    // Ligne 2: LOGISTIGA
     doc.setTextColor(0, 0, 0);
     doc.setFont('helvetica', 'bold');
-    doc.text('LOGISTIGA:', x + 5, contentY);
-    doc.setFont('helvetica', 'normal');
+    doc.text('LOGISTIGA:', leftMargin, contentY);
     
     joursText = '0 jour';
     if (container.responsabilite === 'partagee') {
@@ -436,28 +476,32 @@ class DetentionPdfService {
     } else if (container.responsabilite === 'logistiga') {
       joursText = `${container.joursDepassement} jours`;
     }
-    doc.text(joursText, x + 35, contentY);
+    
+    doc.setFont('helvetica', 'normal');
+    doc.text(joursText, leftMargin + 40, contentY);
     
     // Montant Logistiga
     doc.setFont('helvetica', 'bold');
     if (montantLogistiga > 0) {
       doc.setTextColor(accentColor[0], accentColor[1], accentColor[2]);
     }
-    doc.text(`${this.formatCurrency(montantLogistiga)} FCFA`, x + width - 60, contentY);
+    doc.text(`${this.formatCurrency(montantLogistiga)} FCFA`, valueMargin, contentY);
 
-    contentY += 8;
+    contentY += 10;
+    
     // Ligne de séparation
     doc.setDrawColor(200, 200, 200);
-    doc.line(x + 5, contentY, x + width - 5, contentY);
+    doc.line(leftMargin, contentY, x + width - 8, contentY);
 
-    contentY += 6;
-    // Total final
+    contentY += 8;
+    
+    // Ligne 3: Total final
     doc.setTextColor(0, 0, 0);
     doc.setFont('helvetica', 'bold');
-    doc.text('TOTAL:', x + 5, contentY);
     doc.setFontSize(9);
+    doc.text('TOTAL:', leftMargin, contentY);
     doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-    doc.text(`${this.formatCurrency(container.montantTotal)} FCFA`, x + width - 60, contentY);
+    doc.text(`${this.formatCurrency(container.montantTotal)} FCFA`, valueMargin, contentY);
 
     return y + breakdownHeight + 3;
   }
