@@ -37,11 +37,22 @@ export const SortieForm = ({ formData, setFormData, onSubmit, onCancel }: Sortie
 
   // Calcul automatique des jours lors du changement de date
   useEffect(() => {
-    if (formData.dateFinFranchise) {
-      const jours = calculateDaysFromDate(formData.dateFinFranchise);
-      setJoursCalcules(jours);
+    if (formData.dateFinFranchise && dateSortie) {
+      const dateFinFranchise = new Date(formData.dateFinFranchise);
+      const dateSortieValue = new Date(dateSortie);
+      
+      // Calculer la différence en jours entre la date de sortie et la date de fin de franchise
+      const diffInTime = dateFinFranchise.getTime() - dateSortieValue.getTime();
+      const diffInDays = Math.ceil(diffInTime / (1000 * 3600 * 24));
+      
+      // Les jours gratuits correspondent à cette différence
+      const joursGratuits = Math.max(0, diffInDays);
+      setJoursCalcules(joursGratuits);
+      
+      // Mettre à jour le champ joursBAD avec les jours calculés
+      setFormData({ ...formData, joursBAD: joursGratuits.toString() });
     }
-  }, [formData.dateFinFranchise]);
+  }, [formData.dateFinFranchise, dateSortie]);
 
   // Synchroniser la date de sortie avec le formData
   useEffect(() => {
