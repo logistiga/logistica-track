@@ -25,23 +25,42 @@ export function DetentionTable({
     containers: containers,
     loading 
   });
-  const getResponsabilityBadge = (container: DetentionContainer) => {
+  const getResponsabilityButton = (container: DetentionContainer) => {
     if (!container.responsabilite) {
-      return <Badge variant="outline" className="text-orange-600 border-orange-300">À définir</Badge>;
+      return (
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={() => onIdentifyResponsability(container)}
+          className="text-orange-600 border-orange-300 hover:bg-orange-50"
+        >
+          À définir
+        </Button>
+      );
     }
+
     const variants = {
       client: "destructive",
-      logistica: "secondary",
+      logistica: "secondary", 
       partagee: "default"
-    };
+    } as const;
+
     const labels = {
       client: "Client",
       logistica: "Logistica",
       partagee: `Partagée (${container.joursClient}j / ${container.joursLogistica}j)`
     };
-    return <Badge variant={variants[container.responsabilite] as any}>
+
+    return (
+      <Button 
+        variant={variants[container.responsabilite] as any}
+        size="sm"
+        onClick={() => onIdentifyResponsability(container)}
+        className="cursor-pointer"
+      >
         {labels[container.responsabilite]}
-      </Badge>;
+      </Button>
+    );
   };
   return <Card>
       <CardHeader>
@@ -100,20 +119,9 @@ export function DetentionTable({
                   <TableCell>{container.dateSortie}</TableCell>
                   <TableCell>{container.dateRetour}</TableCell>
                   <TableCell>{container.nomClient}</TableCell>
-                  <TableCell>{getResponsabilityBadge(container)}</TableCell>
+                  <TableCell>{getResponsabilityButton(container)}</TableCell>
                   <TableCell>
                     <div className="flex gap-2">
-                      {/* Toujours afficher le bouton de responsabilité si pas définie */}
-                      {!container.responsabilite && (
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={() => onIdentifyResponsability(container)}
-                          className="text-orange-600 border-orange-300 hover:bg-orange-50"
-                        >
-                          <Users className="w-4 h-4" />
-                        </Button>
-                      )}
                       <Button variant="outline" size="sm" onClick={() => onGeneratePDF(container)}>
                         <FileText className="w-4 h-4" />
                       </Button>
