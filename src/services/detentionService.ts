@@ -219,7 +219,7 @@ class DetentionService {
         nomClient: backendData.nom_client || 'N/A',
         responsabilite: backendData.responsabilite && backendData.responsabilite !== '' ? this.mapResponsabilite(backendData.responsabilite) : undefined,
         joursClient: backendData.jours_client || 0,
-        joursLogistica: backendData.jours_logistica || 0,
+        joursLogistiga: backendData.jours_logistica || 0,
         coutParJour: backendData.cout_par_jour || 0,
         montantTotal: backendData.cout_total || 0,
         noteDebitGeneree: backendData.note_debit_generee || false,
@@ -250,7 +250,7 @@ class DetentionService {
       nomClient: sortieConteneur.nom_client || 'Client inconnu',
       responsabilite: backendData.responsabilite && backendData.responsabilite !== '' ? this.mapResponsabilite(backendData.responsabilite) : undefined,
       joursClient: backendData.responsabilite === 'client' ? backendData.jours_detention : 0,
-      joursLogistica: backendData.responsabilite === 'transitaire' ? backendData.jours_detention : 0,
+      joursLogistiga: backendData.responsabilite === 'transitaire' ? backendData.jours_detention : 0,
       coutParJour: backendData.cout_par_jour || 15000,
       montantTotal: backendData.cout_total || 0,
       noteDebitGeneree: backendData.statut === 'resolue',
@@ -261,14 +261,14 @@ class DetentionService {
   /**
    * Mapper la responsabilité du backend vers le frontend
    */
-  private mapResponsabilite(backendResponsabilite: string): 'client' | 'logistica' | 'partagee' | undefined {
+  private mapResponsabilite(backendResponsabilite: string): 'client' | 'logistiga' | 'partagee' | undefined {
     switch (backendResponsabilite) {
       case 'client':
         return 'client';
       case 'transitaire':
       case 'transporteur':
       case 'autre':
-        return 'logistica';
+        return 'logistiga';
       default:
         return undefined;
     }

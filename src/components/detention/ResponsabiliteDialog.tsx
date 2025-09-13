@@ -21,7 +21,7 @@ export const ResponsabiliteDialog = ({
   const [formData, setFormData] = useState({
     responsabilite: "",
     joursClient: 0,
-    joursLogistica: 0
+    joursLogistiga: 0
   });
 
   useEffect(() => {
@@ -29,14 +29,14 @@ export const ResponsabiliteDialog = ({
       setFormData({
         responsabilite: selectedContainer.responsabilite || "",
         joursClient: selectedContainer.joursClient || 0,
-        joursLogistica: selectedContainer.joursLogistica || 0
+        joursLogistiga: selectedContainer.joursLogistiga || 0
       });
     }
   }, [selectedContainer]);
 
   const handleSubmit = () => {
     if (formData.responsabilite === "partagee") {
-      const total = formData.joursClient + formData.joursLogistica;
+      const total = formData.joursClient + formData.joursLogistiga;
       if (total !== selectedContainer?.joursDepassement) {
         alert(`Le total des jours (${total}) doit égaler le dépassement (${selectedContainer?.joursDepassement})`);
         return;
@@ -50,9 +50,9 @@ export const ResponsabiliteDialog = ({
       ...prev,
       responsabilite: value,
       joursClient: value === "client" ? selectedContainer?.joursDepassement || 0 : 
-                   value === "logistica" ? 0 : prev.joursClient,
-      joursLogistica: value === "logistica" ? selectedContainer?.joursDepassement || 0 :
-                      value === "client" ? 0 : prev.joursLogistica
+                   value === "logistiga" ? 0 : prev.joursClient,
+      joursLogistiga: value === "logistiga" ? selectedContainer?.joursDepassement || 0 :
+                      value === "client" ? 0 : prev.joursLogistiga
     }));
   };
 

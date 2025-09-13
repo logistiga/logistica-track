@@ -15,9 +15,9 @@ export function ResponsabiliteForm({ selectedContainer, formData, onFormDataChan
       ...formData,
       responsabilite: value,
       joursClient: value === "client" ? selectedContainer?.joursDepassement || 0 : 
-                   value === "logistica" ? 0 : formData.joursClient,
-      joursLogistica: value === "logistica" ? selectedContainer?.joursDepassement || 0 :
-                      value === "client" ? 0 : formData.joursLogistica
+                   value === "logistiga" ? 0 : formData.joursClient,
+      joursLogistiga: value === "logistiga" ? selectedContainer?.joursDepassement || 0 :
+                      value === "client" ? 0 : formData.joursLogistiga
     });
   };
 
@@ -41,21 +41,21 @@ export function ResponsabiliteForm({ selectedContainer, formData, onFormDataChan
               onChange={(e) => onFormDataChange({
                 ...formData,
                 joursClient: parseInt(e.target.value) || 0,
-                joursLogistica: selectedContainer.joursDepassement - (parseInt(e.target.value) || 0)
+                joursLogistiga: selectedContainer.joursDepassement - (parseInt(e.target.value) || 0)
               })}
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="joursLogistica">Jours Logistica</Label>
+            <Label htmlFor="joursLogistiga">Jours Logistiga</Label>
             <Input
-              id="joursLogistica"
+              id="joursLogistiga"
               type="number"
               min="0"
               max={selectedContainer.joursDepassement}
-              value={formData.joursLogistica}
+              value={formData.joursLogistiga}
               onChange={(e) => onFormDataChange({
                 ...formData,
-                joursLogistica: parseInt(e.target.value) || 0,
+                joursLogistiga: parseInt(e.target.value) || 0,
                 joursClient: selectedContainer.joursDepassement - (parseInt(e.target.value) || 0)
               })}
             />

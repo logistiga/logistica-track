@@ -25,14 +25,14 @@ export function ArchiveSortieTable({ archives, onViewInvoice, onViewDetails }: A
 
     const variants = {
       client: "destructive",
-      logistica: "secondary",
+      logistiga: "secondary",
       partagee: "default"
     };
 
     const labels = {
       client: "Client",
-      logistica: "Logistica",
-      partagee: `Partagée (${archive.joursClient}j / ${archive.joursLogistica}j)`
+      logistiga: "Logistiga",
+      partagee: `Partagée (${archive.joursClient}j / ${archive.joursLogistiga}j)`
     };
 
     return (

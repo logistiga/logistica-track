@@ -17,7 +17,7 @@ export default function Emails() {
     },
     {
       id: "2",
-      destinataire: "admin@logistica.com",
+      destinataire: "admin@logistiga.com",
       sujet: "Opération validée - ORD-2024-001",
       dateEnvoi: "2024-01-15T12:20:00",
       statut: "envoye",
@@ -34,7 +34,7 @@ export default function Emails() {
   ]);
 
   const [emailConfig, setEmailConfig] = useState<EmailConfig>({
-    expediteurDefaut: "notifications@logistica.com",
+    expediteurDefaut: "notifications@logistiga.com",
     serveurSMTP: "smtp.gmail.com",
     port: 587,
     ssl: true

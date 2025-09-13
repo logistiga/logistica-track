@@ -69,7 +69,7 @@ export function useDetention(): UseDetentionReturn {
           nomClient: 'CFAO',
           responsabilite: undefined, // Pas encore définie
           joursClient: 0,
-          joursLogistica: 0,
+          joursLogistiga: 0,
           coutParJour: 25000,
           montantTotal: 125000,
           noteDebitGeneree: false,

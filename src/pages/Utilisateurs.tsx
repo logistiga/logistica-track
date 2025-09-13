@@ -268,7 +268,7 @@ export default function Utilisateurs() {
                       type="email"
                       value={newUser.email}
                       onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
-                      placeholder="Ex: jean@logistica.com"
+                      placeholder="Ex: jean@logistiga.com"
                     />
                   </div>
                   <div>

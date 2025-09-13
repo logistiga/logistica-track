@@ -80,7 +80,7 @@ export default function Detention() {
         case 'client':
           backendResponsabilite = 'client';
           break;
-        case 'logistica':
+        case 'logistiga':
           backendResponsabilite = 'transitaire'; // côté backend: non-client
           break;
         case 'partagee':
@@ -89,7 +89,7 @@ export default function Detention() {
       }
 
       const observations = data.responsabilite === 'partagee'
-        ? `Responsabilité partagée: ${data.joursClient}j client / ${data.joursLogistica}j logistica`
+        ? `Responsabilité partagée: ${data.joursClient}j client / ${data.joursLogistiga}j logistiga`
         : undefined;
 
       // Appel API pour enregistrer la responsabilité

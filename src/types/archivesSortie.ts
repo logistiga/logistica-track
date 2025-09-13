@@ -10,9 +10,9 @@ export interface ArchiveSortie {
   joursBAT: number;
   joursRealises: number;
   joursDepassement: number;
-  responsabilite?: "client" | "logistica" | "partagee";
+  responsabilite?: "client" | "logistiga" | "partagee";
   joursClient?: number;
-  joursLogistica?: number;
+  joursLogistiga?: number;
   montantTotalDetention?: number;
   dateFacturationDetention?: string;
   numeroFactureDetention?: string;

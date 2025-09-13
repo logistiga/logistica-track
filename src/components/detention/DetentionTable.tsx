@@ -41,14 +41,14 @@ export function DetentionTable({
 
     const variants = {
       client: "destructive",
-      logistica: "secondary", 
+      logistiga: "secondary", 
       partagee: "default"
     } as const;
 
     const labels = {
       client: "Client",
-      logistica: "Logistica",
-      partagee: `Partagée (${container.joursClient}j / ${container.joursLogistica}j)`
+      logistiga: "Logistiga",
+      partagee: `Partagée (${container.joursClient}j / ${container.joursLogistiga}j)`
     };
 
     // Afficher une étiquette non cliquable une fois définie

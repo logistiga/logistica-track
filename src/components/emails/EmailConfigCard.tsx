@@ -37,7 +37,7 @@ export function EmailConfigCard({ config, onUpdate }: EmailConfigCardProps) {
             type="email"
             value={localConfig.expediteurDefaut}
             onChange={(e) => setLocalConfig(prev => ({ ...prev, expediteurDefaut: e.target.value }))}
-            placeholder="notifications@logistica.com"
+            placeholder="notifications@logistiga.com"
           />
         </div>
 

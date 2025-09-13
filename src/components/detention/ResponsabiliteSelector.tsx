@@ -16,7 +16,7 @@ export function ResponsabiliteSelector({ value, onChange }: ResponsabiliteSelect
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="client">Client</SelectItem>
-          <SelectItem value="logistica">Société Logistica</SelectItem>
+          <SelectItem value="logistiga">Société Logistiga</SelectItem>
           <SelectItem value="partagee">Partagée</SelectItem>
         </SelectContent>
       </Select>

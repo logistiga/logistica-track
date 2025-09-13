@@ -9,9 +9,9 @@ export interface DetentionContainer {
   dateSortie: string;
   dateRetour: string;
   nomClient: string;
-  responsabilite?: "client" | "logistica" | "partagee";
+  responsabilite?: "client" | "logistiga" | "partagee";
   joursClient?: number;
-  joursLogistica?: number;
+  joursLogistiga?: number;
   coutParJour: number;
   montantTotal: number;
   noteDebitGeneree: boolean;
@@ -19,7 +19,7 @@ export interface DetentionContainer {
 }
 
 export interface ResponsabiliteFormData {
-  responsabilite: "client" | "logistica" | "partagee";
+  responsabilite: "client" | "logistiga" | "partagee";
   joursClient: number;
-  joursLogistica: number;
+  joursLogistiga: number;
 }

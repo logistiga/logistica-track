@@ -12,10 +12,10 @@ interface CompanyInfo {
 
 class DetentionPdfService {
   private companyInfo: CompanyInfo = {
-    name: 'LOGISTICA GABON',
+    name: 'LOGISTIGA GABON',
     address: '123 Boulevard de l\'Indépendance, Libreville, Gabon',
     phone: '+241 01 XX XX XX',
-    email: 'contact@logistica-gabon.com'
+    email: 'contact@logistiga-gabon.com'
   };
 
   /**
@@ -458,10 +458,10 @@ class DetentionPdfService {
     switch (container.responsabilite) {
       case 'client':
         return 'La totalité de la détention est imputable au client.';
-      case 'logistica':
-        return 'La totalité de la détention est imputable à Logistica Gabon.';
+      case 'logistiga':
+        return 'La totalité de la détention est imputable à Logistiga Gabon.';
       case 'partagee':
-        return 'La responsabilité de la détention est partagée entre le client et Logistica.';
+        return 'La responsabilité de la détention est partagée entre le client et Logistiga.';
       default:
         return 'Responsabilité à déterminer.';
     }
@@ -471,7 +471,8 @@ class DetentionPdfService {
     const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
     return new Intl.NumberFormat('fr-FR', {
       minimumFractionDigits: 0,
-      maximumFractionDigits: 0
+      maximumFractionDigits: 0,
+      useGrouping: true
     }).format(numAmount);
   }
 }

@@ -63,7 +63,7 @@ export default function ArchivesSortie() {
       joursDepassement: 5,
       responsabilite: "partagee",
       joursClient: 3,
-      joursLogistica: 2,
+      joursLogistiga: 2,
       montantTotalDetention: 600000,
       dateFacturationDetention: "2024-01-21",
       numeroFactureDetention: "DET-2024-002",

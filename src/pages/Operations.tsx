@@ -78,7 +78,7 @@ export default function Operations() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Opérations</h1>
           <p className="text-muted-foreground">
-            Gestion des opérations spot de Logistica
+            Gestion des opérations spot de Logistiga
           </p>
         </div>
         <OperationDialog 
