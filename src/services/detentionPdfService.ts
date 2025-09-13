@@ -41,7 +41,7 @@ class DetentionPdfService {
 
     // === LAYOUT EN DEUX COLONNES AVEC ESPACEMENT OPTIMISÉ ===
     const margin = 20;
-    const columnGap = 15;
+    const columnGap = 18; // Augmenté de 15 à 18 pour plus d'espace
     const leftColWidth = (pageWidth - (2 * margin) - columnGap) * 0.55; // 55% pour la gauche
     const rightColWidth = (pageWidth - (2 * margin) - columnGap) * 0.45; // 45% pour la droite
     const leftX = margin;
@@ -52,11 +52,11 @@ class DetentionPdfService {
     
     // Carte d'informations conteneur - compacte
     leftY = this.addCompactContainerCard(doc, container, leftX, leftY, leftColWidth, lightBg, primaryColor);
-    leftY += 8;
+    leftY += 12; // Augmenté de 8 à 12 pour plus d'espace
 
     // Chronologie visuelle des dates - compacte
     leftY = this.addCompactTimeline(doc, container, leftX, leftY, leftColWidth, successColor, accentColor);
-    leftY += 8;
+    leftY += 12; // Augmenté de 8 à 12 pour plus d'espace
 
     // Analyse détaillée de la détention - compacte
     leftY = this.addCompactDetentionAnalysis(doc, container, leftX, leftY, leftColWidth, primaryColor, warningColor);
@@ -66,7 +66,7 @@ class DetentionPdfService {
     
     // Carte de calcul moderne - compacte
     rightY = this.addCompactCalculationCard(doc, container, rightX, rightY, rightColWidth, accentColor, primaryColor);
-    rightY += 8;
+    rightY += 12; // Augmenté pour plus d'espace
 
     // Tableau récapitulatif des montants par responsabilité - compacte
     rightY = this.addCompactResponsibilityBreakdown(doc, container, rightX, rightY, rightColWidth, primaryColor, accentColor);
@@ -106,29 +106,29 @@ class DetentionPdfService {
     doc.setFont('helvetica', 'normal');
     doc.text('Service Portuaire Premium', 40, 25);
 
-    // NOTE DE DÉBIT stylée
-    doc.setFontSize(18);
+    // NOTE DE DÉBIT stylée - descendue un peu
+    doc.setFontSize(16); // Légèrement réduit
     doc.setFont('helvetica', 'bold');
     const noteText = 'NOTE DE DÉBIT';
     const noteWidth = doc.getTextWidth(noteText);
     
-    // Fond blanc pour le texte
+    // Fond blanc pour le texte - position descendue
     doc.setFillColor(255, 255, 255);
-    doc.roundedRect(pageWidth - noteWidth - 25, 10, noteWidth + 10, 15, 2, 2, 'F');
+    doc.roundedRect(pageWidth - noteWidth - 25, 15, noteWidth + 10, 18, 2, 2, 'F'); // Descendu de 10 à 15
     
     doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-    doc.text(noteText, pageWidth - noteWidth - 20, 20);
+    doc.text(noteText, pageWidth - noteWidth - 20, 25); // Descendu de 20 à 25
 
-    // Informations document dans l'en-tête
+    // Informations document dans l'en-tête - descendues aussi
     doc.setTextColor(255, 255, 255);
-    doc.setFontSize(9);
+    doc.setFontSize(8); // Légèrement réduit
     doc.setFont('helvetica', 'normal');
     const docNumber = `N° ND-${new Date().getFullYear()}`;
     const currentDate = new Date().toLocaleDateString('fr-FR');
-    doc.text(docNumber, pageWidth - 80, 27);
-    doc.text(currentDate, pageWidth - 80, 32);
+    doc.text(docNumber, pageWidth - 80, 30); // Descendu de 27 à 30
+    doc.text(currentDate, pageWidth - 80, 35); // Descendu de 32 à 35
 
-    return yPos + 40;
+    return yPos + 45; // Augmenté pour plus d'espace après l'en-tête
   }
 
   private addCompactContainerCard(doc: jsPDF, container: DetentionContainer, x: number, y: number, width: number, bgColor: [number, number, number], primaryColor: [number, number, number]): number {
@@ -150,54 +150,54 @@ class DetentionPdfService {
     doc.setFont('helvetica', 'bold');
     doc.text('CONTENEUR & CLIENT', x + 5, y + 7);
 
-    // Contenu en deux colonnes - plus compact
+    // Contenu en deux colonnes - plus compact mais avec espacement amélioré
     doc.setTextColor(0, 0, 0);
-    doc.setFontSize(8); // Réduit de 9 à 8
+    doc.setFontSize(8);
     doc.setFont('helvetica', 'normal');
     
     const leftCol = x + 5;
     const rightCol = x + width/2 + 5;
-    let contentY = y + 16; // Ajusté
+    let contentY = y + 18; // Plus d'espace après l'en-tête
 
-    // Colonne gauche - espacement réduit
+    // Colonne gauche - espacement amélioré
     doc.setFont('helvetica', 'bold');
     doc.text('Conteneur:', leftCol, contentY);
     doc.setFont('helvetica', 'normal');
-    doc.text(container.numeroConteneur, leftCol + 25, contentY);
+    doc.text(container.numeroConteneur, leftCol + 28, contentY); // Plus d'espace
     
-    contentY += 5; // Réduit de 6 à 5
+    contentY += 6; // Augmenté de 5 à 6
     doc.setFont('helvetica', 'bold');
     doc.text('Armateur:', leftCol, contentY);
     doc.setFont('helvetica', 'normal');
-    doc.text(container.codeArmateur, leftCol + 25, contentY);
+    doc.text(container.codeArmateur, leftCol + 28, contentY);
 
-    contentY += 5;
+    contentY += 6;
     doc.setFont('helvetica', 'bold');
     doc.text('Type:', leftCol, contentY);
     doc.setFont('helvetica', 'normal');
-    doc.text(container.typeConteneur, leftCol + 25, contentY);
+    doc.text(container.typeConteneur, leftCol + 28, contentY);
 
     // Colonne droite
-    contentY = y + 16;
+    contentY = y + 18; // Même position de départ
     doc.setFont('helvetica', 'bold');
     doc.text('Client:', rightCol, contentY);
     doc.setFont('helvetica', 'normal');
     const clientName = container.nomClient.length > 12 ? container.nomClient.substring(0, 12) + '...' : container.nomClient;
-    doc.text(clientName, rightCol + 15, contentY);
+    doc.text(clientName, rightCol + 18, contentY); // Plus d'espace
 
-    contentY += 5;
+    contentY += 6;
     doc.setFont('helvetica', 'bold');
     doc.text('Sortie:', rightCol, contentY);
     doc.setFont('helvetica', 'normal');
-    doc.text(container.dateSortie, rightCol + 15, contentY);
+    doc.text(container.dateSortie, rightCol + 18, contentY);
 
-    contentY += 5;
+    contentY += 6;
     doc.setFont('helvetica', 'bold');
     doc.text('Retour:', rightCol, contentY);
     doc.setFont('helvetica', 'normal');
-    doc.text(container.dateRetour || 'En cours', rightCol + 15, contentY);
+    doc.text(container.dateRetour || 'En cours', rightCol + 18, contentY);
 
-    return y + cardHeight + 3; // Espacement réduit
+    return y + cardHeight + 5; // Plus d'espace après la carte
   }
 
   private addCompactTimeline(doc: jsPDF, container: DetentionContainer, x: number, y: number, width: number, successColor: [number, number, number], accentColor: [number, number, number]): number {
@@ -211,12 +211,12 @@ class DetentionPdfService {
 
     // Titre
     doc.setTextColor(0, 0, 0);
-    doc.setFontSize(9); // Réduit
+    doc.setFontSize(9);
     doc.setFont('helvetica', 'bold');
-    doc.text('CHRONOLOGIE DES JOURS', x + 5, y + 8);
+    doc.text('CHRONOLOGIE DES JOURS', x + 5, y + 9); // Plus d'espace
 
     // Barre de progression visuelle
-    const barY = y + 12; // Ajusté
+    const barY = y + 14; // Plus d'espace après le titre
     const barHeight = 6; // Réduit de 8 à 6
     const barWidth = width - 20;
     const barX = x + 10;
@@ -240,13 +240,13 @@ class DetentionPdfService {
       doc.roundedRect(barX + authorizedWidth, barY, excessWidth, barHeight, 3, 3, 'F');
     }
 
-    // Labels - plus compacts
-    doc.setFontSize(7); // Réduit
+    // Labels - plus compacts mais mieux espacés
+    doc.setFontSize(7);
     doc.setTextColor(0, 0, 0);
-    doc.text(`${container.joursBAT}j autorisés`, barX, barY + barHeight + 3);
-    doc.text(`${container.joursDepassement}j dépassement`, barX + barWidth - 40, barY + barHeight + 3);
+    doc.text(`${container.joursBAT}j autorisés`, barX, barY + barHeight + 4); // Plus d'espace
+    doc.text(`${container.joursDepassement}j dépassement`, barX + barWidth - 40, barY + barHeight + 4);
 
-    return y + timelineHeight + 3;
+    return y + timelineHeight + 5; // Plus d'espace après
   }
 
   private addCompactDetentionAnalysis(doc: jsPDF, container: DetentionContainer, x: number, y: number, width: number, primaryColor: [number, number, number], warningColor: [number, number, number]): number {
