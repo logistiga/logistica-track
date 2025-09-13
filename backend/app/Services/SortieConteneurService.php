@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\SortieConteneur;
+use Illuminate\Support\Facades\DB;
 
 class SortieConteneurService
 {
