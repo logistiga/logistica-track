@@ -7,21 +7,32 @@ import { validateFormData, getEmptyFormData } from "@/utils/sortieUtils";
 
 // Fonction pour convertir l'API response vers le type local
 const convertApiToLocal = (apiSortie: APISortieConteneur): SortieConteneur => {
-  console.log('🔄 Converting API sortie:', { id: apiSortie.id, statut: apiSortie.statut, date_retour: apiSortie.date_retour });
+  console.log('🔄 Converting API sortie:', { 
+    id: apiSortie.id, 
+    statut: apiSortie.statut, 
+    date_retour: apiSortie.date_retour 
+  });
   
-  // Mapper les statuts de l'API vers les statuts locaux
+  // Déterminer le statut basé sur la date de retour ET le statut explicite
   let mappedStatus: "en_cours" | "a_la_base" | "livre_client" | "retourne_port";
   
-  if (apiSortie.date_retour) {
-    // Si une date de retour existe, le conteneur est retourné au port
+  // Si le statut est explicitement 'retourne_port' OU qu'il y a une date de retour
+  if (apiSortie.statut === 'retourne_port' || apiSortie.date_retour) {
     mappedStatus = "retourne_port";
-    console.log('📅 Date retour exists, mapping to retourne_port');
+    console.log('📅 Setting status to retourne_port due to:', {
+      explicitStatus: apiSortie.statut === 'retourne_port',
+      hasReturnDate: !!apiSortie.date_retour
+    });
   } else {
     // Sinon, mapper directement le statut de l'API
     mappedStatus = apiSortie.statut as "en_cours" | "a_la_base" | "livre_client" | "retourne_port";
   }
   
-  console.log('📈 Status mapping:', { original: apiSortie.statut, mapped: mappedStatus });
+  console.log('📈 Final status mapping:', { 
+    original: apiSortie.statut, 
+    mapped: mappedStatus,
+    hasReturnDate: !!apiSortie.date_retour
+  });
   
   return {
     id: apiSortie.id.toString(),
@@ -236,24 +247,14 @@ export function useSortieConteneur() {
       console.log('📤 Sending return data to service:', retourData);
       const updated = await sortieConteneurService.confirmerRetour(parseInt(selectedSortie.id), retourData);
       console.log('📥 Received updated sortie from service:', updated);
+      console.log('📈 Service returned status:', updated.statut);
       
-      const convertedUpdated = convertApiToLocal(updated);
-      console.log('🔄 Converted sortie to local format:', convertedUpdated);
-      console.log('📈 New status after conversion:', convertedUpdated.statut);
-      
-      // Mettre à jour immédiatement l'état local
-      setSorties(prev => {
-        const updated = prev.map(s => s.id === selectedSortie.id ? convertedUpdated : s);
-        console.log('📊 Updated sorties state:', updated.map(s => ({ id: s.id, statut: s.statut })));
-        return updated;
-      });
-      
-      // Nettoyer le localStorage pour forcer la synchronisation
-      console.log('🧹 Cleaning localStorage...');
+      // Clear localStorage to force fresh data fetch
+      console.log('🧹 Clearing localStorage for fresh sync...');
       localStorage.removeItem('sorties_conteneurs');
       
-      // Recharger toutes les données pour s'assurer qu'elles sont synchronisées
-      console.log('🔄 Reloading all data...');
+      // Reload all data to ensure complete synchronization
+      console.log('🔄 Reloading all data for synchronization...');
       await loadSorties();
       
       toast({
@@ -261,7 +262,7 @@ export function useSortieConteneur() {
         description: "Le retour au port a été enregistré."
       });
 
-      // Reset
+      // Reset form
       setIsReturnDialogOpen(false);
       setSelectedSortie(null);
       setReturnData({ dateRetour: "", camionRetour: "", remorqueRetour: "" });
@@ -285,11 +286,19 @@ export function useSortieConteneur() {
 
   const getSortiesEnCours = useCallback(() => {
     const filtered = sorties.filter(s => {
-      const isNotReturned = s.statut !== "retourne_port";
-      console.log('🔍 Filtering sortie:', { id: s.id, statut: s.statut, isNotReturned, dateRetour: s.dateRetour });
-      return isNotReturned;
+      // Exclude containers that are returned (either by status OR by having a return date)
+      const isReturned = s.statut === "retourne_port" || !!s.dateRetour;
+      console.log('🔍 Filtering sortie:', { 
+        id: s.id, 
+        statut: s.statut, 
+        dateRetour: s.dateRetour,
+        isReturned,
+        includeInEnCours: !isReturned
+      });
+      return !isReturned;
     });
-    console.log('📊 Sorties en cours filtered:', filtered.map(s => ({ id: s.id, statut: s.statut })));
+    console.log('📊 Sorties en cours final result:', filtered.length, 'out of', sorties.length);
+    console.log('📋 En cours IDs:', filtered.map(s => s.id));
     return filtered;
   }, [sorties]);
 

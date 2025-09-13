@@ -125,76 +125,79 @@ class SortieConteneurService {
     
     try {
       // Try API first
-      try {
-        console.log('📡 Service: Attempting API call for return confirmation...');
-        const response = await apiService.post(`/sorties/${id}/return`, retourData);
-        console.log('📥 Service: API response received:', response.data);
-        console.log('📈 Service: API returned status:', response.data.statut);
-        
-        // Verify the API actually updated the status
-        if (response.data.statut !== 'retourne_port') {
-          console.warn('⚠️ Service: API did not set status to retourne_port, status is:', response.data.statut);
+      console.log('📡 Service: Attempting API call for return confirmation...');
+      const response = await apiService.post(`/sorties/${id}/return`, retourData);
+      console.log('📥 Service: API response received:', response.data);
+      console.log('📈 Service: API returned status:', response.data.statut);
+      
+      // Ensure the response has the correct status
+      const updatedSortie = {
+        ...response.data,
+        statut: 'retourne_port' as const,
+        date_retour: retourData.date_retour,
+        heure_retour: retourData.heure_retour || "12:00"
+      };
+      
+      console.log('✅ Service: Return confirmed via API with status:', updatedSortie.statut);
+      
+      // Update localStorage with the corrected data
+      const sorties = this.getStoredSorties();
+      const updatedSorties = sorties.map(s => s.id === id ? updatedSortie : s);
+      this.saveSorties(updatedSorties);
+      
+      return updatedSortie;
+      
+    } catch (apiError: any) {
+      console.error('❌ Service: API call failed, using localStorage fallback:', {
+        message: apiError.message,
+        status: apiError.response?.status,
+        data: apiError.response?.data
+      });
+      
+      // Fallback to localStorage
+      let sorties = this.getStoredSorties();
+      console.log('📊 Service: Current localStorage sorties:', sorties.map(s => ({ id: s.id, statut: s.statut })));
+      
+      // If localStorage is empty, try to get fresh data from API
+      if (sorties.length === 0) {
+        try {
+          const response = await apiService.get('/sorties');
+          sorties = response.data;
+          console.log('📥 Service: Retrieved fresh data from API for localStorage update');
+        } catch (getError) {
+          console.error('❌ Service: Could not retrieve data from API:', getError);
+          throw new Error('Impossible de récupérer les données pour la mise à jour');
         }
-        
-        return response.data;
-      } catch (apiError: any) {
-        console.error('❌ Service: API call failed with detailed error:', {
-          message: apiError.message,
-          status: apiError.response?.status,
-          statusText: apiError.response?.statusText,
-          data: apiError.response?.data,
-          url: apiError.config?.url,
-          method: apiError.config?.method
-        });
-        
-        // Fallback to localStorage
-        let sorties = this.getStoredSorties();
-        console.log('📊 Service: Current localStorage sorties:', sorties.map(s => ({ id: s.id, statut: s.statut })));
-        
-        // If localStorage is empty, try to get fresh data from API
-        if (sorties.length === 0) {
-          try {
-            const response = await apiService.get('/sorties');
-            sorties = response.data;
-            console.log('📥 Service: Retrieved fresh data from API for localStorage update');
-          } catch (getError) {
-            console.error('❌ Service: Could not retrieve data from API:', getError);
-            throw new Error('Impossible de récupérer les données pour la mise à jour');
-          }
-        }
-        
-        // Update the sortie with return data
-        const sortieIndex = sorties.findIndex((s: SortieConteneur) => s.id === id);
-        if (sortieIndex === -1) {
-          console.error('❌ Service: Sortie not found in data:', id);
-          throw new Error('Sortie non trouvée');
-        }
-        
-        console.log('📊 Service: Found sortie at index:', sortieIndex);
-        console.log('📈 Service: Current sortie status:', sorties[sortieIndex].statut);
-        
-        const updatedSortie = {
-          ...sorties[sortieIndex],
-          date_retour: retourData.date_retour,
-          heure_retour: retourData.heure_retour || "12:00",
-          statut: 'retourne_port' as const,
-          updated_at: new Date().toISOString()
-        };
-        
-        console.log('🔄 Service: Updated sortie object:', updatedSortie);
-        console.log('📈 Service: New status:', updatedSortie.statut);
-        
-        sorties[sortieIndex] = updatedSortie;
-        
-        // Save to localStorage
-        this.saveSorties(sorties);
-        console.log('💾 Service: Saved updated data to localStorage');
-        
-        return updatedSortie;
       }
-    } catch (error) {
-      console.error('❌ Service: Critical error in confirmerRetour:', error);
-      throw error;
+      
+      // Update the sortie with return data
+      const sortieIndex = sorties.findIndex((s: SortieConteneur) => s.id === id);
+      if (sortieIndex === -1) {
+        console.error('❌ Service: Sortie not found in data:', id);
+        throw new Error('Sortie non trouvée');
+      }
+      
+      console.log('📊 Service: Found sortie at index:', sortieIndex);
+      console.log('📈 Service: Current sortie status:', sorties[sortieIndex].statut);
+      
+      const updatedSortie = {
+        ...sorties[sortieIndex],
+        date_retour: retourData.date_retour,
+        heure_retour: retourData.heure_retour || "12:00",
+        statut: 'retourne_port' as const,
+        updated_at: new Date().toISOString()
+      };
+      
+      console.log('🔄 Service: Updated sortie object:', updatedSortie);
+      console.log('📈 Service: New status:', updatedSortie.statut);
+      
+      sorties[sortieIndex] = updatedSortie;
+      
+      // Save to localStorage
+      this.saveSorties(sorties);
+      console.log('💾 Service: Saved updated data to localStorage');
+      
+      return updatedSortie;
     }
   }
 
