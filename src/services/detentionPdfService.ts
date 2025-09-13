@@ -150,52 +150,52 @@ class DetentionPdfService {
     doc.setFont('helvetica', 'bold');
     doc.text('CONTENEUR & CLIENT', x + 5, y + 7);
 
-    // Contenu en deux colonnes - plus compact mais avec espacement amélioré
+    // Contenu en deux colonnes - avec alignement corrigé
     doc.setTextColor(0, 0, 0);
     doc.setFontSize(8);
     doc.setFont('helvetica', 'normal');
     
     const leftCol = x + 5;
-    const rightCol = x + width/2 + 5;
-    let contentY = y + 18; // Plus d'espace après l'en-tête
+    const rightCol = x + width * 0.6; // Position fixe à 60% de la largeur
+    let contentY = y + 18;
 
-    // Colonne gauche - espacement amélioré
+    // Colonne gauche - avec espacement fixe
     doc.setFont('helvetica', 'bold');
     doc.text('Conteneur:', leftCol, contentY);
     doc.setFont('helvetica', 'normal');
-    doc.text(container.numeroConteneur, leftCol + 28, contentY); // Plus d'espace
+    doc.text(container.numeroConteneur, leftCol + 30, contentY); // Position fixe
     
-    contentY += 6; // Augmenté de 5 à 6
+    contentY += 6;
     doc.setFont('helvetica', 'bold');
     doc.text('Armateur:', leftCol, contentY);
     doc.setFont('helvetica', 'normal');
-    doc.text(container.codeArmateur, leftCol + 28, contentY);
+    doc.text(container.codeArmateur, leftCol + 30, contentY);
 
     contentY += 6;
     doc.setFont('helvetica', 'bold');
     doc.text('Type:', leftCol, contentY);
     doc.setFont('helvetica', 'normal');
-    doc.text(container.typeConteneur, leftCol + 28, contentY);
+    doc.text(container.typeConteneur, leftCol + 30, contentY);
 
-    // Colonne droite
-    contentY = y + 18; // Même position de départ
+    // Colonne droite - avec positions fixes
+    contentY = y + 18; // Reset position
     doc.setFont('helvetica', 'bold');
     doc.text('Client:', rightCol, contentY);
     doc.setFont('helvetica', 'normal');
-    const clientName = container.nomClient.length > 12 ? container.nomClient.substring(0, 12) + '...' : container.nomClient;
-    doc.text(clientName, rightCol + 18, contentY); // Plus d'espace
+    const clientName = container.nomClient.length > 10 ? container.nomClient.substring(0, 10) + '...' : container.nomClient;
+    doc.text(clientName, rightCol + 20, contentY); // Position fixe
 
     contentY += 6;
     doc.setFont('helvetica', 'bold');
     doc.text('Sortie:', rightCol, contentY);
     doc.setFont('helvetica', 'normal');
-    doc.text(container.dateSortie, rightCol + 18, contentY);
+    doc.text(container.dateSortie, rightCol + 20, contentY);
 
     contentY += 6;
     doc.setFont('helvetica', 'bold');
     doc.text('Retour:', rightCol, contentY);
     doc.setFont('helvetica', 'normal');
-    doc.text(container.dateRetour || 'En cours', rightCol + 18, contentY);
+    doc.text(container.dateRetour || 'En cours', rightCol + 20, contentY);
 
     return y + cardHeight + 5; // Plus d'espace après la carte
   }
