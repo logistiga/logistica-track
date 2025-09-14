@@ -1,0 +1,58 @@
+import { DetentionContainer } from '@/types/detention';
+
+export const MOCK_DETENTION_DATA: DetentionContainer[] = [
+  {
+    id: '1',
+    numeroConteneur: 'CGMU7654321',
+    codeArmateur: 'CMA20',
+    typeConteneur: 'BAT',
+    joursBAT: 7,
+    joursRealises: 12,
+    joursDepassement: 5,
+    dateSortie: '2025-09-01',
+    dateRetour: '2025-09-09',
+    nomClient: 'CFAO',
+    responsabilite: undefined,
+    joursClient: 0,
+    joursLogistiga: 0,
+    coutParJour: 25000,
+    montantTotal: 125000,
+    noteDebitGeneree: false,
+    paiementConfirme: false,
+  },
+  {
+    id: '2',
+    numeroConteneur: 'MSKU8765432',
+    codeArmateur: 'MSK',
+    typeConteneur: 'EXP',
+    joursBAT: 7,
+    joursRealises: 15,
+    joursDepassement: 8,
+    dateSortie: '2025-09-05',
+    dateRetour: '2025-09-13',
+    nomClient: 'BOLLORE',
+    responsabilite: 'client',
+    joursClient: 8,
+    joursLogistiga: 0,
+    coutParJour: 30000,
+    montantTotal: 240000,
+    noteDebitGeneree: true,
+    paiementConfirme: false,
+  },
+];
+
+export const MOCK_DETENTION_STATS = {
+  totalDetentions: 2,
+  detentionsActives: 1,
+  detentionsResolues: 1,
+  detentionsContestees: 0,
+  coutTotalActif: 125000,
+  coutTotalResolu: 240000,
+  dureeMoyenne: 6.5,
+  parResponsabilite: {
+    client: 1,
+    transitaire: 0,
+    transporteur: 0,
+    autre: 0,
+  },
+};

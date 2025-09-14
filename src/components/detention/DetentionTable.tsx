@@ -1,11 +1,11 @@
-import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, FileText, CheckCircle } from "lucide-react";
-import { DetentionContainer } from "@/types/detention";
-import { Skeleton } from "@/components/ui/skeleton";
-import { formatCurrency } from "@/lib/currency";
+import { DetentionContainer } from '@/types/detention';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Card } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Skeleton } from '@/components/ui/skeleton';
+import { TABLE_COLUMNS, formatCurrency, formatDate } from './tableConfig';
+
 interface DetentionTableProps {
   containers: DetentionContainer[];
   loading?: boolean;
@@ -13,122 +13,77 @@ interface DetentionTableProps {
   onGeneratePDF: (container: DetentionContainer) => void;
   onConfirmPayment: (container: DetentionContainer) => void;
 }
-export function DetentionTable({
-  containers,
-  loading,
-  onIdentifyResponsability,
-  onGeneratePDF,
-  onConfirmPayment
-}: DetentionTableProps) {
-  console.log('🔍 DetentionTable rendered with:', { 
-    containerCount: containers.length, 
-    containers: containers,
-    loading 
-  });
-  const getResponsabilityButton = (container: DetentionContainer) => {
-    if (!container.responsabilite) {
-      return (
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={() => onIdentifyResponsability(container)}
-          className="text-orange-600 border-orange-300 hover:bg-orange-50"
-        >
-          À définir
-        </Button>
-      );
-    }
 
-    const variants = {
-      client: "destructive",
-      logistiga: "secondary", 
-      partagee: "default"
-    } as const;
-
-    const labels = {
-      client: "Client",
-      logistiga: "Logistiga",
-      partagee: `Partagée (${container.joursClient}j / ${container.joursLogistiga}j)`
-    };
-
-    // Afficher une étiquette non cliquable une fois définie
+export function DetentionTable({ containers, loading, onIdentifyResponsability, onGeneratePDF, onConfirmPayment }: DetentionTableProps) {
+  if (loading) {
     return (
-      <Badge variant={variants[container.responsabilite] as any}>
-        {labels[container.responsabilite]}
-      </Badge>
+      <Card className="p-6">
+        <div className="space-y-3">
+          {Array(5).fill(0).map((_, i) => (
+            <Skeleton key={i} className="h-12 w-full" />
+          ))}
+        </div>
+      </Card>
     );
+  }
+
+  if (containers.length === 0) {
+    return (
+      <Card className="p-6">
+        <div className="text-center text-muted-foreground">Aucune détention trouvée</div>
+      </Card>
+    );
+  }
+
+  const renderCell = (container: DetentionContainer, column: typeof TABLE_COLUMNS[0]) => {
+    switch (column.key) {
+      case 'montantTotal':
+        return `${formatCurrency(container.montantTotal)} FCFA`;
+      case 'dateSortie':
+      case 'dateRetour':
+        return formatDate(container[column.key]);
+      case 'responsabilite':
+        return container.responsabilite ? (
+          <Badge variant="secondary">{container.responsabilite}</Badge>
+        ) : (
+          <Button variant="outline" size="sm" onClick={() => onIdentifyResponsability(container)}>
+            Définir
+          </Button>
+        );
+      case 'actions':
+        return (
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => onGeneratePDF(container)}>PDF</Button>
+            <Button variant="default" size="sm" onClick={() => onConfirmPayment(container)}>Payer</Button>
+          </div>
+        );
+      default:
+        return container[column.key as keyof DetentionContainer];
+    }
   };
-  return <Card>
-      <CardHeader>
-        <CardTitle>Conteneurs en détention</CardTitle>
-      </CardHeader>
-      <CardContent className="p-0">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Conteneur</TableHead>
-              <TableHead>Armateur</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>BAD autorisés</TableHead>
-              <TableHead>Jours réalisés</TableHead>
-              <TableHead>Dépassement</TableHead>
-              <TableHead>Montant Total</TableHead>
-              <TableHead>Date sortie</TableHead>
-              <TableHead>Date retour</TableHead>
-              <TableHead>Client</TableHead>
-              <TableHead>Responsabilité</TableHead>
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loading ? Array.from({
-            length: 3
-          }).map((_, i) => <TableRow key={i}>
-                  <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                </TableRow>) : containers.length === 0 ? <TableRow>
-                <TableCell colSpan={12} className="text-center py-8 text-muted-foreground">
-                  Aucune détention trouvée
+
+  return (
+    <Card>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            {TABLE_COLUMNS.map((column) => (
+              <TableHead key={column.key} className={column.className}>{column.label}</TableHead>
+            ))}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {containers.map((container) => (
+            <TableRow key={container.id}>
+              {TABLE_COLUMNS.map((column) => (
+                <TableCell key={column.key} className={column.className}>
+                  {renderCell(container, column)}
                 </TableCell>
-              </TableRow> : containers.map(container => <TableRow key={container.id}>
-                  <TableCell className="font-medium">{container.numeroConteneur}</TableCell>
-                  <TableCell>{container.codeArmateur}</TableCell>
-                  <TableCell>{container.typeConteneur.toUpperCase()}</TableCell>
-                  <TableCell>{container.joursBAT} jours</TableCell>
-                  <TableCell>{container.joursRealises} jours</TableCell>
-                  <TableCell>
-                    <Badge variant="destructive">{container.joursDepassement} jours</Badge>
-                  </TableCell>
-                  <TableCell className="font-semibold text-red-600">
-                    {formatCurrency(container.montantTotal)}
-                  </TableCell>
-                  <TableCell>{container.dateSortie}</TableCell>
-                  <TableCell>{container.dateRetour}</TableCell>
-                  <TableCell>{container.nomClient}</TableCell>
-                  <TableCell>{getResponsabilityButton(container)}</TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm" onClick={() => onGeneratePDF(container)}>
-                        <FileText className="w-4 h-4" />
-                      </Button>
-                      <Button variant="outline" size="sm" onClick={() => onConfirmPayment(container)}>
-                        <CheckCircle className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>)}
-          </TableBody>
-        </Table>
-      </CardContent>
-    </Card>;
+              ))}
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </Card>
+  );
 }

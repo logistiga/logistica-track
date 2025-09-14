@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { detentionService, DetentionStats, DetentionFilters } from '@/services/detentionService';
 import { DetentionContainer } from '@/types/detention';
 import { useToast } from '@/hooks/use-toast';
+import { MOCK_DETENTION_DATA, MOCK_DETENTION_STATS } from '@/services/detention/mockData';
 
 export interface UseDetentionReturn {
   detentions: DetentionContainer[];
@@ -53,29 +54,8 @@ export function useDetention(): UseDetentionReturn {
       setError(errorMessage);
       console.error('❌ Erreur chargement détentions:', err);
       
-      // Fallback vers des données mock si l'API échoue
       console.log('⚠️ Fallback to mock data');
-      setDetentions([
-        {
-          id: '1',
-          numeroConteneur: 'CGMU7654321',
-          codeArmateur: 'CMA20',
-          typeConteneur: 'BAT',
-          joursBAT: 7,
-          joursRealises: 12,
-          joursDepassement: 5,
-          dateSortie: '2025-09-01',
-          dateRetour: '2025-09-09',
-          nomClient: 'CFAO',
-          responsabilite: undefined, // Pas encore définie
-          joursClient: 0,
-          joursLogistiga: 0,
-          coutParJour: 25000,
-          montantTotal: 125000,
-          noteDebitGeneree: false,
-          paiementConfirme: false,
-        },
-      ]);
+      setDetentions(MOCK_DETENTION_DATA);
       
       toast({
         title: 'Erreur de chargement',
@@ -93,30 +73,13 @@ export function useDetention(): UseDetentionReturn {
       setStats(statsData);
     } catch (err) {
       console.error('Erreur chargement statistiques:', err);
-      
-      // Fallback vers des stats mock
-      setStats({
-        totalDetentions: 1,
-        detentionsActives: 1,
-        detentionsResolues: 0,
-        detentionsContestees: 0,
-        coutTotalActif: 125000,
-        coutTotalResolu: 0,
-        dureeMoyenne: 5,
-        parResponsabilite: {
-          client: 1,
-          transitaire: 0,
-          transporteur: 0,
-          autre: 0,
-        },
-      });
+      setStats(MOCK_DETENTION_STATS);
     }
   };
 
   const resolveDetention = async (id: string, observations?: string) => {
     try {
       setLoading(true);
-      
       const response = await detentionService.resolveDetention(id, observations);
       
       if (response.success) {
@@ -124,18 +87,14 @@ export function useDetention(): UseDetentionReturn {
           title: 'Détention résolue',
           description: 'La détention a été marquée comme résolue avec succès.',
         });
-        
-        // Recharger les données
-        await fetchDetentions();
-        await fetchStats();
+        await Promise.all([fetchDetentions(), fetchStats()]);
       } else {
         throw new Error(response.message || 'Erreur lors de la résolution');
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erreur inconnue';
       toast({
         title: 'Erreur',
-        description: `Impossible de résoudre la détention: ${errorMessage}`,
+        description: `Impossible de résoudre la détention: ${err instanceof Error ? err.message : 'Erreur inconnue'}`,
         variant: 'destructive',
       });
     } finally {
@@ -146,7 +105,6 @@ export function useDetention(): UseDetentionReturn {
   const contestDetention = async (id: string, motif: string) => {
     try {
       setLoading(true);
-      
       const response = await detentionService.contestDetention(id, motif);
       
       if (response.success) {
@@ -154,18 +112,14 @@ export function useDetention(): UseDetentionReturn {
           title: 'Détention contestée',
           description: 'La détention a été marquée comme contestée.',
         });
-        
-        // Recharger les données
-        await fetchDetentions();
-        await fetchStats();
+        await Promise.all([fetchDetentions(), fetchStats()]);
       } else {
         throw new Error(response.message || 'Erreur lors de la contestation');
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erreur inconnue';
       toast({
         title: 'Erreur',
-        description: `Impossible de contester la détention: ${errorMessage}`,
+        description: `Impossible de contester la détention: ${err instanceof Error ? err.message : 'Erreur inconnue'}`,
         variant: 'destructive',
       });
     } finally {
@@ -176,7 +130,6 @@ export function useDetention(): UseDetentionReturn {
   const exportDetentions = async (filters: DetentionFilters = {}) => {
     try {
       setLoading(true);
-      
       const response = await detentionService.exportDetentions(filters);
       
       if (response.success) {
@@ -184,17 +137,13 @@ export function useDetention(): UseDetentionReturn {
           title: 'Export généré',
           description: `Export de ${response.data.total_records} détentions généré avec succès.`,
         });
-        
-        // Ici on pourrait déclencher le téléchargement du fichier
-        // Pour l'instant, on affiche juste le message de succès
       } else {
         throw new Error(response.message || 'Erreur lors de l\'export');
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erreur inconnue';
       toast({
         title: 'Erreur',
-        description: `Impossible de générer l'export: ${errorMessage}`,
+        description: `Impossible de générer l'export: ${err instanceof Error ? err.message : 'Erreur inconnue'}`,
         variant: 'destructive',
       });
     } finally {
@@ -202,12 +151,8 @@ export function useDetention(): UseDetentionReturn {
     }
   };
 
-  // Charger les données initiales
   useEffect(() => {
-    console.log('🚀 useDetention: Component mounted, starting data fetch...');
-    console.log('🔗 API URL configured as:', 'http://127.0.0.1:8000/api/detentions');
-    fetchDetentions();
-    fetchStats();
+    Promise.all([fetchDetentions(), fetchStats()]);
   }, []);
 
   return {

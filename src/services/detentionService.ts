@@ -1,5 +1,7 @@
-import { apiService } from './apiService';
 import { DetentionContainer } from '@/types/detention';
+import { apiService } from './apiService';
+import { transformDetentionData } from './detention/mappers';
+import { MOCK_DETENTION_STATS } from './detention/mockData';
 
 export interface DetentionStats {
   totalDetentions: number;
@@ -18,153 +20,86 @@ export interface DetentionStats {
 }
 
 export interface DetentionFilters {
-  statut?: string;
-  responsabilite?: string;
+  statut?: 'active' | 'resolue' | 'contestee';
+  responsabilite?: 'client' | 'logistiga' | 'partagee';
   dateDebut?: string;
   dateFin?: string;
   search?: string;
   page?: number;
-  perPage?: number;
+  limit?: number;
 }
 
 export interface CreateDetentionData {
-  sortieConteneurId: string;
-  dateDebutDetention: string;
-  coutParJour: number;
-  responsabilite: 'client' | 'transitaire' | 'transporteur' | 'autre';
-  motifDetention: string;
-  observations?: string;
+  sortie_conteneur_id: string;
+  cout_par_jour: number;
+  responsabilite?: 'client' | 'logistiga' | 'partagee';
+  jours_client?: number;
+  jours_logistiga?: number;
 }
 
 export interface UpdateDetentionData {
-  dateFinDetention?: string;
-  coutParJour?: number;
-  responsabilite?: 'client' | 'transitaire' | 'transporteur' | 'autre';
-  motifDetention?: string;
+  cout_par_jour?: number;
+  responsabilite?: 'client' | 'logistiga' | 'partagee';
+  jours_client?: number;
+  jours_logistiga?: number;
   observations?: string;
 }
 
 class DetentionService {
-  /**
-   * Récupérer toutes les détentions avec filtres et pagination
-   */
   async getDetentions(filters: DetentionFilters = {}) {
-    console.log('🔍 DetentionService.getDetentions called with filters:', filters);
-    const params = new URLSearchParams();
-    
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== '') {
-        params.append(key, value.toString());
-      }
-    });
-
-    const queryString = params.toString();
-    const endpoint = queryString ? `/detentions?${queryString}` : '/detentions';
-    
-    console.log('📡 Making API call to:', endpoint);
-    const response = await apiService.get(endpoint);
-    console.log('📦 Raw API response:', response);
-    
-    // Transformer les données du backend vers le format frontend
-    if (response.success && response.data) {
-      response.data = response.data.map((detention: any) => this.transformDetentionData(detention));
-    }
-    
-    return response;
+    const queryParams = this.buildQueryParams(filters);
+    return await apiService.get(`/detentions?${queryParams}`);
   }
 
-  /**
-   * Récupérer une détention spécifique
-   */
   async getDetention(id: string) {
-    return apiService.get(`/detentions/${id}`);
+    return await apiService.get(`/detentions/${id}`);
   }
 
-  /**
-   * Créer une nouvelle détention
-   */
   async createDetention(data: CreateDetentionData) {
-    return apiService.post('/detentions', {
-      sortie_conteneur_id: data.sortieConteneurId,
-      date_debut_detention: data.dateDebutDetention,
-      cout_par_jour: data.coutParJour,
-      responsabilite: data.responsabilite,
-      motif_detention: data.motifDetention,
-      observations: data.observations,
-    });
+    return await apiService.post('/detentions', data);
   }
 
-  /**
-   * Mettre à jour une détention
-   */
   async updateDetention(id: string, data: UpdateDetentionData) {
-    const payload: any = {};
-    
-    if (data.dateFinDetention) payload.date_fin_detention = data.dateFinDetention;
-    if (data.coutParJour) payload.cout_par_jour = data.coutParJour;
-    if (data.responsabilite) payload.responsabilite = data.responsabilite;
-    if (data.motifDetention) payload.motif_detention = data.motifDetention;
-    if (data.observations) payload.observations = data.observations;
-
-    return apiService.put(`/detentions/${id}`, payload);
+    return await apiService.put(`/detentions/${id}`, data);
   }
 
-  /**
-   * Supprimer une détention
-   */
   async deleteDetention(id: string) {
-    return apiService.delete(`/detentions/${id}`);
+    return await apiService.delete(`/detentions/${id}`);
   }
 
-  /**
-   * Récupérer les détentions actives
-   */
   async getActiveDetentions(filters: Omit<DetentionFilters, 'statut'> = {}) {
-    return this.getDetentions({ ...filters, statut: 'active' });
+    return await this.getDetentions({ ...filters, statut: 'active' });
   }
 
-  /**
-   * Récupérer les détentions résolues
-   */
   async getResolvedDetentions(filters: Omit<DetentionFilters, 'statut'> = {}) {
-    return this.getDetentions({ ...filters, statut: 'resolue' });
+    return await this.getDetentions({ ...filters, statut: 'resolue' });
   }
 
-  /**
-   * Récupérer les statistiques des détentions
-   */
   async getDetentionStats(filters: Pick<DetentionFilters, 'dateDebut' | 'dateFin'> = {}): Promise<DetentionStats> {
-    const params = new URLSearchParams();
-    
-    if (filters.dateDebut) params.append('date_debut', filters.dateDebut);
-    if (filters.dateFin) params.append('date_fin', filters.dateFin);
-
-    const queryString = params.toString();
-    const endpoint = queryString ? `/detentions/stats?${queryString}` : '/detentions/stats';
-    
-    const response = await apiService.get(endpoint);
-    
-    return {
-      totalDetentions: response.data.total_detentions,
-      detentionsActives: response.data.detentions_actives,
-      detentionsResolues: response.data.detentions_resolues,
-      detentionsContestees: response.data.detentions_contestees,
-      coutTotalActif: response.data.cout_total_actif,
-      coutTotalResolu: response.data.cout_total_resolu,
-      dureeMoyenne: response.data.duree_moyenne,
-      parResponsabilite: {
-        client: response.data.par_responsabilite.client,
-        transitaire: response.data.par_responsabilite.transitaire,
-        transporteur: response.data.par_responsabilite.transporteur,
-        autre: response.data.par_responsabilite.autre,
-      },
-    };
+    try {
+      const queryParams = this.buildQueryParams(filters);
+      const response = await apiService.get(`/detentions/stats?${queryParams}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching detention stats:', error);
+      return MOCK_DETENTION_STATS;
+    }
   }
 
-  /**
-   * Exporter les détentions
-   */
   async exportDetentions(filters: DetentionFilters = {}) {
+    const queryParams = this.buildQueryParams(filters);
+    return await apiService.get(`/detentions/export?${queryParams}`);
+  }
+
+  async resolveDetention(id: string, observations?: string) {
+    return await apiService.post(`/detentions/${id}/resolve`, { observations });
+  }
+
+  async contestDetention(id: string, motif: string) {
+    return await apiService.post(`/detentions/${id}/contest`, { motif });
+  }
+
+  private buildQueryParams(filters: DetentionFilters): string {
     const params = new URLSearchParams();
     
     Object.entries(filters).forEach(([key, value]) => {
@@ -172,162 +107,11 @@ class DetentionService {
         params.append(key, value.toString());
       }
     });
-
-    const queryString = params.toString();
-    const endpoint = queryString ? `/detentions/export?${queryString}` : '/detentions/export';
     
-    return apiService.get(endpoint);
+    return params.toString();
   }
 
-  /**
-   * Résoudre une détention
-   */
-  async resolveDetention(id: string, observations?: string) {
-    return apiService.post(`/detentions/${id}/resolve`, {
-      observations,
-    });
-  }
-
-  /**
-   * Contester une détention
-   */
-  async contestDetention(id: string, motif: string) {
-    return apiService.post(`/detentions/${id}/contest`, {
-      motif,
-    });
-  }
-
-  /**
-   * Transformer les données du backend vers le format frontend
-   */
-  private transformDetentionData(backendData: any): DetentionContainer {
-    console.log('🔄 Transforming detention data:', backendData);
-    
-    // Si le backend a déjà calculé toutes les valeurs (DetentionResource), les utiliser directement
-    if (backendData.numero_conteneur && backendData.jours_bat !== undefined) {
-      console.log('✅ Using backend DetentionResource calculated data');
-      return {
-        id: backendData.id.toString(),
-        numeroConteneur: backendData.numero_conteneur,
-        codeArmateur: backendData.code_armateur || 'N/A',
-        typeConteneur: backendData.type_conteneur_label || 'BAD',
-        joursBAT: backendData.jours_bat || 0,
-        joursRealises: backendData.jours_realises || 0,
-        joursDepassement: backendData.jours_depassement || 0,
-        dateSortie: backendData.date_sortie || '',
-        dateRetour: backendData.date_retour || '',
-        nomClient: backendData.nom_client || 'N/A',
-        responsabilite: backendData.responsabilite && backendData.responsabilite !== '' ? this.mapResponsabilite(backendData.responsabilite) : undefined,
-        joursClient: backendData.jours_client || 0,
-        joursLogistiga: backendData.jours_logistica || 0,
-        coutParJour: backendData.cout_par_jour || 0,
-        montantTotal: backendData.cout_total || 0,
-        noteDebitGeneree: backendData.note_debit_generee || false,
-        paiementConfirme: backendData.paiement_confirme || false,
-      };
-    }
-    
-    // Fallback: utiliser les données de sortie_conteneur si nécessaire
-    const sortieConteneur = backendData.sortie_conteneur || {};
-    console.log('⚠️ Fallback - using sortie_conteneur data:', sortieConteneur);
-    
-    const joursBAT = this.calculateJoursBAT(sortieConteneur);
-    const joursRealises = this.calculateJoursRealises(sortieConteneur);
-    const joursDepassement = Math.max(0, joursRealises - joursBAT);
-    
-    console.log('📊 Calculated values:', { joursBAT, joursRealises, joursDepassement });
-    
-    return {
-      id: backendData.id.toString(),
-      numeroConteneur: sortieConteneur.numero_conteneur || 'N/A',
-      codeArmateur: sortieConteneur.code_armateur || 'N/A',
-      typeConteneur: this.mapTypeConteneur(sortieConteneur.type_destination),
-      joursBAT,
-      joursRealises,
-      joursDepassement,
-      dateSortie: sortieConteneur.date_sortie || '',
-      dateRetour: sortieConteneur.date_retour || '',
-      nomClient: sortieConteneur.nom_client || 'Client inconnu',
-      responsabilite: backendData.responsabilite && backendData.responsabilite !== '' ? this.mapResponsabilite(backendData.responsabilite) : undefined,
-      joursClient: backendData.responsabilite === 'client' ? backendData.jours_detention : 0,
-      joursLogistiga: backendData.responsabilite === 'transitaire' ? backendData.jours_detention : 0,
-      coutParJour: backendData.cout_par_jour || 15000,
-      montantTotal: backendData.cout_total || 0,
-      noteDebitGeneree: backendData.statut === 'resolue',
-      paiementConfirme: backendData.statut === 'resolue',
-    };
-  }
-
-  /**
-   * Mapper la responsabilité du backend vers le frontend
-   */
-  private mapResponsabilite(backendResponsabilite: string): 'client' | 'logistiga' | 'partagee' | undefined {
-    switch (backendResponsabilite) {
-      case 'client':
-        return 'client';
-      case 'transitaire':
-      case 'transporteur':
-      case 'autre':
-        return 'logistiga';
-      default:
-        return undefined;
-    }
-  }
-
-  /**
-   * Mapper le type de conteneur
-   */
-  private mapTypeConteneur(typeDestination: string): string {
-    const types = {
-      'bad': 'BAD',
-      'fix': 'FIX', 
-      'detention': 'BAD', // Les détentions sont des BAD qui ont dépassé
-      'stockage': 'STOCKAGE',
-      'base': 'BASE'
-    };
-    
-    return types[typeDestination] || 'BAD';
-  }
-
-  /**
-   * Calculer les jours BAT autorisés (gratuits depuis la création)
-   */
-  private calculateJoursBAT(sortieConteneur: any): number {
-    // Si c'est un conteneur BAD, utiliser les jours gratuits de l'armateur
-    if (sortieConteneur.type_destination === 'bad') {
-      // Utiliser les jours gratuits de l'armateur ou jours_bad du conteneur
-      const joursArmateur = sortieConteneur.armateur?.jours_gratuits;
-      const joursBad = sortieConteneur.jours_bad;
-      
-      if (joursBad && parseInt(joursBad) > 0) {
-        return parseInt(joursBad);
-      }
-      
-      if (joursArmateur && parseInt(joursArmateur) > 0) {
-        return parseInt(joursArmateur);
-      }
-      
-      return 0; // Pas de jours gratuits par défaut
-    }
-    return 0;
-  }
-
-  /**
-   * Calculer les jours réalisés (entre sortie et retour) en nombres entiers
-   */
-  private calculateJoursRealises(sortieConteneur: any): number {
-    if (!sortieConteneur.date_sortie) return 0;
-    
-    const dateSortie = new Date(sortieConteneur.date_sortie);
-    const dateRetour = sortieConteneur.date_retour 
-      ? new Date(sortieConteneur.date_retour) 
-      : new Date(); // Si pas de retour, utiliser la date actuelle
-    
-    const diffTime = Math.abs(dateRetour.getTime() - dateSortie.getTime());
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)); // Utiliser Math.floor pour des jours entiers
-    
-    return diffDays;
-  }
+  private transformDetentionData = transformDetentionData;
 }
 
 export const detentionService = new DetentionService();
