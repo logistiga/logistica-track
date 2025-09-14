@@ -49,7 +49,7 @@ class DetentionController extends Controller
             'sortie_conteneur_id' => 'required|exists:sortie_conteneurs,id',
             'date_debut_detention' => 'required|date',
             'cout_par_jour' => 'required|numeric|min:0',
-            'responsabilite' => ['required', Rule::in(['client', 'transitaire', 'transporteur', 'autre'])],
+            'responsabilite' => ['required', Rule::in(['client', 'logistiga', 'partagee'])],
             'motif_detention' => 'required|string|max:1000',
             'observations' => 'nullable|string|max:1000',
         ]);
@@ -74,7 +74,7 @@ class DetentionController extends Controller
         $validated = $request->validate([
             'date_fin_detention' => 'nullable|date|after:date_debut_detention',
             'cout_par_jour' => 'sometimes|numeric|min:0',
-            'responsabilite' => ['sometimes', Rule::in(['client', 'transitaire', 'transporteur', 'autre'])],
+            'responsabilite' => ['sometimes', Rule::in(['client', 'logistiga', 'partagee'])],
             'motif_detention' => 'sometimes|string|max:1000',
             'observations' => 'nullable|string|max:1000',
             'jours_client' => 'sometimes|numeric|min:0',

@@ -16,7 +16,7 @@ return new class extends Migration
             $table->integer('jours_detention');
             $table->decimal('cout_par_jour', 10, 2);
             $table->decimal('cout_total', 10, 2);
-            $table->enum('responsabilite', ['client', 'transitaire', 'transporteur', 'autre']);
+            $table->enum('responsabilite', ['client', 'logistiga', 'partagee']);
             $table->text('motif_detention');
             $table->enum('statut', ['active', 'resolue', 'contestee'])->default('active');
             $table->text('observations')->nullable();

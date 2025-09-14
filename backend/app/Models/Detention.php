@@ -86,9 +86,8 @@ class Detention extends Model
     {
         $labels = [
             'client' => 'Client',
-            'transitaire' => 'Transitaire',
-            'transporteur' => 'Transporteur',
-            'autre' => 'Autre',
+            'logistiga' => 'Logistiga',
+            'partagee' => 'Partagée',
         ];
 
         return $labels[$this->responsabilite] ?? $this->responsabilite;
