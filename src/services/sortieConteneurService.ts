@@ -40,6 +40,20 @@ export interface SortieConteneur {
     numero_parc: string;
     immatriculation: string;
   };
+  camion?: {
+    id: number;
+    numero_parc: string;
+    immatriculation: string;
+    libelle_complet: string;
+  };
+  remorque?: {
+    id: number;
+    numero_parc: string;
+    immatriculation: string;
+    libelle_complet: string;
+  };
+  camion_id?: number;
+  remorque_id?: number;
 }
 
 export interface CreateSortieConteneurData {
