@@ -179,29 +179,32 @@ class DetentionPdfService {
   private addAmountCalculation(doc: jsPDF, container: DetentionContainer, pageWidth: number, startY: number): number {
     // Titre section
     doc.setFillColor(248, 249, 250);
-    doc.rect(20, startY, pageWidth - 40, 20, 'F');
+    doc.rect(20, startY, pageWidth - 40, 25, 'F');
     doc.setDrawColor(220, 220, 220);
-    doc.rect(20, startY, pageWidth - 40, 20, 'D');
+    doc.rect(20, startY, pageWidth - 40, 25, 'D');
 
     doc.setTextColor(0, 0, 0);
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(10);
     doc.text('CALCUL DU MONTANT', 25, startY + 8);
 
-    // Calcul
+    // Ligne 1: Jours de dépassement et tarif par jour
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(9);
     doc.text(`Jours de dépassement: ${container.joursDepassement}`, 25, startY + 15);
-    doc.text(`Tarif par jour: ${this.formatCurrency(container.coutParJour)} FCFA`, 120, startY + 15);
+    doc.text(`Tarif par jour: ${this.formatCurrency(container.coutParJour)} FCFA`, pageWidth - 120, startY + 15);
 
-    // Section CLIENT PAIE avec fond gris
+    // Section CLIENT PAIE avec calcul complet
     doc.setFillColor(240, 240, 240);
-    doc.rect(25, startY + 20, pageWidth - 90, 8, 'F');
+    doc.rect(25, startY + 18, pageWidth - 90, 6, 'F');
     doc.setFont('helvetica', 'bold');
-    doc.text('CLIENT PAIE:', 30, startY + 25);
-    doc.text(`${container.joursDepassement} jours × ${this.formatCurrency(container.coutParJour)} = ${this.formatCurrency(container.montantTotal)} FCFA`, 90, startY + 25);
+    doc.text('CLIENT PAIE:', 30, startY + 22);
+    
+    // Calcul détaillé aligné à droite
+    const calculText = `${container.joursDepassement} jours × ${this.formatCurrency(container.coutParJour)} = ${this.formatCurrency(container.montantTotal)} FCFA`;
+    doc.text(calculText, pageWidth - 140, startY + 22);
 
-    return startY + 35;
+    return startY + 30;
   }
 
   private addTotalAmount(doc: jsPDF, container: DetentionContainer, pageWidth: number, startY: number): number {
@@ -212,7 +215,11 @@ class DetentionPdfService {
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(12);
     doc.text('MONTANT TOTAL:', 25, startY + 8);
-    doc.text(`${this.formatCurrency(container.montantTotal)} FCFA`, pageWidth - 80, startY + 8);
+    
+    // Montant aligné à droite avec espacement approprié
+    const montantText = `${this.formatCurrency(container.montantTotal)} FCFA`;
+    const textWidth = doc.getTextWidth(montantText);
+    doc.text(montantText, pageWidth - 25 - textWidth, startY + 8);
 
     return startY + 15;
   }
@@ -238,18 +245,26 @@ class DetentionPdfService {
     doc.setDrawColor(200, 200, 200);
     doc.line(20, footerY, pageWidth - 20, footerY);
 
-    // Informations entreprise
+    // Informations entreprise avec un meilleur formatage
     doc.setTextColor(100, 100, 100);
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(8);
     
+    // Ligne 1: Nom et adresse
     doc.text('LOGISTIGA S.A.R.L - Zone Portuaire - Ouattara-SETTRAG', 20, footerY + 8);
+    
+    // Ligne 2: Contact
     doc.text('Tél: (+241) 01 76 42 30/07 10 45 45/02 22 31 71 - logistiga@logistiga.com - www.logistiga.com', 20, footerY + 14);
+    
+    // Ligne 3: Informations bancaires
     doc.text('RIB CCB: 40002 00043 00000000001 84 - IBAN: 40000 00 100 410100600117 06', 20, footerY + 20);
+    
+    // Ligne 4: Capital et autres infos
     doc.text('Capital: 18 000 000 F CFA - NIF: 7431071 - RCCM: 2011 - F - 00001', 20, footerY + 26);
 
-    // Numéro de page
+    // Numéro de page aligné à droite
     doc.setTextColor(0, 0, 0);
+    doc.setFont('helvetica', 'normal');
     doc.text('Page 1', pageWidth - 30, footerY + 20);
   }
 
@@ -259,7 +274,7 @@ class DetentionPdfService {
       style: 'decimal',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
-    }).format(numAmount);
+    }).format(numAmount).replace(/\s/g, ' '); // Assurer des espaces normaux
   }
 }
 
