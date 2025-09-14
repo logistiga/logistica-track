@@ -47,8 +47,24 @@ export interface UpdateDetentionData {
 
 class DetentionService {
   async getDetentions(filters: DetentionFilters = {}) {
-    const queryParams = this.buildQueryParams(filters);
-    return await apiService.get(`/detentions?${queryParams}`);
+    try {
+      const queryParams = this.buildQueryParams(filters);
+      const response = await apiService.get(`/detentions?${queryParams}`);
+      
+      if (response.success && response.data) {
+        // Transformer chaque élément des données
+        const transformedData = response.data.map((item: any) => this.transformDetentionData(item));
+        return {
+          ...response,
+          data: transformedData
+        };
+      }
+      
+      return response;
+    } catch (error) {
+      console.error('Error fetching detentions:', error);
+      throw error;
+    }
   }
 
   async getDetention(id: string) {

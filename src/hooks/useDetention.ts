@@ -41,11 +41,11 @@ export function useDetention(): UseDetentionReturn {
       const response = await detentionService.getDetentions(filters);
       console.log('📦 Detentions response:', response);
       
-      if (response.success) {
-        setDetentions(response.data || []);
+      if (response.success && response.data) {
+        setDetentions(response.data);
         setTotalPages(response.meta?.last_page || 1);
         setCurrentPage(response.meta?.current_page || 1);
-        console.log('✅ Detentions loaded successfully:', response.data?.length || 0, 'items');
+        console.log('✅ Detentions loaded successfully:', response.data.length, 'items');
       } else {
         throw new Error(response.message || 'Erreur lors du chargement des détentions');
       }
