@@ -12,14 +12,14 @@ class SortieConteneurService
     protected SortieCreationService $creationService;
     protected SortieStatisticsService $statisticsService;
     protected VehiculeManagementService $vehiculeService;
-    protected DetentionCalculationService $detentionService;
+    protected DetentionService $detentionService;
 
     public function __construct(
         SortieQueryService $queryService,
         SortieCreationService $creationService,
         SortieStatisticsService $statisticsService,
         VehiculeManagementService $vehiculeService,
-        DetentionCalculationService $detentionService
+        DetentionService $detentionService
     ) {
         $this->queryService = $queryService;
         $this->creationService = $creationService;
