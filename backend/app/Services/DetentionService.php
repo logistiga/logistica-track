@@ -14,107 +14,56 @@ class DetentionService
      */
     public function getAllDetentions(array $filters = [])
     {
-        \Log::info('🔍 DetentionService@getAllDetentions called with filters:', $filters);
-        
         try {
-            $query = Detention::with(['sortieConteneur.armateur', 'sortieConteneur.camion', 'sortieConteneur.remorque']);
-            \Log::info('📊 Built query, checking table exists...');
+            $query = Detention::with(['sortieConteneur.armateur']);
             
-            // Test si la table existe en comptant les enregistrements
-            $count = Detention::count();
-            \Log::info('📈 Found ' . $count . ' detentions in database');
-            
-            // Si pas de détentions, créer quelques données de test automatiquement
-            if ($count === 0) {
-                \Log::info('🆕 No detentions found, creating test data...');
-                $this->createTestDetentions();
-                $count = Detention::count();
-                \Log::info('📈 After creating test data, found ' . $count . ' detentions');
+            // Filtres
+            if (isset($filters['statut']) && $filters['statut'] !== 'tous') {
+                $query->where('statut', $filters['statut']);
             }
+
+            if (isset($filters['responsabilite'])) {
+                $query->where('responsabilite', $filters['responsabilite']);
+            }
+
+            if (isset($filters['date_debut'])) {
+                $query->whereDate('date_debut_detention', '>=', $filters['date_debut']);
+            }
+
+            if (isset($filters['date_fin'])) {
+                $query->whereDate('date_debut_detention', '<=', $filters['date_fin']);
+            }
+
+            if (isset($filters['search'])) {
+                $search = $filters['search'];
+                $query->whereHas('sortieConteneur', function ($q) use ($search) {
+                    $q->where('numero_conteneur', 'like', "%{$search}%")
+                      ->orWhere('nom_client', 'like', "%{$search}%");
+                });
+            }
+
+            // Pagination
+            $perPage = $filters['per_page'] ?? 15;
+            $paginatedResult = $query->orderBy('date_debut_detention', 'desc')->paginate($perPage);
+
+            return [
+                'data' => $paginatedResult->items(),
+                'meta' => [
+                    'current_page' => $paginatedResult->currentPage(),
+                    'per_page' => $paginatedResult->perPage(),
+                    'total' => $paginatedResult->total(),
+                    'last_page' => $paginatedResult->lastPage(),
+                ],
+            ];
         } catch (\Exception $e) {
             \Log::error('❌ Database error in DetentionService:', ['error' => $e->getMessage()]);
             
-            // Retourner des données de test si la table n'existe pas
+            // Retourner des données de test si erreur
             return [
-                'data' => [
-                    (object)[
-                        'id' => 1,
-                        'sortie_conteneur_id' => 1,
-                        'date_debut_detention' => '2024-01-15',
-                        'date_fin_detention' => null,
-                        'jours_detention' => 10,
-                        'cout_par_jour' => 25000.00,
-                        'cout_total' => 250000.00,
-                        'responsabilite' => 'client',
-                        'motif_detention' => 'Test data - table does not exist',
-                        'statut' => 'active',
-                        'observations' => null,
-                        'sortie_conteneur' => (object)[
-                            'numero_conteneur' => 'TEST001',
-                            'code_armateur' => 'TEST',
-                            'nom_client' => 'Client Test',
-                            'date_sortie' => '2024-01-01',
-                            'date_retour' => null,
-                            'jours_bad' => 7,
-                        ]
-                    ]
-                ],
-                'meta' => [
-                    'current_page' => 1,
-                    'per_page' => 15,
-                    'total' => 1,
-                    'last_page' => 1,
-                ],
-                'links' => []
+                'data' => [],
+                'meta' => ['current_page' => 1, 'per_page' => 15, 'total' => 0, 'last_page' => 1],
             ];
         }
-
-        $query = Detention::with(['sortieConteneur.armateur', 'sortieConteneur.camion', 'sortieConteneur.remorque']);
-
-        // Filtres
-        if (isset($filters['statut']) && $filters['statut'] !== 'tous') {
-            $query->where('statut', $filters['statut']);
-        }
-
-        if (isset($filters['responsabilite'])) {
-            $query->where('responsabilite', $filters['responsabilite']);
-        }
-
-        if (isset($filters['date_debut'])) {
-            $query->whereDate('date_debut_detention', '>=', $filters['date_debut']);
-        }
-
-        if (isset($filters['date_fin'])) {
-            $query->whereDate('date_debut_detention', '<=', $filters['date_fin']);
-        }
-
-        if (isset($filters['search'])) {
-            $search = $filters['search'];
-            $query->whereHas('sortieConteneur', function ($q) use ($search) {
-                $q->where('numero_conteneur', 'like', "%{$search}%")
-                  ->orWhere('nom_client', 'like', "%{$search}%");
-            });
-        }
-
-        // Pagination
-        $perPage = $filters['per_page'] ?? 15;
-        $paginatedResult = $query->orderBy('date_debut_detention', 'desc')->paginate($perPage);
-
-        return [
-            'data' => $paginatedResult->items(),
-            'meta' => [
-                'current_page' => $paginatedResult->currentPage(),
-                'per_page' => $paginatedResult->perPage(),
-                'total' => $paginatedResult->total(),
-                'last_page' => $paginatedResult->lastPage(),
-            ],
-            'links' => [
-                'first' => $paginatedResult->url(1),
-                'last' => $paginatedResult->url($paginatedResult->lastPage()),
-                'prev' => $paginatedResult->previousPageUrl(),
-                'next' => $paginatedResult->nextPageUrl(),
-            ],
-        ];
     }
 
     /**
@@ -123,7 +72,6 @@ class DetentionService
     public function createDetention(array $data): Detention
     {
         return DB::transaction(function () use ($data) {
-            // Calculer automatiquement les jours de détention
             $dateDebut = Carbon::parse($data['date_debut_detention']);
             $dateFin = isset($data['date_fin_detention']) 
                 ? Carbon::parse($data['date_fin_detention']) 
@@ -131,7 +79,7 @@ class DetentionService
             
             $joursDetention = $dateDebut->diffInDays($dateFin);
             
-            $detention = Detention::create([
+            return Detention::create([
                 'sortie_conteneur_id' => $data['sortie_conteneur_id'],
                 'date_debut_detention' => $data['date_debut_detention'],
                 'date_fin_detention' => $data['date_fin_detention'] ?? null,
@@ -142,9 +90,7 @@ class DetentionService
                 'motif_detention' => $data['motif_detention'],
                 'statut' => 'active',
                 'observations' => $data['observations'] ?? null,
-            ]);
-
-            return $detention->load('sortieConteneur.armateur');
+            ])->load('sortieConteneur.armateur');
         });
     }
 
@@ -174,39 +120,12 @@ class DetentionService
     }
 
     /**
-     * Supprimer une détention
-     */
-    public function deleteDetention(Detention $detention): bool
-    {
-        return $detention->delete();
-    }
-
-    /**
-     * Récupérer les détentions actives
-     */
-    public function getActivesDetentions(array $filters = [])
-    {
-        $filters['statut'] = 'active';
-        return $this->getAllDetentions($filters);
-    }
-
-    /**
-     * Récupérer les détentions résolues
-     */
-    public function getResoluesDetentions(array $filters = [])
-    {
-        $filters['statut'] = 'resolue';
-        return $this->getAllDetentions($filters);
-    }
-
-    /**
      * Calculer les statistiques des détentions
      */
     public function getDetentionStats(array $filters = []): array
     {
         $baseQuery = Detention::query();
 
-        // Appliquer les filtres de période si fournis
         if (isset($filters['date_debut'])) {
             $baseQuery->whereDate('date_debut_detention', '>=', $filters['date_debut']);
         }
@@ -222,26 +141,6 @@ class DetentionService
             'cout_total_actif' => (clone $baseQuery)->where('statut', 'active')->sum('cout_total'),
             'cout_total_resolu' => (clone $baseQuery)->where('statut', 'resolue')->sum('cout_total'),
             'duree_moyenne' => (clone $baseQuery)->avg('jours_detention'),
-            'par_responsabilite' => [
-                'client' => (clone $baseQuery)->where('responsabilite', 'client')->count(),
-                'transitaire' => (clone $baseQuery)->where('responsabilite', 'transitaire')->count(),
-                'transporteur' => (clone $baseQuery)->where('responsabilite', 'transporteur')->count(),
-                'autre' => (clone $baseQuery)->where('responsabilite', 'autre')->count(),
-            ],
-        ];
-    }
-
-    /**
-     * Exporter les détentions
-     */
-    public function exportDetentions(array $filters = []): array
-    {
-        $detentions = $this->getAllDetentions(array_merge($filters, ['per_page' => 1000]));
-        
-        return [
-            'filename' => 'detentions_' . now()->format('Y_m_d_H_i_s') . '.csv',
-            'data' => $detentions['data'],
-            'total_records' => count($detentions['data']),
         ];
     }
 
@@ -251,84 +150,91 @@ class DetentionService
     public function resolveDetention(Detention $detention, ?string $observations = null): Detention
     {
         return DB::transaction(function () use ($detention, $observations) {
-            $detention->resoudre($observations);
+            $detention->update([
+                'statut' => 'resolue',
+                'date_fin_detention' => now(),
+                'observations' => $observations
+            ]);
             return $detention->load('sortieConteneur.armateur');
         });
     }
 
     /**
-     * Contester une détention
+     * Calculer et créer automatiquement une détention après retour si dépassement
      */
-    public function contestDetention(Detention $detention, string $motif): Detention
+    public function calculerDetentionApresRetour(SortieConteneur $sortie): void
     {
-        return DB::transaction(function () use ($detention, $motif) {
-            $detention->contester($motif);
-            return $detention->load('sortieConteneur.armateur');
-        });
+        if (!$sortie->date_sortie || !$sortie->date_retour) {
+            return;
+        }
+
+        $joursReels = $sortie->date_sortie->diffInDays($sortie->date_retour);
+        $joursAutorises = $this->determinerJoursAutorises($sortie);
+
+        if ($joursReels <= $joursAutorises) {
+            return; // Pas de dépassement
+        }
+
+        // Vérifier qu'une détention n'existe pas déjà
+        if (Detention::where('sortie_conteneur_id', $sortie->id)->exists()) {
+            return;
+        }
+
+        $joursDepassement = $joursReels - $joursAutorises;
+        $coutParJour = $this->getCoutDetentionParJour($sortie);
+
+        try {
+            Detention::create([
+                'sortie_conteneur_id' => $sortie->id,
+                'date_debut_detention' => $sortie->date_sortie->copy()->addDays($joursAutorises),
+                'date_fin_detention' => $sortie->date_retour,
+                'jours_detention' => $joursDepassement,
+                'cout_par_jour' => $coutParJour,
+                'cout_total' => $joursDepassement * $coutParJour,
+                'responsabilite' => 'client',
+                'motif_detention' => "Dépassement de franchise de {$joursDepassement} jour(s)",
+                'statut' => 'active',
+                'observations' => "Détention créée automatiquement lors du retour du conteneur {$sortie->numero_conteneur}",
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('❌ Error creating automatic detention:', [
+                'sortie_id' => $sortie->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     /**
-     * Calculer automatiquement les détentions pour les sorties dépassées
-     * DÉSACTIVÉ : Le calcul se fait maintenant automatiquement après retour
+     * Déterminer les jours autorisés selon le type de destination
      */
-    public function calculateAutomaticDetentions(): array
+    private function determinerJoursAutorises(SortieConteneur $sortie): int
     {
-        // Ancienne logique désactivée - Le calcul se fait maintenant dans confirmerRetour()
-        // Les détentions sont créées automatiquement seulement APRÈS le retour du conteneur
-        // en comparant jours_réels vs jours_bad
-        
-        return []; // Retourner un tableau vide
+        if ($sortie->jours_bad && $sortie->jours_bad > 0) {
+            return $sortie->jours_bad;
+        }
+
+        switch ($sortie->type_destination) {
+            case 'detention':
+                return 0;
+            case 'bad':
+                return 2;
+            case 'depot':
+                return 7;
+            default:
+                return 5;
+        }
     }
 
     /**
-     * Créer des données de test pour les détentions
+     * Obtenir le coût de détention par jour selon l'armateur
      */
-    private function createTestDetentions(): void
+    private function getCoutDetentionParJour(SortieConteneur $sortie): float
     {
-        \Log::info('🔧 Creating test detentions...');
-        
-        // Vérifier s'il y a des sorties conteneurs
-        $sortiesCount = SortieConteneur::count();
-        \Log::info('📦 Found ' . $sortiesCount . ' sortie conteneurs');
-        
-        if ($sortiesCount === 0) {
-            \Log::info('🏭 Creating test sortie conteneurs first...');
-            // Créer quelques sorties de test
-            for ($i = 1; $i <= 3; $i++) {
-                SortieConteneur::create([
-                    'numero_conteneur' => 'TEST' . str_pad($i, 3, '0', STR_PAD_LEFT),
-                    'code_armateur' => 'TST',
-                    'nom_client' => 'Client Test ' . $i,
-                    'date_sortie' => now()->subDays(15 + $i),
-                    'date_retour' => null,
-                    'jours_bat' => 7,
-                    'statut' => 'sorti',
-                ]);
-            }
+        if ($sortie->armateur && $sortie->armateur->prix_par_jour) {
+            return (float) $sortie->armateur->prix_par_jour;
         }
-        
-        // Récupérer les IDs des sorties
-        $sortieIds = SortieConteneur::pluck('id')->take(3);
-        \Log::info('🆔 Using sortie IDs:', $sortieIds->toArray());
-        
-        // Créer les détentions de test
-        foreach ($sortieIds as $index => $sortieId) {
-            try {
-                $detention = Detention::create([
-                    'sortie_conteneur_id' => $sortieId,
-                    'date_debut_detention' => now()->subDays(10 + $index),
-                    'jours_detention' => 5 + $index,
-                    'cout_par_jour' => 25000.00 + ($index * 5000),
-                    'cout_total' => (5 + $index) * (25000.00 + ($index * 5000)),
-                    'responsabilite' => ['client', 'transitaire', 'transporteur'][$index % 3],
-                    'motif_detention' => 'Retard de récupération - Test ' . ($index + 1),
-                    'statut' => $index < 2 ? 'active' : 'resolue',
-                    'observations' => $index >= 2 ? 'Résolu automatiquement' : null,
-                ]);
-                \Log::info('✅ Test detention created:', ['id' => $detention->id]);
-            } catch (\Exception $e) {
-                \Log::error('❌ Failed to create test detention:', ['error' => $e->getMessage()]);
-            }
-        }
+
+        return 15000; // Tarif par défaut
     }
+}
 }
