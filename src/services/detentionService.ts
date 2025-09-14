@@ -1,7 +1,6 @@
 import { DetentionContainer } from '@/types/detention';
 import { apiService } from './apiService';
 import { transformDetentionData } from './detention/mappers';
-import { MOCK_DETENTION_STATS } from './detention/mockData';
 
 export interface DetentionStats {
   totalDetentions: number;
@@ -91,14 +90,14 @@ class DetentionService {
     return await this.getDetentions({ ...filters, statut: 'resolue' });
   }
 
-  async getDetentionStats(filters: Pick<DetentionFilters, 'dateDebut' | 'dateFin'> = {}): Promise<DetentionStats> {
+  async getDetentionStats(filters: Pick<DetentionFilters, 'dateDebut' | 'dateFin'> = {}): Promise<DetentionStats | null> {
     try {
       const queryParams = this.buildQueryParams(filters);
       const response = await apiService.get(`/detentions/stats?${queryParams}`);
       return response.data;
     } catch (error) {
       console.error('Error fetching detention stats:', error);
-      return MOCK_DETENTION_STATS;
+      throw error;
     }
   }
 

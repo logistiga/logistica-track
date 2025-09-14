@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { detentionService, DetentionStats, DetentionFilters } from '@/services/detentionService';
 import { DetentionContainer } from '@/types/detention';
 import { useToast } from '@/hooks/use-toast';
-import { MOCK_DETENTION_DATA, MOCK_DETENTION_STATS } from '@/services/detention/mockData';
 
 export interface UseDetentionReturn {
   detentions: DetentionContainer[];
@@ -54,12 +53,12 @@ export function useDetention(): UseDetentionReturn {
       setError(errorMessage);
       console.error('❌ Erreur chargement détentions:', err);
       
-      console.log('⚠️ Fallback to mock data');
-      setDetentions(MOCK_DETENTION_DATA);
+      // Clear data instead of showing mock data
+      setDetentions([]);
       
       toast({
         title: 'Erreur de chargement',
-        description: 'Impossible de charger les détentions. Données de démonstration affichées.',
+        description: 'Impossible de charger les détentions.',
         variant: 'destructive',
       });
     } finally {
@@ -73,7 +72,12 @@ export function useDetention(): UseDetentionReturn {
       setStats(statsData);
     } catch (err) {
       console.error('Erreur chargement statistiques:', err);
-      setStats(MOCK_DETENTION_STATS);
+      setStats(null);
+      toast({
+        title: 'Erreur de chargement',
+        description: 'Impossible de charger les statistiques.',
+        variant: 'destructive',
+      });
     }
   };
 
