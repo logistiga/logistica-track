@@ -48,7 +48,8 @@ class DetentionService {
   async getDetentions(filters: DetentionFilters = {}) {
     try {
       const queryParams = this.buildQueryParams(filters);
-      const response = await apiService.get(`/detentions?${queryParams}`);
+      const endpoint = queryParams ? `/detentions?${queryParams}` : '/detentions';
+      const response = await apiService.get(endpoint);
       
       if (response.success && response.data) {
         // Transformer chaque élément des données
@@ -93,7 +94,8 @@ class DetentionService {
   async getDetentionStats(filters: Pick<DetentionFilters, 'dateDebut' | 'dateFin'> = {}): Promise<DetentionStats | null> {
     try {
       const queryParams = this.buildQueryParams(filters);
-      const response = await apiService.get(`/detentions/stats?${queryParams}`);
+      const endpoint = queryParams ? `/detentions/stats?${queryParams}` : '/detentions/stats';
+      const response = await apiService.get(endpoint);
       return response.data;
     } catch (error) {
       console.error('Error fetching detention stats:', error);
@@ -103,7 +105,8 @@ class DetentionService {
 
   async exportDetentions(filters: DetentionFilters = {}) {
     const queryParams = this.buildQueryParams(filters);
-    return await apiService.get(`/detentions/export?${queryParams}`);
+    const endpoint = queryParams ? `/detentions/export?${queryParams}` : '/detentions/export';
+    return await apiService.get(endpoint);
   }
 
   async resolveDetention(id: string, observations?: string) {
