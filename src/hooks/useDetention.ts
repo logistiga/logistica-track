@@ -83,11 +83,16 @@ export function useDetention(): UseDetentionReturn {
       const response = await detentionService.resolveDetention(id, observations);
       
       if (response.success) {
+        // Supprimer immédiatement la détention de la liste locale
+        setDetentions(prev => prev.filter(detention => detention.id !== id));
+        
         toast({
-          title: 'Détention résolue',
-          description: 'La détention a été marquée comme résolue avec succès.',
+          title: 'Paiement confirmé',
+          description: 'La détention a été résolue et supprimée de la liste.',
         });
-        await Promise.all([fetchDetentions(), fetchStats()]);
+        
+        // Recharger les stats pour mettre à jour les totaux
+        await fetchStats();
       } else {
         throw new Error(response.message || 'Erreur lors de la résolution');
       }
