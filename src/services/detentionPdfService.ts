@@ -34,9 +34,6 @@ class DetentionPdfService {
     currentY = this.addTotalAmount(doc, container, pageWidth, currentY);
     currentY += 15;
 
-    // Note importante
-    currentY = this.addImportantNote(doc, pageWidth, currentY);
-
     // Footer
     this.addFooter(doc, pageWidth, pageHeight);
 
