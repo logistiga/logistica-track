@@ -225,47 +225,53 @@ class DetentionPdfService {
   }
 
   private addImportantNote(doc: jsPDF, pageWidth: number, startY: number): number {
+    // Section NOTE IMPORTANTE
     doc.setTextColor(0, 0, 0);
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(10);
     doc.text('NOTE IMPORTANTE:', 20, startY);
 
+    // Contenu de la note avec bon espacement
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(9);
-    doc.text("Cette note de débit est établie à l'identique selon les tarifs de l'armateur en vigueur.", 25, startY + 8);
-    doc.text('Les montants et calculs respectent strictement les accords tarifaires convenus.', 25, startY + 14);
+    doc.text("Cette note de débit est établie à l'identique selon les tarifs de l'armateur en vigueur.", 20, startY + 8);
+    doc.text('Les montants et calculs respectent strictement les accords tarifaires convenus.', 20, startY + 16);
 
-    return startY + 20;
+    return startY + 30; // Plus d'espace avant le footer
   }
 
   private addFooter(doc: jsPDF, pageWidth: number, pageHeight: number): void {
-    const footerY = pageHeight - 40;
+    const footerY = pageHeight - 35; // Position plus haute pour éviter le chevauchement
     
-    // Ligne de séparation
+    // Ligne de séparation subtile
     doc.setDrawColor(200, 200, 200);
-    doc.line(20, footerY, pageWidth - 20, footerY);
+    doc.setLineWidth(0.5);
+    doc.line(20, footerY - 5, pageWidth - 20, footerY - 5);
 
-    // Informations entreprise avec un meilleur formatage
-    doc.setTextColor(100, 100, 100);
+    // Informations entreprise avec espacement correct
+    doc.setTextColor(80, 80, 80); // Gris plus foncé pour meilleure lisibilité
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8);
+    doc.setFontSize(7); // Police légèrement plus petite
     
-    // Ligne 1: Nom et adresse
-    doc.text('LOGISTIGA S.A.R.L - Zone Portuaire - Ouattara-SETTRAG', 20, footerY + 8);
+    // Ligne 1: Nom et adresse (bien espacée)
+    doc.text('LOGISTIGA S.A.R.L - Zone Portuaire - Ouattara-SETTRAG', 20, footerY + 3);
     
-    // Ligne 2: Contact
-    doc.text('Tél: (+241) 01 76 42 30/07 10 45 45/02 22 31 71 - logistiga@logistiga.com - www.logistiga.com', 20, footerY + 14);
+    // Ligne 2: Contact (avec espacement vertical de 4mm)
+    doc.text('Tél: (+241) 01 76 42 30/07 10 45 45/02 22 31 71 - logistiga@logistiga.com - www.logistiga.com', 20, footerY + 8);
     
-    // Ligne 3: Informations bancaires
-    doc.text('RIB CCB: 40002 00043 00000000001 84 - IBAN: 40000 00 100 410100600117 06', 20, footerY + 20);
+    // Ligne 3: Informations bancaires (avec espacement vertical de 4mm)
+    doc.text('RIB CCB: 40002 00043 00000000001 84 - IBAN: 40000 00 100 410100600117 06', 20, footerY + 13);
     
-    // Ligne 4: Capital et autres infos
-    doc.text('Capital: 18 000 000 F CFA - NIF: 7431071 - RCCM: 2011 - F - 00001', 20, footerY + 26);
+    // Ligne 4: Capital et autres infos (avec espacement vertical de 4mm)
+    doc.text('Capital: 18 000 000 F CFA - NIF: 7431071 - RCCM: 2011 - F - 00001', 20, footerY + 18);
 
-    // Numéro de page aligné à droite
+    // Numéro de page dans le coin droit avec un fond léger
+    doc.setFillColor(248, 249, 250);
+    doc.rect(pageWidth - 35, footerY + 10, 25, 8, 'F');
     doc.setTextColor(0, 0, 0);
-    doc.setFont('helvetica', 'normal');
-    doc.text('Page 1', pageWidth - 30, footerY + 20);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8);
+    doc.text('Page 1', pageWidth - 30, footerY + 15);
   }
 
   private formatCurrency(amount: number | string): string {
