@@ -36,7 +36,7 @@ export default function Detention() {
         toast({ title: 'Responsabilité définie', description: 'La responsabilité a été mise à jour avec succès.' });
         setIsResponsabiliteDialogOpen(false);
         setSelectedContainer(null);
-        await Promise.all([fetchDetentions({}), fetchStats()]);
+        await Promise.all([fetchDetentions(), fetchStats()]);
       }
     } catch (error) {
       toast({ title: 'Erreur', description: 'Impossible de mettre à jour la responsabilité.', variant: 'destructive' });
@@ -59,11 +59,11 @@ export default function Detention() {
   const handleFixMissingDetentions = async () => {
     try {
       setIsFixingMissing(true);
-      const response = await apiService.post('/detentions/fix-missing');
+      const response = await apiService.post('/detentions/fix-missing', {});
       
       if (response.success) {
         toast({ title: 'Détentions créées', description: `${response.data.created_count} nouvelles détentions ont été créées.` });
-        await Promise.all([fetchDetentions({}), fetchStats()]);
+        await Promise.all([fetchDetentions(), fetchStats()]);
       }
     } catch (error) {
       toast({ title: 'Erreur', description: 'Impossible de créer les détentions manquantes.', variant: 'destructive' });
@@ -100,7 +100,7 @@ export default function Detention() {
             setIsResponsabiliteDialogOpen(open); 
             if (!open) setSelectedContainer(null); 
           }}
-          container={selectedContainer}
+          selectedContainer={selectedContainer}
           onConfirm={handleConfirmResponsability}
         />
       )}
