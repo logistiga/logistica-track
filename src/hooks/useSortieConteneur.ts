@@ -208,6 +208,16 @@ export function useSortieConteneur() {
   }, []);
 
   const handleDelete = useCallback(async (sortie: SortieConteneur) => {
+    // Vérifier si la sortie est en cours
+    if (sortie.statut === 'en_cours') {
+      toast({
+        title: "Suppression impossible",
+        description: "Impossible de supprimer une sortie en cours. Veuillez d'abord confirmer le retour au port.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     try {
       await sortieConteneurService.deleteSortie(parseInt(sortie.id));
       setSorties(prev => prev.filter(s => s.id !== sortie.id));
@@ -215,10 +225,25 @@ export function useSortieConteneur() {
         title: "Sortie supprimée",
         description: "La sortie de conteneur a été supprimée."
       });
-    } catch (error) {
+    } catch (error: any) {
+      // Analyser l'erreur pour afficher un message approprié
+      let errorMessage = "Erreur lors de la suppression";
+      
+      if (error?.message) {
+        try {
+          const errorData = JSON.parse(error.message);
+          if (errorData.message) {
+            errorMessage = errorData.message;
+          }
+        } catch {
+          // Si ce n'est pas du JSON, utiliser le message d'erreur tel quel
+          errorMessage = error.message;
+        }
+      }
+      
       toast({
         title: "Erreur",
-        description: "Erreur lors de la suppression",
+        description: errorMessage,
         variant: "destructive"
       });
     }
