@@ -237,4 +237,3 @@ class DetentionService
         return 15000; // Tarif par défaut
     }
 }
-}

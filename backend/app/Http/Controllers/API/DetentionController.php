@@ -180,4 +180,3 @@ class DetentionController extends Controller
         }
     }
 }
-}
