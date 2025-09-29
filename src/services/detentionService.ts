@@ -48,7 +48,7 @@ class DetentionService {
   async getDetentions(filters: DetentionFilters = {}) {
     try {
       const queryParams = this.buildQueryParams(filters);
-      const endpoint = queryParams ? `/detentions?${queryParams}` : '/detentions/';
+      const endpoint = queryParams ? `/detentions?${queryParams}` : '/detentions';
       const response = await apiService.get(endpoint);
       
       if (response.success && response.data) {
