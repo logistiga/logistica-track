@@ -7,6 +7,7 @@ use App\Http\Resources\DetentionResource;
 use App\Models\Detention;
 use App\Models\SortieConteneur;
 use App\Services\DetentionService;
+use App\Traits\ApiResponseTrait;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -15,6 +16,7 @@ use Illuminate\Support\Facades\Log;
 
 class DetentionController extends Controller
 {
+    use ApiResponseTrait;
     protected DetentionService $detentionService;
 
     public function __construct(DetentionService $detentionService)
