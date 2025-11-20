@@ -1,8 +1,16 @@
-// Configuration simplifiée de l'URL de l'API
+// Configuration de l'URL de l'API avec détection d'environnement
 export const getApiBaseUrl = () => {
-  // En développement, utiliser l'URL locale avec 127.0.0.1
-  const url = 'http://127.0.0.1:8000/api';
+  // Si vous développez localement, utiliser l'URL locale
+  // Si vous déployez, utiliser l'URL publique du backend (ngrok ou serveur déployé)
+  const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  
+  // ⚠️ IMPORTANT: Remplacez cette URL par votre URL ngrok ou serveur déployé
+  // Exemple: 'https://your-backend.ngrok.io/api' ou 'https://api.votredomaine.com/api'
+  const deployedBackendUrl = 'http://127.0.0.1:8000/api'; // ← Changez cette URL !
+  
+  const url = isLocal ? 'http://127.0.0.1:8000/api' : deployedBackendUrl;
   console.log('🔗 API Base URL configured as:', url);
+  console.log('🌍 Environment:', isLocal ? 'local' : 'deployed');
   return url;
 };
 
