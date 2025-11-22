@@ -12,9 +12,9 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             ArmateurSeeder::class,
             VehiculeSeeder::class,
-            // SortieConteneurSeeder::class, // Temporarily disabled
-            DetentionSeeder::class,
             NotificationSeeder::class,
+            // SortieConteneurSeeder::class, // Temporarily disabled - autoloader issue
+            // DetentionSeeder::class, // Disabled - requires SortieConteneur data
         ]);
     }
 }
