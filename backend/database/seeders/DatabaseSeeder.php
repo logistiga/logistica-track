@@ -12,7 +12,7 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             ArmateurSeeder::class,
             VehiculeSeeder::class,
-            SortieConteneurSeeder::class,
+            // SortieConteneurSeeder::class, // Temporarily disabled
             DetentionSeeder::class,
             NotificationSeeder::class,
         ]);
