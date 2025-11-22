@@ -6,10 +6,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable, HasApiTokens;
+    use HasFactory, Notifiable, HasApiTokens, HasRoles;
 
     /**
      * The attributes that are mass assignable.
@@ -52,7 +53,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Get role label for display
+     * Get role label for display (based on simple 'role' column)
      */
     public function getRoleLabel(): string
     {
@@ -66,9 +67,10 @@ class User extends Authenticatable
     }
 
     /**
-     * Check if user has specific role
+     * Check if user has specific simple role (column 'role')
+     * ⚠️ Ne pas confondre avec HasRoles::hasRole() (Spatie)
      */
-    public function hasRole(string $role): bool
+    public function hasSimpleRole(string $role): bool
     {
         return $this->role === $role;
     }
