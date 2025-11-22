@@ -12,8 +12,8 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             ArmateurSeeder::class,
             VehiculeSeeder::class,
-            NotificationSeeder::class,
-            // SortieConteneurSeeder::class, // Temporarily disabled - autoloader issue
+            // NotificationSeeder::class, // Disabled temporarily - column issue
+            // SortieConteneurSeeder::class, // Disabled - autoloader issue
             // DetentionSeeder::class, // Disabled - requires SortieConteneur data
         ]);
     }
