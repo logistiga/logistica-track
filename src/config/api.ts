@@ -4,9 +4,8 @@ export const getApiBaseUrl = () => {
   // Si vous déployez, utiliser l'URL publique du backend (ngrok ou serveur déployé)
   const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
   
-  // ⚠️ IMPORTANT: Remplacez cette URL par votre URL ngrok ou serveur déployé
-  // Exemple: 'https://your-backend.ngrok.io/api' ou 'https://api.votredomaine.com/api'
-  const deployedBackendUrl = 'http://127.0.0.1:8000/api'; // ← Changez cette URL !
+  // Backend déployé sur suivitc.logistiga.com
+  const deployedBackendUrl = 'https://suivitc.logistiga.com/backend/public/api';
   
   const url = isLocal ? 'http://127.0.0.1:8000/api' : deployedBackendUrl;
   console.log('🔗 API Base URL configured as:', url);
