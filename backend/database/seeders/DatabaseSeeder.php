@@ -14,6 +14,7 @@ class DatabaseSeeder extends Seeder
             VehiculeSeeder::class,
             SortieConteneurSeeder::class,
             DetentionSeeder::class,
+            NotificationSeeder::class,
         ]);
     }
 }
