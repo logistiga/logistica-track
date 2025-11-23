@@ -1,0 +1,51 @@
+<IfModule mod_rewrite.c>
+    <IfModule mod_negotiation.c>
+        Options -MultiViews -Indexes
+    </IfModule>
+
+    # =========================================
+    # CORS Configuration - MUST BE FIRST
+    # =========================================
+    <IfModule mod_headers.c>
+        # Allow requests from Lovable domain
+        Header always set Access-Control-Allow-Origin "https://b3b36859-40bc-4d2e-9dda-fa8b3af543d8.lovableproject.com"
+        
+        # Allow HTTP methods
+        Header always set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS, PATCH"
+        
+        # Allow headers
+        Header always set Access-Control-Allow-Headers "Content-Type, Authorization, Accept, X-Requested-With, Origin, X-CSRF-TOKEN, Cache-Control, Pragma"
+        
+        # Allow credentials (cookies, authorization headers)
+        Header always set Access-Control-Allow-Credentials "true"
+        
+        # Preflight cache duration (24 hours)
+        Header always set Access-Control-Max-Age "86400"
+    </IfModule>
+
+    RewriteEngine On
+
+    # =========================================
+    # Handle Preflight OPTIONS Requests
+    # =========================================
+    RewriteCond %{REQUEST_METHOD} OPTIONS
+    RewriteRule ^(.*)$ $1 [R=204,L]
+
+    # =========================================
+    # Laravel Standard Rewrite Rules
+    # =========================================
+    
+    # Handle Authorization Header
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+    # Redirect Trailing Slashes If Not A Folder
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_URI} (.+)/$
+    RewriteRule ^ %1 [L,R=301]
+
+    # Send Requests To Front Controller
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^ index.php [L]
+</IfModule>
