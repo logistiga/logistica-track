@@ -9,12 +9,11 @@ class CorsMiddleware
 {
     public function handle(Request $request, Closure $next)
     {
-        $origin = $request->headers->get('origin');
         $allowedOrigin = $this->getAllowedOrigin($request);
 
-        // Handle preflight OPTIONS requests
+        // Handle preflight OPTIONS requests FIRST
         if ($request->getMethod() === 'OPTIONS') {
-            return response('', 204)
+            return response('', 200)
                 ->header('Access-Control-Allow-Origin', $allowedOrigin)
                 ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH')
                 ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, X-Requested-With, Origin, Cache-Control, Pragma, X-CSRF-TOKEN')
@@ -24,13 +23,12 @@ class CorsMiddleware
 
         $response = $next($request);
 
-        // Add CORS headers to actual requests
-        if (method_exists($response, 'headers')) {
-            $response->headers->set('Access-Control-Allow-Origin', $allowedOrigin);
-            $response->headers->set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
-            $response->headers->set('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, X-Requested-With, Origin, Cache-Control, Pragma, X-CSRF-TOKEN');
-            $response->headers->set('Access-Control-Allow-Credentials', 'true');
-        }
+        // Add CORS headers to ALL responses
+        $response->headers->set('Access-Control-Allow-Origin', $allowedOrigin);
+        $response->headers->set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+        $response->headers->set('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, X-Requested-With, Origin, Cache-Control, Pragma, X-CSRF-TOKEN');
+        $response->headers->set('Access-Control-Allow-Credentials', 'true');
+        $response->headers->set('Access-Control-Max-Age', '86400');
 
         return $response;
     }
