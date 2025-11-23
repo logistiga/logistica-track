@@ -5,7 +5,8 @@ export const getApiBaseUrl = () => {
   const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
   
   // Backend déployé sur suivitc.logistiga.com
-  const deployedBackendUrl = 'https://suivitc.logistiga.com/backend/public/api';
+  // Essayer d'abord l'URL sans /backend/public (si document root = public)
+  const deployedBackendUrl = 'https://suivitc.logistiga.com/api';
   
   const url = isLocal ? 'http://127.0.0.1:8000/api' : deployedBackendUrl;
   console.log('🔗 API Base URL configured as:', url);
