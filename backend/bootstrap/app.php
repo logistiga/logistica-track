@@ -2,15 +2,16 @@
 
 /*
 |--------------------------------------------------------------------------
-| Load Application Constants
+| Load Application Constants and Helpers
 |--------------------------------------------------------------------------
 |
-| Load application constants before creating the application instance.
-| These constants will be available throughout the application.
+| Load application constants and helper functions before creating the 
+| application instance. These will be available throughout the application.
 |
 */
 
 require_once __DIR__ . '/constants.php';
+require_once __DIR__ . '/helpers.php';
 
 /*
 |--------------------------------------------------------------------------
