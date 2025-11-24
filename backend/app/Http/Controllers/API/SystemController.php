@@ -33,6 +33,21 @@ class SystemController extends Controller
     }
 
     /**
+     * Test CORS configuration
+     */
+    public function corsTest(\Illuminate\Http\Request $request): JsonResponse
+    {
+        return response()->json([
+            'status' => 'success',
+            'message' => 'CORS is working correctly',
+            'origin' => $request->headers->get('origin'),
+            'method' => $request->method(),
+            'timestamp' => now()->toISOString(),
+            'cors_headers_will_be_added_by_middleware' => true,
+        ], 200);
+    }
+
+    /**
      * Get system health status
      */
     public function health(): JsonResponse
