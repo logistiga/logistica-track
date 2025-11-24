@@ -26,6 +26,10 @@ Route::prefix('public')->group(function () {
     Route::get('/vehicules/disponibles', [VehiculeStatusController::class, 'disponiblesPublic'])->name('public.vehicules.disponibles');
 });
 
+// System routes (health check & CORS test)
+Route::get('/health', [\App\Http\Controllers\API\SystemController::class, 'health'])->name('system.health');
+Route::get('/cors-test', [\App\Http\Controllers\API\SystemController::class, 'corsTest'])->name('system.cors-test');
+
 // Routes protégées par authentification
 Route::middleware('auth:sanctum')->group(function () {
     
