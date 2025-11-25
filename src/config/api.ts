@@ -1,10 +1,10 @@
-// Configuration de l'URL de l'API - TEMPORAIREMENT EN LOCAL
+// Configuration de l'URL de l'API - Backend exposé via ngrok
 export const getApiBaseUrl = () => {
-  // TEMPORAIRE: Force l'utilisation du backend local (php artisan serve)
-  const url = 'http://127.0.0.1:8000/api';
+  // URL ngrok pour accéder au backend local depuis lovableproject.com
+  const url = 'https://unextradited-monocotyledonous-sena.ngrok-free.dev/api';
   
   console.log('🔗 API Base URL configured as:', url);
-  console.log('🌍 Environment: local development (forced)');
+  console.log('🌍 Environment: ngrok tunnel');
   return url;
 };
 
