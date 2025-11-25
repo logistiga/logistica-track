@@ -14,7 +14,7 @@
         Header always set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS, PATCH"
         
         # Allow headers
-        Header always set Access-Control-Allow-Headers "Content-Type, Authorization, Accept, X-Requested-With, Origin, X-CSRF-TOKEN, Cache-Control, Pragma"
+        Header always set Access-Control-Allow-Headers "Content-Type, Authorization, Accept, X-Requested-With, Origin, X-CSRF-TOKEN, Cache-Control, Pragma, ngrok-skip-browser-warning"
         
         # Allow credentials (cookies, authorization headers)
         Header always set Access-Control-Allow-Credentials "true"
