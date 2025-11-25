@@ -43,6 +43,7 @@ class CorsMiddleware
             'https://b3b36859-40bc-4d2e-9dda-fa8b3af543d8.sandbox.lovable.dev',
             'https://b3b36859-40bc-4d2e-9dda-fa8b3af543d8.lovableproject.com',
             'https://id-preview--b3b36859-40bc-4d2e-9dda-fa8b3af543d8.lovable.app',
+            'https://unextradited-monocotyledonous-sena.ngrok-free.dev',
         ];
 
         $origin = $request->headers->get('origin');
@@ -56,11 +57,12 @@ class CorsMiddleware
             return $origin;
         }
 
-        // Check patterns for Lovable domains
+        // Check patterns for Lovable and ngrok domains
         if (preg_match('/^https:\/\/.*\.lovableproject\.com$/', $origin) ||
             preg_match('/^https:\/\/.*\.lovable\.app$/', $origin) ||
             preg_match('/^https:\/\/.*--.*\.lovable\.app$/', $origin) ||
-            preg_match('/^https:\/\/.*\.sandbox\.lovable\.dev$/', $origin)) {
+            preg_match('/^https:\/\/.*\.sandbox\.lovable\.dev$/', $origin) ||
+            preg_match('/^https:\/\/.*\.ngrok-free\.dev$/', $origin)) {
             return $origin;
         }
 
