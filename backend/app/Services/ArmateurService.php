@@ -95,15 +95,17 @@ class ArmateurService
      */
     public function getDetentionStats(Armateur $armateur)
     {
-        $detentions = Detention::whereHas('sortieConteneur', function ($query) use ($armateur) {
-            $query->where('armateur_code', $armateur->code);
-        });
+        $baseQuery = function () use ($armateur) {
+            return Detention::whereHas('sortieConteneur', function ($query) use ($armateur) {
+                $query->where('armateur_code', $armateur->code);
+            });
+        };
 
-        $totalDetentions = $detentions->count();
-        $detentionActive = $detentions->where('statut', 'active')->count();
-        $totalMontant = $detentions->sum('montant');
-        $moyenneJours = $detentions->avg('jours_realises') ?? 0;
-        $derniereDetention = $detentions->latest('created_at')->first()?->created_at;
+        $totalDetentions = $baseQuery()->count();
+        $detentionActive = $baseQuery()->where('statut', 'active')->count();
+        $totalMontant = $baseQuery()->sum('montant') ?? 0;
+        $moyenneJours = $baseQuery()->avg('jours_realises') ?? 0;
+        $derniereDetention = $baseQuery()->latest('created_at')->first()?->created_at;
 
         return [
             'total_detentions' => $totalDetentions,
