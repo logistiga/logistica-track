@@ -11,6 +11,7 @@ class ApiService {
     const token = localStorage.getItem('auth_token');
     const headers = {
       ...apiConfig.defaultHeaders,
+      'ngrok-skip-browser-warning': 'true',
       ...(token && { 'Authorization': `Bearer ${token}` })
     };
     
