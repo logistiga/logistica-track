@@ -1,12 +1,14 @@
 import { useState } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PrimeStats } from "@/components/primes/PrimeStats";
 import { PrimeTable } from "@/components/primes/PrimeTable";
+import { PrimeArchiveTable } from "@/components/primes/PrimeArchiveTable";
 import { PrimeDialog } from "@/components/primes/PrimeDialog";
 import { usePrimes } from "@/hooks/usePrimes";
 import type { PrimeChauffeur } from "@/types/prime";
 
 export default function PrimesChauffeur() {
-  const { primes, stats, loading, updatePrime, marquerCommePaye } = usePrimes();
+  const { primes, archives, stats, archiveStats, updatePrime, payerEnLot } = usePrimes();
   const [selectedPrime, setSelectedPrime] = useState<PrimeChauffeur | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
@@ -15,9 +17,13 @@ export default function PrimesChauffeur() {
     setDialogOpen(true);
   };
 
-  const handleMarkAsPaid = async (prime: PrimeChauffeur) => {
-    if (confirm(`Confirmer le paiement de la prime de ${prime.montant_prime} FCFA pour le conteneur ${prime.numero_conteneur} ?`)) {
-      await marquerCommePaye(prime.sortie_id);
+  const handlePaySelected = async (sortieIds: number[]) => {
+    if (sortieIds.length === 0) {
+      return;
+    }
+    
+    if (confirm(`Confirmer le paiement de ${sortieIds.length} prime(s) sélectionnée(s) ?`)) {
+      await payerEnLot(sortieIds);
     }
   };
 
@@ -33,17 +39,33 @@ export default function PrimesChauffeur() {
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Primes Chauffeur</h1>
         <p className="text-muted-foreground">
-          Gestion des primes de chauffeur pour les sorties de conteneur
+          Gestion des primes de chauffeur - Paiement par semaine
         </p>
       </div>
 
       <PrimeStats stats={stats} />
 
-      <PrimeTable
-        primes={primes}
-        onEdit={handleEdit}
-        onMarkAsPaid={handleMarkAsPaid}
-      />
+      <Tabs defaultValue="en-cours" className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="en-cours">Primes en attente</TabsTrigger>
+          <TabsTrigger value="archives">Archives</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="en-cours" className="space-y-4">
+          <PrimeTable
+            primes={primes}
+            onEdit={handleEdit}
+            onPaySelected={handlePaySelected}
+          />
+        </TabsContent>
+
+        <TabsContent value="archives" className="space-y-4">
+          <PrimeArchiveTable
+            archives={archives}
+            stats={archiveStats}
+          />
+        </TabsContent>
+      </Tabs>
 
       <PrimeDialog
         prime={selectedPrime}
