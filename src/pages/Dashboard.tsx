@@ -55,7 +55,7 @@ export default function Dashboard() {
         />
         <StatsCard
           title="Factures en Attente"
-          value="12 450 €"
+          value="12 450 FCFA"
           description="À encaisser ce mois"
           icon={CreditCard}
           variant="pending"

@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Edit, Trash2, CheckCircle } from "lucide-react";
 import { OrdreOperation, UpdateOrdreOperationData } from "@/types/ordre";
+import { formatCurrency } from "@/lib/currency";
 
 interface OrdreOperationsTabProps {
   operations: OrdreOperation[];
@@ -81,7 +82,7 @@ export function OrdreOperationsTab({
                 <TableCell>{operation.dateExecution}</TableCell>
                 <TableCell>{operation.camion}</TableCell>
                 <TableCell>{operation.client}</TableCell>
-                <TableCell className="font-medium">{operation.montant.toFixed(2)} €</TableCell>
+                <TableCell className="font-medium">{formatCurrency(operation.montant)}</TableCell>
                 <TableCell>
                   {editingId === operation.id ? (
                     <div className="flex gap-2">

@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Edit, Trash2, CheckCircle } from "lucide-react";
 import { Operation } from "@/types/operations";
+import { formatCurrency } from "@/lib/currency";
 
 interface OperationTableProps {
   operations: Operation[];
@@ -83,7 +84,7 @@ export function OperationTable({
                 <TableCell>{operation.remorque}</TableCell>
                 <TableCell>{operation.client}</TableCell>
                 <TableCell className="max-w-xs truncate">{operation.instructions}</TableCell>
-                <TableCell className="font-medium">{operation.montant.toFixed(2)} €</TableCell>
+                <TableCell className="font-medium">{formatCurrency(operation.montant)}</TableCell>
                 <TableCell>{getStatusBadge(operation.statut)}</TableCell>
                 <TableCell>
                   <div className="flex gap-2">

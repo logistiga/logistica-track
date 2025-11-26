@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle, Clock, Euro, FileText } from "lucide-react";
+import { CheckCircle, Clock, Coins, FileText } from "lucide-react";
 import { Operation } from "@/types/operations";
+import { formatCurrency } from "@/lib/currency";
 
 interface OperationStatsProps {
   operations: Operation[];
@@ -36,10 +37,10 @@ export function OperationStats({ operations }: OperationStatsProps) {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Montant en attente</CardTitle>
-          <Euro className="h-4 w-4 text-muted-foreground" />
+          <Coins className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{montantTotal.toFixed(2)} €</div>
+          <div className="text-2xl font-bold">{formatCurrency(montantTotal)}</div>
         </CardContent>
       </Card>
 
