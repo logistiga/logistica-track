@@ -1,17 +1,18 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CreditCard, CheckCircle, Coins, FileText } from "lucide-react";
-import { FactureInterne } from "@/types/facturation";
 import { formatCurrency } from "@/lib/currency";
 
 interface FacturationStatsProps {
-  factures: FactureInterne[];
+  stats: {
+    totalBrouillons: number;
+    totalEnvoyees: number;
+    totalPayees: number;
+    montantTotal: number;
+    montantEnAttente: number;
+  };
 }
 
-export function FacturationStats({ factures }: FacturationStatsProps) {
-  const facturesEnAttente = factures.filter(f => f.statutPaiement === "en-attente");
-  const facturesPayees = factures.filter(f => f.statutPaiement === "paye");
-  const montantTotal = facturesEnAttente.reduce((acc, f) => acc + f.montantAPayer, 0);
-
+export function FacturationStats({ stats }: FacturationStatsProps) {
   return (
     <div className="grid gap-4 md:grid-cols-4">
       <Card>
@@ -20,7 +21,7 @@ export function FacturationStats({ factures }: FacturationStatsProps) {
           <CreditCard className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{facturesEnAttente.length}</div>
+          <div className="text-2xl font-bold">{stats.totalEnvoyees}</div>
         </CardContent>
       </Card>
 
@@ -30,7 +31,7 @@ export function FacturationStats({ factures }: FacturationStatsProps) {
           <CheckCircle className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{facturesPayees.length}</div>
+          <div className="text-2xl font-bold">{stats.totalPayees}</div>
         </CardContent>
       </Card>
 
@@ -40,7 +41,7 @@ export function FacturationStats({ factures }: FacturationStatsProps) {
           <Coins className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{formatCurrency(montantTotal)}</div>
+          <div className="text-2xl font-bold">{formatCurrency(stats.montantEnAttente)}</div>
         </CardContent>
       </Card>
 
@@ -50,7 +51,7 @@ export function FacturationStats({ factures }: FacturationStatsProps) {
           <FileText className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{factures.length}</div>
+          <div className="text-2xl font-bold">{stats.totalBrouillons + stats.totalEnvoyees + stats.totalPayees}</div>
         </CardContent>
       </Card>
     </div>

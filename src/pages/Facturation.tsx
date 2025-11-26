@@ -1,66 +1,23 @@
-import { useState } from "react";
 import { FactureInterne } from "@/types/facturation";
 import { FacturationStats } from "@/components/facturation/FacturationStats";
 import { FacturationTable } from "@/components/facturation/FacturationTable";
-import { useToast } from "@/hooks/use-toast";
+import { useFacturation } from "@/hooks/useFacturation";
 
 export default function Facturation() {
-  const { toast } = useToast();
-  const [factures, setFactures] = useState<FactureInterne[]>([
-    {
-      id: "1",
-      numeroFacture: "FACT-2024-001",
-      dateFacture: "2024-01-15",
-      typeOperation: "stockage",
-      numeroConteneur: "CONT001",
-      nomClient: "Client ABC",
-      montantAPayer: 350.00,
-      dateSortieOperation: "2024-01-15",
-      statutPaiement: "en-attente",
-      joursGratuits: 5,
-      joursPayants: 3,
-      tarifJournalier: 116.67
-    },
-    {
-      id: "2",
-      numeroFacture: "FACT-2024-002",
-      dateFacture: "2024-01-16",
-      typeOperation: "double-relevage",
-      numeroConteneur: "CONT002",
-      nomClient: "Client XYZ",
-      montantAPayer: 250.00,
-      dateSortieOperation: "2024-01-16",
-      statutPaiement: "en-attente"
-    },
-    {
-      id: "3",
-      numeroFacture: "FACT-2024-003",
-      dateFacture: "2024-01-14",
-      typeOperation: "stockage",
-      numeroConteneur: "CONT003",
-      nomClient: "Client DEF",
-      montantAPayer: 180.00,
-      dateSortieOperation: "2024-01-14",
-      statutPaiement: "paye",
-      joursGratuits: 7,
-      joursPayants: 2,
-      tarifJournalier: 90.00
-    }
-  ]);
+  const {
+    factures,
+    loading,
+    stats,
+    generatePDF,
+    markAsPaid,
+  } = useFacturation();
 
   const handleGeneratePDF = (facture: FactureInterne) => {
-    toast({
-      title: "PDF généré",
-      description: `Facture ${facture.numeroFacture} générée avec succès`
-    });
+    generatePDF(facture);
   };
 
   const handleConfirmPayment = (facture: FactureInterne) => {
-    setFactures(prev => prev.filter(f => f.id !== facture.id));
-    toast({
-      title: "Paiement confirmé",
-      description: `La facture ${facture.numeroFacture} a été transférée aux archives.`
-    });
+    markAsPaid(facture.id);
   };
 
   return (
@@ -72,10 +29,11 @@ export default function Facturation() {
         </p>
       </div>
 
-      <FacturationStats factures={factures} />
+      <FacturationStats stats={stats} />
 
       <FacturationTable
         factures={factures}
+        loading={loading}
         onGeneratePDF={handleGeneratePDF}
         onConfirmPayment={handleConfirmPayment}
       />

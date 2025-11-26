@@ -43,5 +43,6 @@ export const apiConfig = {
     stockages: '/stockages',
     doubleRelevages: '/double-relevages',
     depotages: '/depotages',
+    facturations: '/facturations',
   }
 };
