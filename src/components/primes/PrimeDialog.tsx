@@ -25,7 +25,7 @@ export function PrimeDialog({ prime, open, onOpenChange, onSubmit }: PrimeDialog
 
   useEffect(() => {
     if (prime) {
-      setMontant(prime.montant_prime.toString());
+      setMontant(prime.prime_chauffeur.toString());
       setObservations(prime.observations || "");
     }
   }, [prime]);
@@ -33,7 +33,7 @@ export function PrimeDialog({ prime, open, onOpenChange, onSubmit }: PrimeDialog
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (prime && montant) {
-      onSubmit(prime.sortie_id, parseFloat(montant), observations);
+      onSubmit(prime.id, parseFloat(montant), observations);
       onOpenChange(false);
     }
   };
@@ -46,7 +46,7 @@ export function PrimeDialog({ prime, open, onOpenChange, onSubmit }: PrimeDialog
         <DialogHeader>
           <DialogTitle>Modifier la prime chauffeur</DialogTitle>
           <DialogDescription>
-            Conteneur: {prime.numero_conteneur} - Camion: {prime.camion}
+            Conteneur: {prime.numero_tc} - Immatriculation: {prime.immatriculation || 'N/A'}
           </DialogDescription>
         </DialogHeader>
         

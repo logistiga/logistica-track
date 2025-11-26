@@ -10,9 +10,9 @@ export function usePrimes() {
   const [stats, setStats] = useState<PrimeStats>({
     total_primes: 0,
     montant_total: '0 FCFA',
-    montant_en_cours: '0 FCFA',
+    montant_en_attente: '0 FCFA',
     montant_paye: '0 FCFA',
-    nombre_en_cours: 0,
+    nombre_en_attente: 0,
     nombre_paye: 0
   });
   const [archiveStats, setArchiveStats] = useState<any>(null);

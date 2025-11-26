@@ -20,17 +20,16 @@ export function PrimeTable({ primes, onEdit, onPaySelected }: PrimeTableProps) {
   const [selectedPrimes, setSelectedPrimes] = useState<number[]>([]);
 
   const filteredPrimes = primes.filter((prime) =>
-    prime.numero_conteneur.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    prime.camion.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    prime.nom_client.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    prime.numero_tc.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (prime.immatriculation && prime.immatriculation.toLowerCase().includes(searchTerm.toLowerCase())) ||
     (prime.chauffeur && prime.chauffeur.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  const togglePrime = (sortieId: number) => {
+  const togglePrime = (primeId: number) => {
     setSelectedPrimes(prev =>
-      prev.includes(sortieId)
-        ? prev.filter(id => id !== sortieId)
-        : [...prev, sortieId]
+      prev.includes(primeId)
+        ? prev.filter(id => id !== primeId)
+        : [...prev, primeId]
     );
   };
 
@@ -38,7 +37,7 @@ export function PrimeTable({ primes, onEdit, onPaySelected }: PrimeTableProps) {
     if (selectedPrimes.length === filteredPrimes.length) {
       setSelectedPrimes([]);
     } else {
-      setSelectedPrimes(filteredPrimes.map(p => p.sortie_id));
+      setSelectedPrimes(filteredPrimes.map(p => p.id));
     }
   };
 
@@ -48,17 +47,15 @@ export function PrimeTable({ primes, onEdit, onPaySelected }: PrimeTableProps) {
   };
 
   const selectedTotal = primes
-    .filter(p => selectedPrimes.includes(p.sortie_id))
-    .reduce((sum, p) => sum + p.montant_prime, 0);
+    .filter(p => selectedPrimes.includes(p.id))
+    .reduce((sum, p) => sum + p.prime_chauffeur, 0);
 
   const getStatusBadge = (statut: string) => {
     switch (statut) {
-      case 'en_cours':
-        return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">En cours</Badge>;
-      case 'retourne':
-        return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Retourné</Badge>;
+      case 'en_attente':
+        return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">En attente</Badge>;
       case 'paye':
-        return <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200">Payé</Badge>;
+        return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Payé</Badge>;
       default:
         return <Badge variant="outline">{statut}</Badge>;
     }
@@ -104,9 +101,8 @@ export function PrimeTable({ primes, onEdit, onPaySelected }: PrimeTableProps) {
                 />
               </TableHead>
               <TableHead>N° Conteneur</TableHead>
-              <TableHead>Camion</TableHead>
+              <TableHead>Immatriculation</TableHead>
               <TableHead>Chauffeur</TableHead>
-              <TableHead>Client</TableHead>
               <TableHead>Date Sortie</TableHead>
               <TableHead>Date Retour</TableHead>
               <TableHead>Montant</TableHead>
@@ -117,7 +113,7 @@ export function PrimeTable({ primes, onEdit, onPaySelected }: PrimeTableProps) {
           <TableBody>
             {filteredPrimes.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={10} className="text-center text-muted-foreground">
+                <TableCell colSpan={8} className="text-center text-muted-foreground">
                   Aucune prime trouvée
                 </TableCell>
               </TableRow>
@@ -126,14 +122,13 @@ export function PrimeTable({ primes, onEdit, onPaySelected }: PrimeTableProps) {
                 <TableRow key={prime.id}>
                   <TableCell>
                     <Checkbox
-                      checked={selectedPrimes.includes(prime.sortie_id)}
-                      onCheckedChange={() => togglePrime(prime.sortie_id)}
+                      checked={selectedPrimes.includes(prime.id)}
+                      onCheckedChange={() => togglePrime(prime.id)}
                     />
                   </TableCell>
-                  <TableCell className="font-medium">{prime.numero_conteneur}</TableCell>
-                  <TableCell>{prime.camion}</TableCell>
+                  <TableCell className="font-medium">{prime.numero_tc}</TableCell>
+                  <TableCell>{prime.immatriculation || 'N/A'}</TableCell>
                   <TableCell>{prime.chauffeur || 'N/A'}</TableCell>
-                  <TableCell>{prime.nom_client}</TableCell>
                   <TableCell>{new Date(prime.date_sortie).toLocaleDateString('fr-FR')}</TableCell>
                   <TableCell>
                     {prime.date_retour 
@@ -142,15 +137,15 @@ export function PrimeTable({ primes, onEdit, onPaySelected }: PrimeTableProps) {
                     }
                   </TableCell>
                   <TableCell className="font-semibold text-primary">
-                    {formatCurrency(prime.montant_prime)}
+                    {formatCurrency(prime.prime_chauffeur)}
                   </TableCell>
-                  <TableCell>{getStatusBadge(prime.statut)}</TableCell>
+                  <TableCell>{getStatusBadge(prime.statut_prime)}</TableCell>
                   <TableCell className="text-right">
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => onEdit(prime)}
-                      disabled={prime.statut === 'paye'}
+                      disabled={prime.statut_prime === 'paye'}
                     >
                       <Edit className="h-4 w-4" />
                     </Button>
