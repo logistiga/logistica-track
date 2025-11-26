@@ -40,6 +40,7 @@ export default function Operations() {
   };
 
   const handleTransfer = (destination: string) => {
+    if (!Array.isArray(operations)) return;
     const confirmedOperations = operations.filter(op => op.statut === "confirmee");
     if (confirmedOperations.length > 0) {
       transferToFacturation(confirmedOperations, "Opérations");
@@ -50,7 +51,7 @@ export default function Operations() {
     <div className="space-y-6">
       <DataFlowIndicator 
         currentPage="Operations" 
-        showTransferButtons={operations.some(op => op.statut === "confirmee")}
+        showTransferButtons={Array.isArray(operations) && operations.some(op => op.statut === "confirmee")}
         onTransfer={handleTransfer}
       />
       
