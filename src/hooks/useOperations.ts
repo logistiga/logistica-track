@@ -65,14 +65,64 @@ export function useOperations() {
     }
   };
 
-  // Créer une opération (version simplifiée pour correspondre aux types existants)
-  const createOperation = (data: CreateOperationData): Operation => {
-    return {
-      id: Date.now().toString(),
-      ...data,
-      statut: "en-attente",
-      dateCreation: new Date().toISOString().split('T')[0]
-    };
+  // Créer une opération
+  const createOperation = async (data: CreateOperationData) => {
+    setLoading(true);
+    try {
+      const newOperation = await operationService.createOperation(data);
+      setOperations(prev => [newOperation, ...prev]);
+      showToast('Succès', 'Opération créée avec succès');
+    } catch (error) {
+      console.error('Erreur lors de la création de l\'opération:', error);
+      showToast('Erreur', 'Impossible de créer l\'opération');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Mettre à jour une opération
+  const updateOperation = async (id: string, data: Partial<CreateOperationData>) => {
+    setLoading(true);
+    try {
+      const updated = await operationService.updateOperation(id, data);
+      setOperations(prev => prev.map(op => op.id === id ? updated : op));
+      showToast('Succès', 'Opération mise à jour avec succès');
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour de l\'opération:', error);
+      showToast('Erreur', 'Impossible de mettre à jour l\'opération');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Supprimer une opération
+  const deleteOperation = async (id: string) => {
+    setLoading(true);
+    try {
+      await operationService.deleteOperation(id);
+      setOperations(prev => prev.filter(op => op.id !== id));
+      showToast('Succès', 'Opération supprimée avec succès');
+    } catch (error) {
+      console.error('Erreur lors de la suppression de l\'opération:', error);
+      showToast('Erreur', 'Impossible de supprimer l\'opération');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Confirmer une opération
+  const confirmOperation = async (id: string) => {
+    setLoading(true);
+    try {
+      const updated = await operationService.updateStatut(id, 'confirmee');
+      setOperations(prev => prev.map(op => op.id === id ? updated : op));
+      showToast('Succès', 'Opération confirmée avec succès');
+    } catch (error) {
+      console.error('Erreur lors de la confirmation de l\'opération:', error);
+      showToast('Erreur', 'Impossible de confirmer l\'opération');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const showToast = (title: string, description: string) => {
@@ -81,7 +131,7 @@ export function useOperations() {
 
   useEffect(() => {
     loadVehicules();
-    // loadOperations(); // Commenté pour l'instant car pas encore d'API backend
+    loadOperations();
   }, []);
 
   return {
@@ -91,6 +141,9 @@ export function useOperations() {
     clients,
     loading,
     createOperation,
+    updateOperation,
+    deleteOperation,
+    confirmOperation,
     loadOperations,
     showToast
   };
