@@ -16,7 +16,8 @@ import {
   Menu,
   X,
   Ship,
-  Building2
+  Building2,
+  Coins
 } from "lucide-react";
 
 const navigation = [
@@ -25,6 +26,7 @@ const navigation = [
   { name: "Base", href: "/base", icon: Building2 },
   { name: "Matériel", href: "/materiel", icon: Truck },
   { name: "Armateurs", href: "/armateurs", icon: Ship },
+  { name: "Primes Chauffeur", href: "/primes", icon: Coins },
   { name: "Détention", href: "/detention", icon: AlertTriangle },
   { name: "Facturation", href: "/facturation", icon: CreditCard },
   { name: "Opérations", href: "/operations", icon: FileText },

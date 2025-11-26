@@ -17,6 +17,7 @@ import Detention from "./pages/Detention";
 import Facturation from "./pages/Facturation";
 import Operations from "./pages/Operations";
 import Ordre from "./pages/Ordre";
+import PrimesChauffeur from "./pages/PrimesChauffeur";
 import Notifications from "./pages/Notifications";
 import Emails from "./pages/Emails";
 import ArchivesBase from "./pages/ArchivesBase";
@@ -106,6 +107,13 @@ const App = () => (
               <ProtectedRoute>
                 <Layout>
                   <Ordre />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/primes" element={
+              <ProtectedRoute>
+                <Layout>
+                  <PrimesChauffeur />
                 </Layout>
               </ProtectedRoute>
             } />
