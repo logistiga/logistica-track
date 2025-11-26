@@ -45,6 +45,7 @@ Route::middleware('auth:sanctum')->group(function () {
     require __DIR__.'/modules/notifications.php';
     require __DIR__.'/modules/archives.php';
     require __DIR__.'/modules/base.php';
+    require __DIR__.'/modules/primes.php';
 });
 
 // Routes de fallback pour API non trouvée
