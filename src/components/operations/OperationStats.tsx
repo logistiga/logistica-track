@@ -8,8 +8,9 @@ interface OperationStatsProps {
 }
 
 export function OperationStats({ operations }: OperationStatsProps) {
-  const operationsEnAttente = operations.filter(op => op.statut === "en-attente");
-  const operationsConfirmees = operations.filter(op => op.statut === "confirmee");
+  const safeOperations = Array.isArray(operations) ? operations : [];
+  const operationsEnAttente = safeOperations.filter(op => op.statut === "en-attente");
+  const operationsConfirmees = safeOperations.filter(op => op.statut === "confirmee");
   const montantTotal = operationsEnAttente.reduce((acc, op) => acc + op.montant, 0);
 
   return (
@@ -50,7 +51,7 @@ export function OperationStats({ operations }: OperationStatsProps) {
           <FileText className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{operations.length}</div>
+          <div className="text-2xl font-bold">{safeOperations.length}</div>
         </CardContent>
       </Card>
     </div>

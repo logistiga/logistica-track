@@ -56,10 +56,12 @@ export function useOperations() {
     setLoading(true);
     try {
       const data = await operationService.getOperations();
-      setOperations(data);
+      // S'assurer que data est toujours un tableau
+      setOperations(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Erreur lors du chargement des opérations:', error);
       showToast('Erreur', 'Impossible de charger les opérations');
+      setOperations([]); // Réinitialiser à un tableau vide en cas d'erreur
     } finally {
       setLoading(false);
     }

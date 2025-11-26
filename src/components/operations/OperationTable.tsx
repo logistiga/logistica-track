@@ -76,7 +76,7 @@ export function OperationTable({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {operations.map((operation) => (
+            {Array.isArray(operations) && operations.map((operation) => (
               <TableRow key={operation.id}>
                 <TableCell>{getOperationTypeBadge(operation.typeOperation)}</TableCell>
                 <TableCell>{operation.dateExecution}</TableCell>
