@@ -15,6 +15,24 @@ export interface PrimeChauffeur {
   observations?: string;
 }
 
+export interface PrimeArchive {
+  id: number;
+  sortie_id: number;
+  numero_conteneur: string;
+  camion: string;
+  chauffeur?: string;
+  date_sortie: string;
+  date_retour?: string;
+  montant_prime: number;
+  montant_prime_formatte: string;
+  nom_client: string;
+  destination: string;
+  observations?: string;
+  date_paiement: string;
+  numero_semaine: string;
+  paye_par: string;
+}
+
 export interface PrimeStats {
   total_primes: number;
   montant_total: string;

@@ -1,5 +1,5 @@
 import { apiService } from './apiService';
-import type { PrimeChauffeur, PrimeStats, UpdatePrimeData } from '@/types/prime';
+import type { PrimeChauffeur, PrimeArchive, PrimeStats, UpdatePrimeData } from '@/types/prime';
 
 class PrimeService {
   // Récupérer toutes les primes
@@ -40,9 +40,38 @@ class PrimeService {
     return response.data;
   }
 
-  // Marquer une prime comme payée
-  async marquerCommePaye(sortieId: number): Promise<void> {
-    await apiService.post(`/primes/${sortieId}/marquer-paye`, {});
+  // Payer plusieurs primes en lot
+  async payerEnLot(sortieIds: number[]): Promise<any> {
+    const response = await apiService.post('/primes/payer-en-lot', {
+      sortie_ids: sortieIds
+    });
+    return response.data;
+  }
+
+  // Récupérer les archives
+  async getArchives(): Promise<PrimeArchive[]> {
+    try {
+      const response = await apiService.get('/primes/archives');
+      return response.data || [];
+    } catch (error) {
+      console.error('Erreur lors de la récupération des archives:', error);
+      return [];
+    }
+  }
+
+  // Récupérer les statistiques des archives
+  async getArchiveStats(): Promise<any> {
+    try {
+      const response = await apiService.get('/primes/archives/stats');
+      return response.data;
+    } catch (error) {
+      console.error('Erreur lors de la récupération des stats archives:', error);
+      return {
+        total_archives: 0,
+        montant_total: '0 FCFA',
+        par_semaine: {}
+      };
+    }
   }
 
   private formatCurrency(amount: number): string {
