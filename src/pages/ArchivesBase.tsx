@@ -1,52 +1,13 @@
-import { useState, useMemo } from "react";
-import { ArchiveBase, ArchiveFilters } from "@/types/archives";
+import { useState, useMemo, useEffect } from "react";
+import { ArchiveFilters } from "@/types/archives";
 import { ArchiveStats } from "@/components/archives/ArchiveStats";
 import { ArchiveFiltersDialog } from "@/components/archives/ArchiveFiltersDialog";
 import { ArchiveTable } from "@/components/archives/ArchiveTable";
-import { useToast } from "@/hooks/use-toast";
+import { useArchives } from "@/hooks/useArchives";
 
 export default function ArchivesBase() {
-  const { toast } = useToast();
+  const { archives, loading, searchArchives, exportArchives } = useArchives();
   
-  const [archives] = useState<ArchiveBase[]>([
-    {
-      id: "1",
-      typeOperation: "stockage",
-      numeroConteneur: "CONT001",
-      nomClient: "Client ABC",
-      provenance: "Port",
-      dateArriveeBase: "2024-01-10",
-      dateSortieBase: "2024-01-18",
-      camionArrivee: "CAM001 - Mercedes Actros",
-      remorqueArrivee: "REM001 - Porte-conteneur",
-      camionSortie: "CAM002 - Volvo FH",
-      remorqueSortie: "REM002 - Semi-remorque",
-      joursGratuits: 5,
-      joursPayants: 3,
-      montantTotalFacture: 350000,
-      dateFacturation: "2024-01-19",
-      numeroFacture: "FACT-2024-001",
-      statutPaiement: "paye",
-      dateArchivage: "2024-01-20"
-    },
-    {
-      id: "2",
-      typeOperation: "double-relevage",
-      numeroConteneur: "CONT002",
-      nomClient: "Client XYZ",
-      provenance: "Client",
-      dateArriveeBase: "2024-01-12",
-      dateSortieBase: "2024-01-12",
-      camionArrivee: "CAM003 - Scania R500",
-      remorqueArrivee: "REM003 - Plateau",
-      montantTotalFacture: 250000,
-      dateFacturation: "2024-01-13",
-      numeroFacture: "FACT-2024-002",
-      statutPaiement: "paye",
-      dateArchivage: "2024-01-14"
-    }
-  ]);
-
   const [filters, setFilters] = useState<ArchiveFilters>({
     dateDebut: "",
     dateFin: "",
@@ -56,43 +17,24 @@ export default function ArchivesBase() {
     statutPaiement: "all"
   });
 
+  useEffect(() => {
+    searchArchives(filters);
+  }, [filters]);
+
   const clients = useMemo(() => {
     return Array.from(new Set(archives.map(a => a.nomClient)));
   }, [archives]);
 
-  const filteredArchives = useMemo(() => {
-    return archives.filter(archive => {
-      const matchesDateRange = (!filters.dateDebut || archive.dateArriveeBase >= filters.dateDebut) &&
-                              (!filters.dateFin || archive.dateArriveeBase <= filters.dateFin);
-      const matchesType = filters.typeOperation === "all" || archive.typeOperation === filters.typeOperation;
-      const matchesClient = filters.client === "all" || archive.nomClient === filters.client;
-      const matchesConteneur = !filters.numeroConteneur || 
-                              archive.numeroConteneur.toLowerCase().includes(filters.numeroConteneur.toLowerCase());
-      const matchesStatut = filters.statutPaiement === "all" || archive.statutPaiement === filters.statutPaiement;
-
-      return matchesDateRange && matchesType && matchesClient && matchesConteneur && matchesStatut;
-    });
-  }, [archives, filters]);
-
   const handleExport = (format: string) => {
-    toast({
-      title: "Export en cours",
-      description: `Génération du fichier ${format.toUpperCase()}...`
-    });
+    exportArchives(format, filters);
   };
 
-  const handleViewInvoice = (archive: ArchiveBase) => {
-    toast({
-      title: "Facture",
-      description: `Ouverture de la facture ${archive.numeroFacture}`
-    });
+  const handleViewInvoice = (archive: any) => {
+    console.log('Voir facture:', archive.numeroFacture);
   };
 
-  const handleViewDetails = (archive: ArchiveBase) => {
-    toast({
-      title: "Détails",
-      description: `Détails complets de l'opération ${archive.numeroConteneur}`
-    });
+  const handleViewDetails = (archive: any) => {
+    console.log('Voir détails:', archive.numeroConteneur);
   };
 
   return (
@@ -113,10 +55,10 @@ export default function ArchivesBase() {
         />
       </div>
 
-      <ArchiveStats archives={filteredArchives} />
+      <ArchiveStats archives={archives} />
 
       <ArchiveTable
-        archives={filteredArchives}
+        archives={archives}
         onViewInvoice={handleViewInvoice}
         onViewDetails={handleViewDetails}
       />
