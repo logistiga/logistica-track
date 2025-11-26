@@ -15,10 +15,10 @@ export function PrimeArchiveTable({ archives, stats }: PrimeArchiveTableProps) {
   const [searchTerm, setSearchTerm] = useState("");
 
   const filteredArchives = archives.filter((archive) =>
-    archive.numero_conteneur.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    archive.chauffeur?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    archive.numero_semaine.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    archive.nom_client.toLowerCase().includes(searchTerm.toLowerCase())
+    archive.numero_tc.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (archive.chauffeur && archive.chauffeur.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    archive.numero_semaine.toString().includes(searchTerm.toLowerCase()) ||
+    (archive.immatriculation && archive.immatriculation.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   return (
@@ -49,41 +49,37 @@ export function PrimeArchiveTable({ archives, stats }: PrimeArchiveTableProps) {
           <TableHeader>
             <TableRow>
               <TableHead>N° Conteneur</TableHead>
-              <TableHead>Camion</TableHead>
+              <TableHead>Immatriculation</TableHead>
               <TableHead>Chauffeur</TableHead>
-              <TableHead>Client</TableHead>
               <TableHead>Date Sortie</TableHead>
               <TableHead>Montant</TableHead>
               <TableHead>Semaine</TableHead>
               <TableHead>Date Paiement</TableHead>
-              <TableHead>Payé par</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredArchives.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={9} className="text-center text-muted-foreground">
+                <TableCell colSpan={7} className="text-center text-muted-foreground">
                   Aucune archive trouvée
                 </TableCell>
               </TableRow>
             ) : (
               filteredArchives.map((archive) => (
                 <TableRow key={archive.id}>
-                  <TableCell className="font-medium">{archive.numero_conteneur}</TableCell>
-                  <TableCell>{archive.camion}</TableCell>
+                  <TableCell className="font-medium">{archive.numero_tc}</TableCell>
+                  <TableCell>{archive.immatriculation || 'N/A'}</TableCell>
                   <TableCell>{archive.chauffeur || 'N/A'}</TableCell>
-                  <TableCell>{archive.nom_client}</TableCell>
                   <TableCell>{new Date(archive.date_sortie).toLocaleDateString('fr-FR')}</TableCell>
                   <TableCell className="font-semibold text-primary">
                     {formatCurrency(archive.montant_prime)}
                   </TableCell>
                   <TableCell>
                     <span className="px-2 py-1 bg-secondary text-secondary-foreground rounded text-xs font-medium">
-                      {archive.numero_semaine}
+                      Semaine {archive.numero_semaine}
                     </span>
                   </TableCell>
                   <TableCell>{new Date(archive.date_paiement).toLocaleDateString('fr-FR')}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{archive.paye_par}</TableCell>
                 </TableRow>
               ))
             )}

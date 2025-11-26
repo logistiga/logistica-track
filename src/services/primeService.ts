@@ -17,15 +17,26 @@ class PrimeService {
   async getStats(): Promise<PrimeStats> {
     try {
       const response = await apiService.get('/primes/stats');
-      return response.data;
+      const data = response.data;
+      
+      // Calculer les nombres à partir des primes réelles
+      const primes = await this.getPrimes();
+      const nombre_en_attente = primes.filter(p => p.statut_prime === 'en_attente').length;
+      const nombre_paye = primes.filter(p => p.statut_prime === 'paye').length;
+      
+      return {
+        ...data,
+        nombre_en_attente,
+        nombre_paye
+      };
     } catch (error) {
       console.error('Erreur lors de la récupération des statistiques:', error);
       return {
         total_primes: 0,
         montant_total: '0 FCFA',
-        montant_en_cours: '0 FCFA',
+        montant_en_attente: '0 FCFA',
         montant_paye: '0 FCFA',
-        nombre_en_cours: 0,
+        nombre_en_attente: 0,
         nombre_paye: 0
       };
     }

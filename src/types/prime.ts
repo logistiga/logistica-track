@@ -1,45 +1,37 @@
 export interface PrimeChauffeur {
   id: number;
-  sortie_id: number;
-  numero_conteneur: string;
-  camion: string;
+  numero_tc: string;
+  immatriculation?: string;
   chauffeur?: string;
   date_sortie: string;
   date_retour?: string;
-  montant_prime: number;
-  montant_prime_formatte: string;
-  statut: 'en_cours' | 'retourne' | 'paye';
-  statut_label: string;
-  nom_client: string;
-  destination: string;
+  prime_chauffeur: number;
+  prime_formatted: string;
+  statut_prime: 'en_attente' | 'paye';
+  statut_prime_label: string;
   observations?: string;
 }
 
 export interface PrimeArchive {
   id: number;
-  sortie_id: number;
-  numero_conteneur: string;
-  camion: string;
+  numero_tc: string;
+  immatriculation?: string;
   chauffeur?: string;
   date_sortie: string;
-  date_retour?: string;
   montant_prime: number;
-  montant_prime_formatte: string;
-  nom_client: string;
-  destination: string;
+  montant_formatted: string;
   observations?: string;
   date_paiement: string;
-  numero_semaine: string;
-  paye_par: string;
+  numero_semaine: number;
 }
 
 export interface PrimeStats {
   total_primes: number;
-  montant_total: string;
-  montant_en_cours: string;
-  montant_paye: string;
-  nombre_en_cours: number;
-  nombre_paye: number;
+  montant_total: number | string;
+  montant_en_attente: number | string;
+  montant_paye: number | string;
+  nombre_en_attente?: number;
+  nombre_paye?: number;
 }
 
 export interface CreatePrimeData {
