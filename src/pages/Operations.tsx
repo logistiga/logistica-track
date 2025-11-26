@@ -8,54 +8,34 @@ import { useDataFlow } from "@/hooks/useDataFlow";
 import { DataFlowIndicator } from "@/components/shared/DataFlowIndicator";
 
 export default function Operations() {
-  const { camions, remorques, clients, createOperation, showToast } = useOperations();
+  const { 
+    operations, 
+    camions, 
+    remorques, 
+    clients, 
+    loading,
+    createOperation,
+    updateOperation,
+    deleteOperation,
+    confirmOperation,
+    showToast 
+  } = useOperations();
   const { transferToFacturation } = useDataFlow();
-  const [operations, setOperations] = useState<Operation[]>([
-    {
-      id: "1",
-      typeOperation: "transport",
-      dateExecution: "2024-01-15",
-      camion: "CAM001 - Mercedes Actros",
-      remorque: "REM001 - Porte-conteneur",
-      client: "Client ABC",
-      instructions: "Transport de conteneur du port vers entrepôt",
-      montant: 450.00,
-      statut: "en-attente",
-      dateCreation: "2024-01-14"
-    },
-    {
-      id: "2", 
-      typeOperation: "location",
-      dateExecution: "2024-01-16",
-      camion: "CAM002 - Volvo FH",
-      remorque: "REM002 - Semi-remorque",
-      client: "Client XYZ",
-      instructions: "Location de camion pour 2 jours",
-      montant: 300.00,
-      statut: "confirmee",
-      dateCreation: "2024-01-15"
-    }
-  ]);
 
-  const handleCreateOperation = (data: any) => {
-    const newOperation = createOperation(data);
-    setOperations(prev => [newOperation, ...prev]);
-    showToast("Opération créée", "La nouvelle opération a été ajoutée avec succès.");
+  const handleCreateOperation = async (data: any) => {
+    await createOperation(data);
   };
 
-  const handleEditOperation = (operation: Operation) => {
-    showToast("Modification", `Édition de l'opération ${operation.id}`);
+  const handleEditOperation = async (operation: Operation) => {
+    await updateOperation(operation.id, operation);
   };
 
-  const handleDeleteOperation = (operation: Operation) => {
-    setOperations(prev => prev.filter(op => op.id !== operation.id));
-    showToast("Opération supprimée", "L'opération a été supprimée avec succès.");
+  const handleDeleteOperation = async (operation: Operation) => {
+    await deleteOperation(operation.id);
   };
 
-  const handleConfirmOperation = (operation: Operation) => {
-    setOperations(prev => prev.map(op =>
-      op.id === operation.id ? { ...op, statut: "confirmee" as const } : op
-    ));
+  const handleConfirmOperation = async (operation: Operation) => {
+    await confirmOperation(operation.id);
     transferToFacturation(operation, "Opérations");
   };
 
