@@ -1,61 +1,13 @@
-import { useState, useMemo } from "react";
-import { ArchiveOperation, ArchiveOperationFilters } from "@/types/archivesOperation";
+import { useState, useMemo, useEffect } from "react";
+import { ArchiveOperationFilters } from "@/types/archivesOperation";
 import { ArchiveOperationStats } from "@/components/archivesOperation/ArchiveOperationStats";
 import { ArchiveOperationFiltersDialog } from "@/components/archivesOperation/ArchiveOperationFiltersDialog";
 import { ArchiveOperationTable } from "@/components/archivesOperation/ArchiveOperationTable";
-import { useToast } from "@/hooks/use-toast";
+import { useArchiveOperation } from "@/hooks/useArchiveOperation";
 
 export default function ArchivesOperation() {
-  const { toast } = useToast();
+  const { archives, loading, searchArchivesOperation, exportArchivesOperation } = useArchiveOperation();
   
-  const [archives] = useState<ArchiveOperation[]>([
-    {
-      id: "1",
-      typeOperation: "transport",
-      numeroOperation: "OP-2024-001",
-      dateExecution: "2024-01-15",
-      camion: "CAM001 - Mercedes Actros",
-      remorque: "REM001 - Porte-conteneur",
-      client: "Client ABC",
-      instructions: "Transport de conteneur du port vers entrepôt",
-      montantTotal: 450000,
-      dateFacturation: "2024-01-16",
-      numeroFacture: "FACT-2024-001",
-      statutPaiement: "paye",
-      dateArchivage: "2024-01-20"
-    },
-    {
-      id: "2",
-      typeOperation: "location",
-      numeroOperation: "OP-2024-002",
-      dateExecution: "2024-01-16",
-      camion: "CAM002 - Volvo FH",
-      remorque: "REM002 - Semi-remorque",
-      client: "Client XYZ",
-      instructions: "Location de camion pour 2 jours",
-      montantTotal: 300000,
-      dateFacturation: "2024-01-17",
-      numeroFacture: "FACT-2024-002",
-      statutPaiement: "paye",
-      dateArchivage: "2024-01-21"
-    },
-    {
-      id: "3",
-      typeOperation: "double-relevage",
-      numeroOperation: "OP-2024-003",
-      dateExecution: "2024-01-18",
-      camion: "CAM003 - MAN TGX",
-      remorque: "REM003 - Porte-conteneur",
-      client: "Client DEF",
-      instructions: "Double relevage conteneur 20 pieds",
-      montantTotal: 250000,
-      dateFacturation: "2024-01-19",
-      numeroFacture: "FACT-2024-003",
-      statutPaiement: "paye",
-      dateArchivage: "2024-01-22"
-    }
-  ]);
-
   const [filters, setFilters] = useState<ArchiveOperationFilters>({
     dateDebut: "",
     dateFin: "",
@@ -65,43 +17,24 @@ export default function ArchivesOperation() {
     statutPaiement: "all"
   });
 
+  useEffect(() => {
+    searchArchivesOperation(filters);
+  }, [filters]);
+
   const clients = useMemo(() => {
     return Array.from(new Set(archives.map(archive => archive.client))).sort();
   }, [archives]);
 
-  const filteredArchives = useMemo(() => {
-    return archives.filter(archive => {
-      const matchesDateRange = (!filters.dateDebut || archive.dateExecution >= filters.dateDebut) &&
-                              (!filters.dateFin || archive.dateExecution <= filters.dateFin);
-      const matchesType = !filters.typeOperation || filters.typeOperation === "all" || archive.typeOperation === filters.typeOperation;
-      const matchesClient = !filters.client || filters.client === "all" || archive.client === filters.client;
-      const matchesNumero = !filters.numeroOperation || 
-                           archive.numeroOperation.toLowerCase().includes(filters.numeroOperation.toLowerCase());
-      const matchesStatut = !filters.statutPaiement || filters.statutPaiement === "all" || archive.statutPaiement === filters.statutPaiement;
-
-      return matchesDateRange && matchesType && matchesClient && matchesNumero && matchesStatut;
-    });
-  }, [archives, filters]);
-
   const handleExport = (format: string) => {
-    toast({
-      title: "Export en cours",
-      description: `Génération du fichier ${format.toUpperCase()}...`
-    });
+    exportArchivesOperation(format, filters);
   };
 
-  const handleViewInvoice = (archive: ArchiveOperation) => {
-    toast({
-      title: "Facture",
-      description: `Affichage de la facture ${archive.numeroFacture}`
-    });
+  const handleViewInvoice = (archive: any) => {
+    console.log('Voir facture:', archive.numeroFacture);
   };
 
-  const handleViewDetails = (archive: ArchiveOperation) => {
-    toast({
-      title: "Détails de l'opération",
-      description: `Affichage des détails de l'opération ${archive.numeroOperation}`
-    });
+  const handleViewDetails = (archive: any) => {
+    console.log('Voir détails:', archive.numeroOperation);
   };
 
   return (
@@ -122,10 +55,10 @@ export default function ArchivesOperation() {
         />
       </div>
 
-      <ArchiveOperationStats archives={filteredArchives} />
+      <ArchiveOperationStats archives={archives} />
 
       <ArchiveOperationTable
-        archives={filteredArchives}
+        archives={archives}
         onViewInvoice={handleViewInvoice}
         onViewDetails={handleViewDetails}
       />
