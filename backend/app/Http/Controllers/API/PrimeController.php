@@ -26,7 +26,7 @@ class PrimeController extends Controller
             if ($request->filled('search')) {
                 $search = $request->search;
                 $query->where(function ($q) use ($search) {
-                    $q->where('numero_conteneur', 'like', "%{$search}%")
+                    $q->where('numero_tc', 'like', "%{$search}%")
                       ->orWhere('chauffeur_nom', 'like', "%{$search}%")
                       ->orWhere('nom_client', 'like', "%{$search}%");
                 });
@@ -57,7 +57,7 @@ class PrimeController extends Controller
                 return [
                     'id' => $sortie->id,
                     'sortie_id' => $sortie->id,
-                    'numero_conteneur' => $sortie->numero_conteneur,
+                    'numero_tc' => $sortie->numero_tc,
                     'camion' => $sortie->camion?->libelle_complet ?? $sortie->camion_id ?? 'N/A',
                     'chauffeur' => $sortie->chauffeur_nom ?? '',
                     'date_sortie' => $sortie->date_sortie,
@@ -206,7 +206,7 @@ class PrimeController extends Controller
                 // Créer l'archive
                 PrimeArchive::create([
                     'sortie_id' => $sortie->id,
-                    'numero_conteneur' => $sortie->numero_conteneur,
+                    'numero_conteneur' => $sortie->numero_tc,
                     'camion' => $sortie->camion?->libelle_complet ?? $sortie->camion_id ?? 'N/A',
                     'chauffeur' => $sortie->chauffeur_nom,
                     'date_sortie' => $sortie->date_sortie,
