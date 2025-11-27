@@ -100,8 +100,18 @@ class DetentionService
     public function updateDetention(Detention $detention, array $data): Detention
     {
         return DB::transaction(function () use ($detention, $data) {
-            // Recalculer les jours et le coût si nécessaire
-            if (isset($data['date_fin_detention']) || isset($data['cout_par_jour'])) {
+            // Recalculer les coûts si la responsabilité est "partagee"
+            if (isset($data['responsabilite']) && $data['responsabilite'] === 'partagee') {
+                $joursClient = $data['jours_client'] ?? 0;
+                $joursLogistiga = $data['jours_logistiga'] ?? 0;
+                $coutParJour = $data['cout_par_jour'] ?? $detention->cout_par_jour;
+                
+                // Calculer le coût total basé sur les jours client + logistiga
+                $data['jours_detention'] = $joursClient + $joursLogistiga;
+                $data['cout_total'] = $data['jours_detention'] * $coutParJour;
+            }
+            // Recalculer les jours et le coût si nécessaire pour les autres cas
+            else if (isset($data['date_fin_detention']) || isset($data['cout_par_jour'])) {
                 $dateDebut = $detention->date_debut_detention;
                 $dateFin = isset($data['date_fin_detention']) 
                     ? Carbon::parse($data['date_fin_detention'])

@@ -63,8 +63,8 @@ class DetentionResource extends JsonResource
             'jours_bat' => $joursBAT,
             'jours_realises' => $joursRealises,
             'jours_depassement' => $joursDepassement,
-            'jours_client' => $this->responsabilite === 'client' ? $this->jours_detention : 0,
-            'jours_logistica' => in_array($this->responsabilite, ['transitaire', 'transporteur', 'autre']) ? $this->jours_detention : 0,
+            'jours_client' => $this->jours_client ?? 0,
+            'jours_logistica' => $this->jours_logistiga ?? 0,
             'note_debit_generee' => $this->statut === 'resolue',
             'paiement_confirme' => $this->statut === 'resolue',
             
@@ -89,9 +89,8 @@ class DetentionResource extends JsonResource
     {
         return match($this->responsabilite) {
             'client' => 'Client',
-            'transitaire' => 'Transitaire',
-            'transporteur' => 'Transporteur',
-            'autre' => 'Autre',
+            'logistiga' => 'Logistiga',
+            'partagee' => 'Partagée',
             default => ucfirst($this->responsabilite)
         };
     }
