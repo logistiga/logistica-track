@@ -51,6 +51,14 @@ export function DetentionTable({ containers, loading, onIdentifyResponsability, 
           </Button>
         );
       case 'actions':
+        // N'afficher les actions que si la responsabilité a été définie
+        if (!container.responsabilite) {
+          return (
+            <div className="text-sm text-muted-foreground">
+              Définir la responsabilité
+            </div>
+          );
+        }
         return (
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={() => onGeneratePDF(container)}>PDF</Button>
