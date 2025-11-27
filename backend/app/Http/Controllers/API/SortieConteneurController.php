@@ -220,16 +220,16 @@ class SortieConteneurController extends Controller
                     'sc.date_sortie_port as dateSortiePort',
                     'sc.date_retour_port as dateRetourPort',
                     'sc.destination_initiale as destinationInitiale',
-                    'd.jours_bat as joursBAT',
-                    'd.jours_realises as joursRealises',
-                    'd.jours_depassement as joursDepassement',
+                    DB::raw('COALESCE(d.jours_bat, 0) as joursBAT'),
+                    DB::raw('COALESCE(d.jours_realises, 0) as joursRealises'),
+                    DB::raw('COALESCE(d.jours_depassement, 0) as joursDepassement'),
                     'd.responsabilite',
-                    'd.jours_client as joursClient',
-                    'd.jours_logistiga as joursLogistiga',
-                    'd.montant_total as montantTotalDetention',
+                    DB::raw('COALESCE(d.jours_client, 0) as joursClient'),
+                    DB::raw('COALESCE(d.jours_logistiga, 0) as joursLogistiga'),
+                    DB::raw('COALESCE(d.montant_total, 0) as montantTotalDetention'),
                     'd.date_facturation as dateFacturationDetention',
                     'd.numero_facture as numeroFactureDetention',
-                    DB::raw("CASE WHEN d.montant_total > 0 THEN 'paye' ELSE 'sans-frais' END as statutPaiement"),
+                    DB::raw("CASE WHEN COALESCE(d.montant_total, 0) > 0 THEN 'paye' ELSE 'sans-frais' END as statutPaiement"),
                     'sc.pv_sortie as pvSortie',
                     'sc.pv_rentree_port as pvRentreePort',
                     'sc.numero_ordre as numeroOrdre',
@@ -241,6 +241,7 @@ class SortieConteneurController extends Controller
             return $this->successResponse($archives, 'Archives récupérées avec succès');
 
         } catch (\Exception $e) {
+            \Log::error('Erreur archives sorties: ' . $e->getMessage());
             return $this->errorResponse('Erreur lors de la récupération des archives', 500);
         }
     }
@@ -264,16 +265,16 @@ class SortieConteneurController extends Controller
                     'sc.date_sortie_port as dateSortiePort',
                     'sc.date_retour_port as dateRetourPort',
                     'sc.destination_initiale as destinationInitiale',
-                    'd.jours_bat as joursBAT',
-                    'd.jours_realises as joursRealises',
-                    'd.jours_depassement as joursDepassement',
+                    DB::raw('COALESCE(d.jours_bat, 0) as joursBAT'),
+                    DB::raw('COALESCE(d.jours_realises, 0) as joursRealises'),
+                    DB::raw('COALESCE(d.jours_depassement, 0) as joursDepassement'),
                     'd.responsabilite',
-                    'd.jours_client as joursClient',
-                    'd.jours_logistiga as joursLogistiga',
-                    'd.montant_total as montantTotalDetention',
+                    DB::raw('COALESCE(d.jours_client, 0) as joursClient'),
+                    DB::raw('COALESCE(d.jours_logistiga, 0) as joursLogistiga'),
+                    DB::raw('COALESCE(d.montant_total, 0) as montantTotalDetention'),
                     'd.date_facturation as dateFacturationDetention',
                     'd.numero_facture as numeroFactureDetention',
-                    DB::raw("CASE WHEN d.montant_total > 0 THEN 'paye' ELSE 'sans-frais' END as statutPaiement"),
+                    DB::raw("CASE WHEN COALESCE(d.montant_total, 0) > 0 THEN 'paye' ELSE 'sans-frais' END as statutPaiement"),
                     'sc.pv_sortie as pvSortie',
                     'sc.pv_rentree_port as pvRentreePort',
                     'sc.numero_ordre as numeroOrdre',
@@ -307,10 +308,10 @@ class SortieConteneurController extends Controller
             // Filtrer par statut de paiement
             if ($request->has('statutPaiement') && $request->statutPaiement !== '') {
                 if ($request->statutPaiement === 'paye') {
-                    $query->where('d.montant_total', '>', 0);
+                    $query->whereNotNull('d.id')->where('d.montant_total', '>', 0);
                 } elseif ($request->statutPaiement === 'sans-frais') {
                     $query->where(function($q) {
-                        $q->whereNull('d.montant_total')
+                        $q->whereNull('d.id')
                           ->orWhere('d.montant_total', '=', 0);
                     });
                 }
@@ -321,6 +322,7 @@ class SortieConteneurController extends Controller
             return $this->successResponse($archives, 'Recherche effectuée avec succès');
 
         } catch (\Exception $e) {
+            \Log::error('Erreur recherche archives: ' . $e->getMessage());
             return $this->errorResponse('Erreur lors de la recherche', 500);
         }
     }
@@ -331,30 +333,30 @@ class SortieConteneurController extends Controller
     public function archivesStats(Request $request): JsonResponse
     {
         try {
+            $totalArchives = DB::table('prime_archives')->count();
+            
+            $avecDetention = DB::table('prime_archives as pa')
+                ->join('sortie_conteneurs as sc', 'pa.sortie_id', '=', 'sc.id')
+                ->join('detentions as d', 'sc.id', '=', 'd.sortie_id')
+                ->where('d.montant_total', '>', 0)
+                ->count();
+
+            $montantTotal = DB::table('prime_archives as pa')
+                ->join('sortie_conteneurs as sc', 'pa.sortie_id', '=', 'sc.id')
+                ->leftJoin('detentions as d', 'sc.id', '=', 'd.sortie_id')
+                ->sum('d.montant_total') ?? 0;
+
             $stats = [
-                'total_archives' => DB::table('prime_archives')->count(),
-                'total_avec_detention' => DB::table('prime_archives as pa')
-                    ->join('sortie_conteneurs as sc', 'pa.sortie_id', '=', 'sc.id')
-                    ->join('detentions as d', 'sc.id', '=', 'd.sortie_id')
-                    ->where('d.montant_total', '>', 0)
-                    ->count(),
-                'total_sans_frais' => DB::table('prime_archives as pa')
-                    ->join('sortie_conteneurs as sc', 'pa.sortie_id', '=', 'sc.id')
-                    ->leftJoin('detentions as d', 'sc.id', '=', 'd.sortie_id')
-                    ->where(function($q) {
-                        $q->whereNull('d.montant_total')
-                          ->orWhere('d.montant_total', '=', 0);
-                    })
-                    ->count(),
-                'montant_total_detention' => DB::table('prime_archives as pa')
-                    ->join('sortie_conteneurs as sc', 'pa.sortie_id', '=', 'sc.id')
-                    ->join('detentions as d', 'sc.id', '=', 'd.sortie_id')
-                    ->sum('d.montant_total') ?? 0,
+                'total_archives' => $totalArchives,
+                'total_avec_detention' => $avecDetention,
+                'total_sans_frais' => $totalArchives - $avecDetention,
+                'montant_total_detention' => (float) $montantTotal,
             ];
 
             return $this->successResponse($stats, 'Statistiques récupérées avec succès');
 
         } catch (\Exception $e) {
+            \Log::error('Erreur stats archives: ' . $e->getMessage());
             return $this->errorResponse('Erreur lors de la récupération des statistiques', 500);
         }
     }
