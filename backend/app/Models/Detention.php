@@ -15,6 +15,8 @@ class Detention extends Model
         'date_debut_detention',
         'date_fin_detention',
         'jours_detention',
+        'jours_client',
+        'jours_logistiga',
         'cout_par_jour',
         'cout_total',
         'responsabilite',
@@ -29,6 +31,8 @@ class Detention extends Model
         'cout_par_jour' => 'decimal:2',
         'cout_total' => 'decimal:2',
         'jours_detention' => 'integer',
+        'jours_client' => 'integer',
+        'jours_logistiga' => 'integer',
     ];
 
     // Relations
