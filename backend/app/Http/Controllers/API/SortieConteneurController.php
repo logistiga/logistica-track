@@ -210,7 +210,7 @@ class SortieConteneurController extends Controller
             $archives = DB::table('prime_archives as pa')
                 ->join('sortie_conteneurs as sc', 'pa.sortie_id', '=', 'sc.id')
                 ->join('armateurs as a', 'sc.code_armateur', '=', 'a.code')
-                ->leftJoin('detentions as d', 'sc.id', '=', 'd.sortie_id')
+                ->leftJoin('detentions as d', 'sc.id', '=', 'd.sortie_conteneur_id')
                 ->select(
                     'pa.id',
                     'sc.numero_conteneur as numeroConteneur',
@@ -219,16 +219,14 @@ class SortieConteneurController extends Controller
                     'sc.date_sortie as dateSortiePort',
                     'sc.date_retour as dateRetourPort',
                     'sc.destination as destinationInitiale',
-                    DB::raw('COALESCE(d.jours_bat, 0) as joursBAT'),
-                    DB::raw('COALESCE(d.jours_realises, 0) as joursRealises'),
-                    DB::raw('COALESCE(d.jours_depassement, 0) as joursDepassement'),
+                    DB::raw('COALESCE(d.jours_detention, 0) as joursDetention'),
+                    DB::raw('COALESCE(d.cout_par_jour, 0) as coutParJour'),
+                    DB::raw('COALESCE(d.cout_total, 0) as montantTotalDetention'),
                     'd.responsabilite',
-                    DB::raw('COALESCE(d.jours_client, 0) as joursClient'),
-                    DB::raw('COALESCE(d.jours_logistiga, 0) as joursLogistiga'),
-                    DB::raw('COALESCE(d.montant_total, 0) as montantTotalDetention'),
-                    'd.date_facturation as dateFacturationDetention',
-                    'd.numero_facture as numeroFactureDetention',
-                    DB::raw("CASE WHEN COALESCE(d.montant_total, 0) > 0 THEN 'paye' ELSE 'sans-frais' END as statutPaiement"),
+                    'd.date_debut_detention as dateDebutDetention',
+                    'd.date_fin_detention as dateFinDetention',
+                    'd.statut as statutDetention',
+                    DB::raw("CASE WHEN d.id IS NOT NULL AND COALESCE(d.cout_total, 0) > 0 THEN 'paye' ELSE 'sans-frais' END as statutPaiement"),
                     'pa.date_paiement as dateArchivage'
                 )
                 ->orderBy('pa.date_paiement', 'desc')
@@ -255,7 +253,7 @@ class SortieConteneurController extends Controller
             $query = DB::table('prime_archives as pa')
                 ->join('sortie_conteneurs as sc', 'pa.sortie_id', '=', 'sc.id')
                 ->join('armateurs as a', 'sc.code_armateur', '=', 'a.code')
-                ->leftJoin('detentions as d', 'sc.id', '=', 'd.sortie_id')
+                ->leftJoin('detentions as d', 'sc.id', '=', 'd.sortie_conteneur_id')
                 ->select(
                     'pa.id',
                     'sc.numero_conteneur as numeroConteneur',
@@ -264,16 +262,14 @@ class SortieConteneurController extends Controller
                     'sc.date_sortie as dateSortiePort',
                     'sc.date_retour as dateRetourPort',
                     'sc.destination as destinationInitiale',
-                    DB::raw('COALESCE(d.jours_bat, 0) as joursBAT'),
-                    DB::raw('COALESCE(d.jours_realises, 0) as joursRealises'),
-                    DB::raw('COALESCE(d.jours_depassement, 0) as joursDepassement'),
+                    DB::raw('COALESCE(d.jours_detention, 0) as joursDetention'),
+                    DB::raw('COALESCE(d.cout_par_jour, 0) as coutParJour'),
+                    DB::raw('COALESCE(d.cout_total, 0) as montantTotalDetention'),
                     'd.responsabilite',
-                    DB::raw('COALESCE(d.jours_client, 0) as joursClient'),
-                    DB::raw('COALESCE(d.jours_logistiga, 0) as joursLogistiga'),
-                    DB::raw('COALESCE(d.montant_total, 0) as montantTotalDetention'),
-                    'd.date_facturation as dateFacturationDetention',
-                    'd.numero_facture as numeroFactureDetention',
-                    DB::raw("CASE WHEN COALESCE(d.montant_total, 0) > 0 THEN 'paye' ELSE 'sans-frais' END as statutPaiement"),
+                    'd.date_debut_detention as dateDebutDetention',
+                    'd.date_fin_detention as dateFinDetention',
+                    'd.statut as statutDetention',
+                    DB::raw("CASE WHEN d.id IS NOT NULL AND COALESCE(d.cout_total, 0) > 0 THEN 'paye' ELSE 'sans-frais' END as statutPaiement"),
                     'pa.date_paiement as dateArchivage'
                 );
 
@@ -304,11 +300,11 @@ class SortieConteneurController extends Controller
             // Filtrer par statut de paiement
             if ($request->has('statutPaiement') && $request->statutPaiement !== '') {
                 if ($request->statutPaiement === 'paye') {
-                    $query->whereNotNull('d.id')->where('d.montant_total', '>', 0);
+                    $query->whereNotNull('d.id')->where('d.cout_total', '>', 0);
                 } elseif ($request->statutPaiement === 'sans-frais') {
                     $query->where(function($q) {
                         $q->whereNull('d.id')
-                          ->orWhere('d.montant_total', '=', 0);
+                          ->orWhere('d.cout_total', '=', 0);
                     });
                 }
             }
