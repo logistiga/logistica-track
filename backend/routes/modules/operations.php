@@ -14,6 +14,11 @@ Route::prefix('operations')->name('operations.')->group(function () {
     Route::get('/search', [OperationController::class, 'search'])->name('search');
     Route::get('/export', [OperationController::class, 'export'])->name('export');
     
+    // Archive routes - must come before {operation} catch-all
+    Route::get('/archives', [OperationController::class, 'archives'])->name('archives');
+    Route::get('/archives/search', [OperationController::class, 'archivesSearch'])->name('archives.search');
+    Route::get('/archives/stats', [OperationController::class, 'archivesStats'])->name('archives.stats');
+    
     Route::prefix('{operation}')->group(function () {
         Route::get('/', [OperationController::class, 'show'])->name('show');
         Route::put('/', [OperationController::class, 'update'])->middleware('role:admin,manager,operator')->name('update');

@@ -435,4 +435,119 @@ class OperationController extends Controller
             return $this->errorResponse('Erreur lors de la récupération des documents', 500);
         }
     }
+
+    /**
+     * Get archived operations
+     */
+    public function archives(Request $request): JsonResponse
+    {
+        try {
+            // Fetch archived operations (completed with invoicing)
+            $archives = DB::table('operations')
+                ->where('statut', 'terminee')
+                ->whereNotNull('date_fin')
+                ->select(
+                    'id',
+                    'numero_operation as numeroOperation',
+                    'type_operation as typeOperation',
+                    'date_prevue as dateExecution',
+                    'vehicule_id as camion',
+                    DB::raw("'' as remorque"),
+                    'responsable as client',
+                    'description as instructions',
+                    DB::raw('0 as montantTotal'),
+                    DB::raw("DATE(date_fin) as dateFacturation"),
+                    DB::raw("CONCAT('FACT-', id) as numeroFacture"),
+                    DB::raw("'paye' as statutPaiement"),
+                    'date_fin as dateArchivage'
+                )
+                ->orderBy('date_fin', 'desc')
+                ->get();
+
+            return $this->successResponse($archives, 'Archives récupérées avec succès');
+        } catch (\Exception $e) {
+            \Log::error('Erreur archives opérations: ' . $e->getMessage());
+            return $this->errorResponse('Erreur lors de la récupération des archives', 500);
+        }
+    }
+
+    /**
+     * Search in archived operations
+     */
+    public function archivesSearch(Request $request): JsonResponse
+    {
+        try {
+            $query = DB::table('operations')
+                ->where('statut', 'terminee')
+                ->whereNotNull('date_fin');
+
+            // Apply filters
+            if ($request->filled('dateDebut') && $request->filled('dateFin')) {
+                $query->whereBetween('date_fin', [
+                    $request->dateDebut,
+                    $request->dateFin
+                ]);
+            }
+
+            if ($request->filled('typeOperation')) {
+                $query->where('type_operation', $request->typeOperation);
+            }
+
+            if ($request->filled('client')) {
+                $query->where('responsable', 'like', '%' . $request->client . '%');
+            }
+
+            if ($request->filled('numeroOperation')) {
+                $query->where('numero_operation', 'like', '%' . $request->numeroOperation . '%');
+            }
+
+            $archives = $query->select(
+                    'id',
+                    'numero_operation as numeroOperation',
+                    'type_operation as typeOperation',
+                    'date_prevue as dateExecution',
+                    'vehicule_id as camion',
+                    DB::raw("'' as remorque"),
+                    'responsable as client',
+                    'description as instructions',
+                    DB::raw('0 as montantTotal'),
+                    DB::raw("DATE(date_fin) as dateFacturation"),
+                    DB::raw("CONCAT('FACT-', id) as numeroFacture"),
+                    DB::raw("'paye' as statutPaiement"),
+                    'date_fin as dateArchivage'
+                )
+                ->orderBy('date_fin', 'desc')
+                ->get();
+
+            return $this->successResponse($archives, 'Recherche effectuée avec succès');
+        } catch (\Exception $e) {
+            \Log::error('Erreur recherche archives opérations: ' . $e->getMessage());
+            return $this->errorResponse('Erreur lors de la recherche', 500);
+        }
+    }
+
+    /**
+     * Get statistics for archived operations
+     */
+    public function archivesStats(Request $request): JsonResponse
+    {
+        try {
+            $stats = [
+                'total_archives' => DB::table('operations')
+                    ->where('statut', 'terminee')
+                    ->whereNotNull('date_fin')
+                    ->count(),
+                'par_type' => DB::table('operations')
+                    ->where('statut', 'terminee')
+                    ->whereNotNull('date_fin')
+                    ->select('type_operation', DB::raw('COUNT(*) as count'))
+                    ->groupBy('type_operation')
+                    ->get()
+            ];
+
+            return $this->successResponse($stats);
+        } catch (\Exception $e) {
+            return $this->errorResponse('Erreur lors de la récupération des statistiques', 500);
+        }
+    }
 }
