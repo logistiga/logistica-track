@@ -156,11 +156,11 @@ class DetentionPdfService {
     currentY += 7;
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(80, 80, 80);
-    doc.text('Responsabilité:', rightCol, currentY);
+    doc.text('Client:', rightCol, currentY);
     doc.setFont('helvetica', 'bold');
-    doc.setTextColor(220, 53, 69);
-    doc.setFontSize(9);
-    doc.text('CLIENT', rightCol + 30, currentY);
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(8);
+    doc.text(container.nomClient, rightCol + 30, currentY);
     
     return startY + 38;
   }
