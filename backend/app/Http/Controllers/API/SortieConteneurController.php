@@ -241,8 +241,12 @@ class SortieConteneurController extends Controller
             return $this->successResponse($archives, 'Archives récupérées avec succès');
 
         } catch (\Exception $e) {
-            \Log::error('Erreur archives sorties: ' . $e->getMessage());
-            return $this->errorResponse('Erreur lors de la récupération des archives', 500);
+            \Log::error('Erreur archives sorties: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
+            return $this->errorResponse('Erreur lors de la récupération des archives: ' . $e->getMessage(), 500);
         }
     }
 
@@ -322,8 +326,12 @@ class SortieConteneurController extends Controller
             return $this->successResponse($archives, 'Recherche effectuée avec succès');
 
         } catch (\Exception $e) {
-            \Log::error('Erreur recherche archives: ' . $e->getMessage());
-            return $this->errorResponse('Erreur lors de la recherche', 500);
+            \Log::error('Erreur recherche archives: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
+            return $this->errorResponse('Erreur lors de la recherche: ' . $e->getMessage(), 500);
         }
     }
 
@@ -356,8 +364,12 @@ class SortieConteneurController extends Controller
             return $this->successResponse($stats, 'Statistiques récupérées avec succès');
 
         } catch (\Exception $e) {
-            \Log::error('Erreur stats archives: ' . $e->getMessage());
-            return $this->errorResponse('Erreur lors de la récupération des statistiques', 500);
+            \Log::error('Erreur stats archives: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
+            return $this->errorResponse('Erreur lors de la récupération des statistiques: ' . $e->getMessage(), 500);
         }
     }
 
