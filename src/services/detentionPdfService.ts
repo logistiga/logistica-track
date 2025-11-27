@@ -1,7 +1,7 @@
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { DetentionContainer } from '@/types/detention';
-import logistigaLogo from '@/assets/logistiga-logo.png';
+import logistigaLogo from '@/assets/logistiga-logo-full.png';
 
 class DetentionPdfService {
   generateDebitNote(container: DetentionContainer): void {
@@ -43,29 +43,18 @@ class DetentionPdfService {
   }
 
   private addHeader(doc: jsPDF, pageWidth: number, startY: number): number {
-    // Ajouter le logo de l'entreprise
-    const logoSize = 25;
-    const logoX = 20;
+    // Logo centré et grand format prenant tout l'en-tête
+    const logoWidth = 120;
+    const logoHeight = 35;
+    const logoX = (pageWidth - logoWidth) / 2; // Centrer horizontalement
     
     try {
-      doc.addImage(logistigaLogo, 'PNG', logoX, startY, logoSize, logoSize);
+      doc.addImage(logistigaLogo, 'PNG', logoX, startY, logoWidth, logoHeight);
     } catch (e) {
       console.error('Erreur lors du chargement du logo:', e);
     }
-    
-    // Nom de l'entreprise
-    doc.setTextColor(0, 0, 0);
-    doc.setFontSize(22);
-    doc.setFont('helvetica', 'bold');
-    doc.text('LOGISTIGA', logoX + logoSize + 8, startY + 12);
 
-    // Sous-titre
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(100, 100, 100);
-    doc.text('TRANSPORT-STOCKAGE-MANUTENTION', logoX + logoSize + 8, startY + 20);
-
-    return startY + logoSize + 10;
+    return startY + logoHeight + 15;
   }
 
   private addTitle(doc: jsPDF, pageWidth: number, startY: number): number {
