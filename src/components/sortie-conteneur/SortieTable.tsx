@@ -1,10 +1,12 @@
+import { useState } from "react";
 import { SortieConteneur } from "@/types/sortie-conteneur";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { StatusBadge } from "./StatusBadge";
 import { DetentionStatusButton } from "./DetentionStatusButton";
-import { Edit, Trash2, CheckCircle, Eye } from "lucide-react";
+import { Edit, Trash2, CheckCircle, Eye, ChevronLeft, ChevronRight } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface SortieTableProps {
   sorties: SortieConteneur[];
@@ -23,6 +25,20 @@ export function SortieTable({
   onView,
   showReturnAction = true 
 }: SortieTableProps) {
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  // Calculer les indices de pagination
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = sorties.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(sorties.length / itemsPerPage);
+
+  // Réinitialiser à la page 1 si le nombre de sorties change
+  if (currentPage > totalPages && totalPages > 0) {
+    setCurrentPage(1);
+  }
+
   if (sorties.length === 0) {
     return (
       <Card>
@@ -37,6 +53,31 @@ export function SortieTable({
 
   return (
     <Card>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+        <div className="text-sm text-muted-foreground">
+          {sorties.length} sortie{sorties.length > 1 ? 's' : ''} au total
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">Afficher:</span>
+          <Select 
+            value={itemsPerPage.toString()} 
+            onValueChange={(value) => {
+              setItemsPerPage(Number(value));
+              setCurrentPage(1);
+            }}
+          >
+            <SelectTrigger className="w-[80px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="5">5</SelectItem>
+              <SelectItem value="10">10</SelectItem>
+              <SelectItem value="20">20</SelectItem>
+              <SelectItem value="50">50</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </CardHeader>
       <CardContent className="p-0">
         <Table>
           <TableHeader>
@@ -56,7 +97,7 @@ export function SortieTable({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {sorties.map((sortie) => (
+            {currentItems.map((sortie) => (
               <TableRow key={sortie.id}>
                 <TableCell className="font-medium">
                   {sortie.numeroConteneur}
@@ -137,6 +178,35 @@ export function SortieTable({
             ))}
           </TableBody>
         </Table>
+        
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between px-6 py-4 border-t">
+            <div className="text-sm text-muted-foreground">
+              Page {currentPage} sur {totalPages} • Affichage de {indexOfFirstItem + 1} à {Math.min(indexOfLastItem, sorties.length)} sur {sorties.length}
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+              >
+                <ChevronLeft className="h-4 w-4" />
+                Précédent
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages}
+              >
+                Suivant
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
