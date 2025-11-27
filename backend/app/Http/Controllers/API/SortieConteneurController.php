@@ -209,17 +209,16 @@ class SortieConteneurController extends Controller
         try {
             $archives = DB::table('prime_archives as pa')
                 ->join('sortie_conteneurs as sc', 'pa.sortie_id', '=', 'sc.id')
-                ->join('armateurs as a', 'sc.armateur_id', '=', 'a.id')
+                ->join('armateurs as a', 'sc.code_armateur', '=', 'a.code')
                 ->leftJoin('detentions as d', 'sc.id', '=', 'd.sortie_id')
                 ->select(
                     'pa.id',
                     'sc.numero_conteneur as numeroConteneur',
                     'a.code as codeArmateur',
-                    'sc.type_conteneur as typeConteneur',
                     'pa.nom_client as nomClient',
-                    'sc.date_sortie_port as dateSortiePort',
-                    'sc.date_retour_port as dateRetourPort',
-                    'sc.destination_initiale as destinationInitiale',
+                    'sc.date_sortie as dateSortiePort',
+                    'sc.date_retour as dateRetourPort',
+                    'sc.destination as destinationInitiale',
                     DB::raw('COALESCE(d.jours_bat, 0) as joursBAT'),
                     DB::raw('COALESCE(d.jours_realises, 0) as joursRealises'),
                     DB::raw('COALESCE(d.jours_depassement, 0) as joursDepassement'),
@@ -230,9 +229,6 @@ class SortieConteneurController extends Controller
                     'd.date_facturation as dateFacturationDetention',
                     'd.numero_facture as numeroFactureDetention',
                     DB::raw("CASE WHEN COALESCE(d.montant_total, 0) > 0 THEN 'paye' ELSE 'sans-frais' END as statutPaiement"),
-                    'sc.pv_sortie as pvSortie',
-                    'sc.pv_rentree_port as pvRentreePort',
-                    'sc.numero_ordre as numeroOrdre',
                     'pa.date_paiement as dateArchivage'
                 )
                 ->orderBy('pa.date_paiement', 'desc')
@@ -258,17 +254,16 @@ class SortieConteneurController extends Controller
         try {
             $query = DB::table('prime_archives as pa')
                 ->join('sortie_conteneurs as sc', 'pa.sortie_id', '=', 'sc.id')
-                ->join('armateurs as a', 'sc.armateur_id', '=', 'a.id')
+                ->join('armateurs as a', 'sc.code_armateur', '=', 'a.code')
                 ->leftJoin('detentions as d', 'sc.id', '=', 'd.sortie_id')
                 ->select(
                     'pa.id',
                     'sc.numero_conteneur as numeroConteneur',
                     'a.code as codeArmateur',
-                    'sc.type_conteneur as typeConteneur',
                     'pa.nom_client as nomClient',
-                    'sc.date_sortie_port as dateSortiePort',
-                    'sc.date_retour_port as dateRetourPort',
-                    'sc.destination_initiale as destinationInitiale',
+                    'sc.date_sortie as dateSortiePort',
+                    'sc.date_retour as dateRetourPort',
+                    'sc.destination as destinationInitiale',
                     DB::raw('COALESCE(d.jours_bat, 0) as joursBAT'),
                     DB::raw('COALESCE(d.jours_realises, 0) as joursRealises'),
                     DB::raw('COALESCE(d.jours_depassement, 0) as joursDepassement'),
@@ -279,9 +274,6 @@ class SortieConteneurController extends Controller
                     'd.date_facturation as dateFacturationDetention',
                     'd.numero_facture as numeroFactureDetention',
                     DB::raw("CASE WHEN COALESCE(d.montant_total, 0) > 0 THEN 'paye' ELSE 'sans-frais' END as statutPaiement"),
-                    'sc.pv_sortie as pvSortie',
-                    'sc.pv_rentree_port as pvRentreePort',
-                    'sc.numero_ordre as numeroOrdre',
                     'pa.date_paiement as dateArchivage'
                 );
 
