@@ -215,34 +215,59 @@ class DetentionPdfService {
   }
 
   private addAmountCalculation(doc: jsPDF, container: DetentionContainer, pageWidth: number, startY: number): number {
-    // Titre section
-    doc.setFillColor(248, 249, 250);
-    doc.rect(20, startY, pageWidth - 40, 25, 'F');
-    doc.setDrawColor(220, 220, 220);
-    doc.rect(20, startY, pageWidth - 40, 25, 'D');
-
-    doc.setTextColor(0, 0, 0);
+    // En-tête de section avec style moderne
+    doc.setFillColor(220, 53, 69);
+    doc.roundedRect(20, startY, pageWidth - 40, 10, 2, 2, 'F');
+    doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(10);
-    doc.text('CALCUL DU MONTANT', 25, startY + 8);
+    doc.setTextColor(255, 255, 255);
+    doc.text('CALCUL DU MONTANT', 25, startY + 7);
+    
+    // Fond du contenu
+    doc.setFillColor(250, 250, 250);
+    doc.roundedRect(20, startY + 10, pageWidth - 40, 28, 2, 2, 'F');
+    doc.setDrawColor(230, 230, 230);
+    doc.setLineWidth(0.3);
+    doc.roundedRect(20, startY + 10, pageWidth - 40, 28, 2, 2, 'S');
 
-    // Ligne 1: Jours de dépassement et tarif par jour
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(9);
-    doc.text(`Jours de dépassement: ${container.joursDepassement}`, 25, startY + 15);
-    doc.text(`Tarif par jour: ${this.formatCurrency(container.coutParJour)} FCFA`, pageWidth - 120, startY + 15);
+    // Informations de calcul
+    const contentY = startY + 18;
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(10);
+    
+    // Ligne 1: Jours de dépassement
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(80, 80, 80);
+    doc.text('Jours de dépassement:', 25, contentY);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(0, 0, 0);
+    doc.text(`${container.joursDepassement}`, 75, contentY);
+
+    // Ligne 1 suite: Tarif par jour
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(80, 80, 80);
+    doc.text('Tarif par jour:', pageWidth / 2 + 5, contentY);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(0, 0, 0);
+    doc.text(`${this.formatCurrency(container.coutParJour)} FCFA`, pageWidth / 2 + 35, contentY);
 
     // Section CLIENT PAIE avec calcul complet
     doc.setFillColor(240, 240, 240);
-    doc.rect(25, startY + 18, pageWidth - 90, 6, 'F');
-    doc.setFont('helvetica', 'bold');
-    doc.text('CLIENT PAIE:', 30, startY + 22);
+    doc.roundedRect(25, contentY + 8, pageWidth - 50, 10, 2, 2, 'F');
     
-    // Calcul détaillé aligné à droite
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(220, 53, 69);
+    doc.setFontSize(11);
+    doc.text('CLIENT PAIE:', 30, contentY + 15);
+    
+    // Calcul détaillé
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(10);
     const calculText = `${container.joursDepassement} jours × ${this.formatCurrency(container.coutParJour)} = ${this.formatCurrency(container.montantTotal)} FCFA`;
-    doc.text(calculText, pageWidth - 140, startY + 22);
+    doc.text(calculText, 70, contentY + 15);
 
-    return startY + 30;
+    return startY + 43;
   }
 
   private addTotalAmount(doc: jsPDF, container: DetentionContainer, pageWidth: number, startY: number): number {
@@ -287,37 +312,58 @@ class DetentionPdfService {
   }
 
   private addFooter(doc: jsPDF, pageWidth: number, pageHeight: number): void {
-    const footerY = pageHeight - 35; // Position plus haute pour éviter le chevauchement
+    const footerY = pageHeight - 40;
     
-    // Ligne de séparation subtile
-    doc.setDrawColor(200, 200, 200);
-    doc.setLineWidth(0.5);
+    // Ligne de séparation élégante
+    doc.setDrawColor(220, 53, 69);
+    doc.setLineWidth(0.8);
     doc.line(20, footerY - 5, pageWidth - 20, footerY - 5);
 
-    // Informations entreprise avec espacement correct
-    doc.setTextColor(80, 80, 80); // Gris plus foncé pour meilleure lisibilité
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(7); // Police légèrement plus petite
-    
-    // Ligne 1: Nom et adresse (bien espacée)
-    doc.text('LOGISTIGA S.A.R.L - Zone Portuaire - Ouattara-SETTRAG', 20, footerY + 3);
-    
-    // Ligne 2: Contact (avec espacement vertical de 4mm)
-    doc.text('Tél: (+241) 01 76 42 30/07 10 45 45/02 22 31 71 - logistiga@logistiga.com - www.logistiga.com', 20, footerY + 8);
-    
-    // Ligne 3: Informations bancaires (avec espacement vertical de 4mm)
-    doc.text('RIB CCB: 40002 00043 00000000001 84 - IBAN: 40000 00 100 410100600117 06', 20, footerY + 13);
-    
-    // Ligne 4: Capital et autres infos (avec espacement vertical de 4mm)
-    doc.text('Capital: 18 000 000 F CFA - NIF: 7431071 - RCCM: 2011 - F - 00001', 20, footerY + 18);
+    // Fond subtil pour le footer
+    doc.setFillColor(250, 250, 250);
+    doc.rect(20, footerY, pageWidth - 40, 35, 'F');
 
-    // Numéro de page dans le coin droit avec un fond léger
-    doc.setFillColor(248, 249, 250);
-    doc.rect(pageWidth - 35, footerY + 10, 25, 8, 'F');
-    doc.setTextColor(0, 0, 0);
-    doc.setFont('helvetica', 'bold');
+    // Informations entreprise bien espacées
+    doc.setTextColor(60, 60, 60);
+    doc.setFont('helvetica', 'normal');
     doc.setFontSize(8);
-    doc.text('Page 1', pageWidth - 30, footerY + 15);
+    
+    let currentY = footerY + 5;
+    
+    // Ligne 1: Nom et adresse
+    doc.setFont('helvetica', 'bold');
+    doc.text('LOGISTIGA S.A.R.L', 25, currentY);
+    doc.setFont('helvetica', 'normal');
+    doc.text(' - Zone Portuaire - Ouattara-SETTRAG', 60, currentY);
+    
+    currentY += 5;
+    
+    // Ligne 2: Contact
+    doc.text('Tél: (+241) 01 76 42 30/07 10 45 45/02 22 31 71', 25, currentY);
+    
+    currentY += 5;
+    
+    // Ligne 3: Email et web
+    doc.text('logistiga@logistiga.com - www.logistiga.com', 25, currentY);
+    
+    currentY += 5;
+    
+    // Ligne 4: Informations bancaires
+    doc.setFontSize(7);
+    doc.text('RIB CCB: 40002 00043 00000000001 84 - IBAN: 40000 00 100 410100600117 06', 25, currentY);
+    
+    currentY += 5;
+    
+    // Ligne 5: Capital et autres infos
+    doc.text('Capital: 18 000 000 F CFA - NIF: 7431071 - RCCM: 2011 - F - 00001', 25, currentY);
+
+    // Numéro de page dans un cadre moderne
+    doc.setFillColor(220, 53, 69);
+    doc.roundedRect(pageWidth - 30, footerY + 12, 20, 8, 2, 2, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.text('Page 1', pageWidth - 20, footerY + 17, { align: 'center' });
   }
 
   private formatCurrency(amount: number | string): string {
