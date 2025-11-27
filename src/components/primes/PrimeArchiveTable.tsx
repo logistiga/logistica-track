@@ -14,12 +14,15 @@ interface PrimeArchiveTableProps {
 export function PrimeArchiveTable({ archives, stats }: PrimeArchiveTableProps) {
   const [searchTerm, setSearchTerm] = useState("");
 
-  const filteredArchives = archives.filter((archive) =>
-    archive.numero_tc.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (archive.chauffeur && archive.chauffeur.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    archive.numero_semaine.toString().includes(searchTerm.toLowerCase()) ||
-    (archive.immatriculation && archive.immatriculation.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  const filteredArchives = archives.filter((archive) => {
+    const search = searchTerm.toLowerCase();
+    return (
+      (archive.numero_tc?.toLowerCase() || '').includes(search) ||
+      (archive.chauffeur?.toLowerCase() || '').includes(search) ||
+      (archive.numero_semaine?.toString() || '').includes(search) ||
+      (archive.immatriculation?.toLowerCase() || '').includes(search)
+    );
+  });
 
   return (
     <Card>
