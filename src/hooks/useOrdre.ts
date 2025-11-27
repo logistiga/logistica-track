@@ -48,9 +48,10 @@ export function useOrdre() {
     setLoading(true);
     try {
       const data = await sortieConteneurService.getSorties();
-      // Filtrer uniquement les sorties en cours (pas encore retournées)
+      // Filtrer uniquement les sorties retournées au port (en attente de validation)
+      // Exclure les sorties déjà archivées
       const sortiesEnCours = Array.isArray(data)
-        ? data.filter((s: any) => s.statut === 'en_cours' || s.statut === 'sorti')
+        ? data.filter((s: any) => s.statut === 'retourne_port')
         : [];
       
       // Mapper au format OrdreSortieStandard
