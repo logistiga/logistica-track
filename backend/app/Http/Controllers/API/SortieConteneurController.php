@@ -201,4 +201,162 @@ class SortieConteneurController extends Controller
         }
     }
 
+    /**
+     * Lister les archives de sorties (primes payées)
+     */
+    public function archives(Request $request): JsonResponse
+    {
+        try {
+            $archives = DB::table('prime_archives as pa')
+                ->join('sortie_conteneurs as sc', 'pa.sortie_id', '=', 'sc.id')
+                ->join('armateurs as a', 'sc.armateur_id', '=', 'a.id')
+                ->leftJoin('detentions as d', 'sc.id', '=', 'd.sortie_id')
+                ->select(
+                    'pa.id',
+                    'sc.numero_conteneur as numeroConteneur',
+                    'a.code as codeArmateur',
+                    'sc.type_conteneur as typeConteneur',
+                    'pa.nom_client as nomClient',
+                    'sc.date_sortie_port as dateSortiePort',
+                    'sc.date_retour_port as dateRetourPort',
+                    'sc.destination_initiale as destinationInitiale',
+                    'd.jours_bat as joursBAT',
+                    'd.jours_realises as joursRealises',
+                    'd.jours_depassement as joursDepassement',
+                    'd.responsabilite',
+                    'd.jours_client as joursClient',
+                    'd.jours_logistiga as joursLogistiga',
+                    'd.montant_total as montantTotalDetention',
+                    'd.date_facturation as dateFacturationDetention',
+                    'd.numero_facture as numeroFactureDetention',
+                    DB::raw("CASE WHEN d.montant_total > 0 THEN 'paye' ELSE 'sans-frais' END as statutPaiement"),
+                    'sc.pv_sortie as pvSortie',
+                    'sc.pv_rentree_port as pvRentreePort',
+                    'sc.numero_ordre as numeroOrdre',
+                    'pa.date_paiement as dateArchivage'
+                )
+                ->orderBy('pa.date_paiement', 'desc')
+                ->get();
+
+            return $this->successResponse($archives, 'Archives récupérées avec succès');
+
+        } catch (\Exception $e) {
+            return $this->errorResponse('Erreur lors de la récupération des archives', 500);
+        }
+    }
+
+    /**
+     * Rechercher dans les archives de sorties
+     */
+    public function archivesSearch(Request $request): JsonResponse
+    {
+        try {
+            $query = DB::table('prime_archives as pa')
+                ->join('sortie_conteneurs as sc', 'pa.sortie_id', '=', 'sc.id')
+                ->join('armateurs as a', 'sc.armateur_id', '=', 'a.id')
+                ->leftJoin('detentions as d', 'sc.id', '=', 'd.sortie_id')
+                ->select(
+                    'pa.id',
+                    'sc.numero_conteneur as numeroConteneur',
+                    'a.code as codeArmateur',
+                    'sc.type_conteneur as typeConteneur',
+                    'pa.nom_client as nomClient',
+                    'sc.date_sortie_port as dateSortiePort',
+                    'sc.date_retour_port as dateRetourPort',
+                    'sc.destination_initiale as destinationInitiale',
+                    'd.jours_bat as joursBAT',
+                    'd.jours_realises as joursRealises',
+                    'd.jours_depassement as joursDepassement',
+                    'd.responsabilite',
+                    'd.jours_client as joursClient',
+                    'd.jours_logistiga as joursLogistiga',
+                    'd.montant_total as montantTotalDetention',
+                    'd.date_facturation as dateFacturationDetention',
+                    'd.numero_facture as numeroFactureDetention',
+                    DB::raw("CASE WHEN d.montant_total > 0 THEN 'paye' ELSE 'sans-frais' END as statutPaiement"),
+                    'sc.pv_sortie as pvSortie',
+                    'sc.pv_rentree_port as pvRentreePort',
+                    'sc.numero_ordre as numeroOrdre',
+                    'pa.date_paiement as dateArchivage'
+                );
+
+            // Filtrer par dates
+            if ($request->has('dateDebut')) {
+                $query->where('pa.date_paiement', '>=', $request->dateDebut);
+            }
+
+            if ($request->has('dateFin')) {
+                $query->where('pa.date_paiement', '<=', $request->dateFin);
+            }
+
+            // Filtrer par armateur
+            if ($request->has('armateur') && $request->armateur !== '') {
+                $query->where('a.code', 'like', '%' . $request->armateur . '%');
+            }
+
+            // Filtrer par client
+            if ($request->has('client') && $request->client !== '') {
+                $query->where('pa.nom_client', 'like', '%' . $request->client . '%');
+            }
+
+            // Filtrer par numéro de conteneur
+            if ($request->has('numeroConteneur') && $request->numeroConteneur !== '') {
+                $query->where('sc.numero_conteneur', 'like', '%' . $request->numeroConteneur . '%');
+            }
+
+            // Filtrer par statut de paiement
+            if ($request->has('statutPaiement') && $request->statutPaiement !== '') {
+                if ($request->statutPaiement === 'paye') {
+                    $query->where('d.montant_total', '>', 0);
+                } elseif ($request->statutPaiement === 'sans-frais') {
+                    $query->where(function($q) {
+                        $q->whereNull('d.montant_total')
+                          ->orWhere('d.montant_total', '=', 0);
+                    });
+                }
+            }
+
+            $archives = $query->orderBy('pa.date_paiement', 'desc')->get();
+
+            return $this->successResponse($archives, 'Recherche effectuée avec succès');
+
+        } catch (\Exception $e) {
+            return $this->errorResponse('Erreur lors de la recherche', 500);
+        }
+    }
+
+    /**
+     * Statistiques des archives de sorties
+     */
+    public function archivesStats(Request $request): JsonResponse
+    {
+        try {
+            $stats = [
+                'total_archives' => DB::table('prime_archives')->count(),
+                'total_avec_detention' => DB::table('prime_archives as pa')
+                    ->join('sortie_conteneurs as sc', 'pa.sortie_id', '=', 'sc.id')
+                    ->join('detentions as d', 'sc.id', '=', 'd.sortie_id')
+                    ->where('d.montant_total', '>', 0)
+                    ->count(),
+                'total_sans_frais' => DB::table('prime_archives as pa')
+                    ->join('sortie_conteneurs as sc', 'pa.sortie_id', '=', 'sc.id')
+                    ->leftJoin('detentions as d', 'sc.id', '=', 'd.sortie_id')
+                    ->where(function($q) {
+                        $q->whereNull('d.montant_total')
+                          ->orWhere('d.montant_total', '=', 0);
+                    })
+                    ->count(),
+                'montant_total_detention' => DB::table('prime_archives as pa')
+                    ->join('sortie_conteneurs as sc', 'pa.sortie_id', '=', 'sc.id')
+                    ->join('detentions as d', 'sc.id', '=', 'd.sortie_id')
+                    ->sum('d.montant_total') ?? 0,
+            ];
+
+            return $this->successResponse($stats, 'Statistiques récupérées avec succès');
+
+        } catch (\Exception $e) {
+            return $this->errorResponse('Erreur lors de la récupération des statistiques', 500);
+        }
+    }
+
 }

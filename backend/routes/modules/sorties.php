@@ -13,6 +13,9 @@ Route::prefix('sorties')->name('sorties.')->group(function () {
     Route::get('/search', [SortieConteneurController::class, 'search'])->name('search');
     Route::get('/stats', [SortieConteneurController::class, 'stats'])->name('stats');
     Route::get('/export', [SortieConteneurController::class, 'export'])->name('export');
+    Route::get('/archives', [SortieConteneurController::class, 'archives'])->name('archives');
+    Route::get('/archives/search', [SortieConteneurController::class, 'archivesSearch'])->name('archives.search');
+    Route::get('/archives/stats', [SortieConteneurController::class, 'archivesStats'])->name('archives.stats');
     Route::post('/bulk-return', [SortieRetourController::class, 'bulkReturn'])->middleware('role:admin,manager,operator')->name('bulk-return');
     
     Route::prefix('{sortie}')->group(function () {
