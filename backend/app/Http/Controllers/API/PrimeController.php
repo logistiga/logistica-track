@@ -20,7 +20,11 @@ class PrimeController extends Controller
         try {
             $query = SortieConteneur::with(['armateur', 'camion', 'remorque', 'createdBy'])
                 ->whereNotNull('prime_chauffeur')
-                ->where('prime_chauffeur', '>', 0);
+                ->where('prime_chauffeur', '>', 0)
+                ->where(function ($q) {
+                    $q->whereNull('statut_prime')
+                      ->orWhere('statut_prime', 'en_attente');
+                });
 
             // Filtres
             if ($request->filled('search')) {
@@ -92,28 +96,39 @@ class PrimeController extends Controller
     public function stats(): JsonResponse
     {
         try {
-            $sorties = SortieConteneur::whereNotNull('prime_chauffeur')
+            // Primes en attente seulement (non payées)
+            $sortiesEnAttente = SortieConteneur::whereNotNull('prime_chauffeur')
+                ->where('prime_chauffeur', '>', 0)
+                ->where(function ($q) {
+                    $q->whereNull('statut_prime')
+                      ->orWhere('statut_prime', 'en_attente');
+                })
+                ->get();
+
+            // Toutes les primes (pour montant total)
+            $toutesLesSorties = SortieConteneur::whereNotNull('prime_chauffeur')
                 ->where('prime_chauffeur', '>', 0)
                 ->get();
 
-            $total = $sorties->count();
-            $montantTotal = $sorties->sum('prime_chauffeur');
+            $total = $toutesLesSorties->count();
+            $montantTotal = $toutesLesSorties->sum('prime_chauffeur');
             
-            $primesEnCours = $sorties->whereNull('date_retour');
-            $primesPaye = $sorties->where('statut_prime', 'paye');
+            $montantEnAttente = $sortiesEnAttente->sum('prime_chauffeur');
+            $nombreEnAttente = $sortiesEnAttente->count();
             
-            $montantEnCours = $primesEnCours->sum('prime_chauffeur');
+            $primesPaye = $toutesLesSorties->where('statut_prime', 'paye');
             $montantPaye = $primesPaye->sum('prime_chauffeur');
+            $nombrePaye = $primesPaye->count();
 
             return response()->json([
                 'status' => 'success',
                 'data' => [
                     'total_primes' => $total,
                     'montant_total' => number_format($montantTotal, 0, ',', ' ') . ' FCFA',
-                    'montant_en_cours' => number_format($montantEnCours, 0, ',', ' ') . ' FCFA',
+                    'montant_en_attente' => number_format($montantEnAttente, 0, ',', ' ') . ' FCFA',
                     'montant_paye' => number_format($montantPaye, 0, ',', ' ') . ' FCFA',
-                    'nombre_en_cours' => $primesEnCours->count(),
-                    'nombre_paye' => $primesPaye->count(),
+                    'nombre_en_attente' => $nombreEnAttente,
+                    'nombre_paye' => $nombrePaye,
                 ],
             ]);
         } catch (\Exception $e) {
