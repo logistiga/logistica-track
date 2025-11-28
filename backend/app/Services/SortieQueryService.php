@@ -43,7 +43,8 @@ class SortieQueryService
     public function getSortiesEnCours(array $filters = [])
     {
         $query = SortieConteneur::with(['armateur', 'camion', 'remorque'])
-            ->where('statut', 'en_cours');
+            ->where('statut', 'en_cours')
+            ->whereNull('archived_at');
 
         $this->applyBasicFilters($query, $filters);
 
@@ -56,7 +57,8 @@ class SortieQueryService
     public function getSortiesRetournees(array $filters = [])
     {
         $query = SortieConteneur::with(['armateur', 'camion', 'remorque', 'camionRetour', 'remorqueRetour'])
-            ->where('statut', 'retourne_port');
+            ->where('statut', 'retourne_port')
+            ->whereNull('archived_at');
 
         $this->applyBasicFilters($query, $filters);
 
@@ -68,6 +70,11 @@ class SortieQueryService
      */
     private function applyFilters($query, array $filters)
     {
+        // Exclure les sorties archivées par défaut
+        if (!isset($filters['include_archived']) || !$filters['include_archived']) {
+            $query->whereNull('archived_at');
+        }
+
         if (isset($filters['statut']) && $filters['statut'] !== 'tous') {
             $query->where('statut', $filters['statut']);
         }
