@@ -211,6 +211,7 @@ class SortieConteneurController extends Controller
                 ->join('sortie_conteneurs as sc', 'pa.sortie_id', '=', 'sc.id')
                 ->join('armateurs as a', 'sc.code_armateur', '=', 'a.code')
                 ->leftJoin('detentions as d', 'sc.id', '=', 'd.sortie_conteneur_id')
+                ->leftJoin('vehicules as vr', 'sc.remorque_id', '=', 'vr.id')
                 ->select(
                     'pa.id',
                     'sc.numero_conteneur as numeroConteneur',
@@ -230,6 +231,7 @@ class SortieConteneurController extends Controller
                     DB::raw("CASE WHEN d.id IS NOT NULL AND COALESCE(d.cout_total, 0) > 0 THEN 'paye' ELSE 'sans-frais' END as statutPaiement"),
                     'pa.montant_prime as montantPrime',
                     'pa.camion',
+                    'vr.immatriculation as remorque',
                     'pa.chauffeur',
                     'sc.numero_bl as numeroBL',
                     'sc.nom_transitaire as nomTransitaire',
@@ -261,6 +263,7 @@ class SortieConteneurController extends Controller
                 ->join('sortie_conteneurs as sc', 'pa.sortie_id', '=', 'sc.id')
                 ->join('armateurs as a', 'sc.code_armateur', '=', 'a.code')
                 ->leftJoin('detentions as d', 'sc.id', '=', 'd.sortie_conteneur_id')
+                ->leftJoin('vehicules as vr', 'sc.remorque_id', '=', 'vr.id')
                 ->select(
                     'pa.id',
                     'sc.numero_conteneur as numeroConteneur',
@@ -280,6 +283,7 @@ class SortieConteneurController extends Controller
                     DB::raw("CASE WHEN d.id IS NOT NULL AND COALESCE(d.cout_total, 0) > 0 THEN 'paye' ELSE 'sans-frais' END as statutPaiement"),
                     'pa.montant_prime as montantPrime',
                     'pa.camion',
+                    'vr.immatriculation as remorque',
                     'pa.chauffeur',
                     'sc.numero_bl as numeroBL',
                     'sc.nom_transitaire as nomTransitaire',

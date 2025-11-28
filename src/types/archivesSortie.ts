@@ -19,6 +19,7 @@ export interface ArchiveSortie {
   statutPaiement: "paye" | "sans-frais";
   montantPrime?: number;
   camion?: string;
+  remorque?: string;
   chauffeur?: string;
   numeroBL?: string;
   nomTransitaire?: string;

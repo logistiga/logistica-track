@@ -83,6 +83,10 @@ export function ArchiveSortieDetailsDialog({ archive, open, onOpenChange }: Arch
                 <p className="font-medium">{archive.camion || "-"}</p>
               </div>
               <div>
+                <span className="text-sm text-muted-foreground">Remorque</span>
+                <p className="font-medium">{archive.remorque || "-"}</p>
+              </div>
+              <div>
                 <span className="text-sm text-muted-foreground">Chauffeur</span>
                 <p className="font-medium">{archive.chauffeur || "-"}</p>
               </div>
