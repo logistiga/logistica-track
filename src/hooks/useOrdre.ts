@@ -211,11 +211,22 @@ export function useOrdre() {
   // Confirmer une sortie (l'envoyer aux archives)
   const confirmSortie = async (sortie: OrdreSortieStandard) => {
     try {
-      // Marquer la sortie comme archivée
-      await sortieConteneurService.updateSortie(parseInt(sortie.id), {
-        statut: 'archive'
-      } as any);
-      setSorties(prev => prev.filter(s => s.id !== sortie.id));
+      // Vérifier que les champs obligatoires sont remplis
+      if (!sortie.pvSortie || !sortie.pvRentreePort || !sortie.numeroOrdre) {
+        toast({
+          title: "Champs manquants",
+          description: "Veuillez remplir PV Sortie, PV Rentrée et N° Ordre avant de valider.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Archiver la sortie (créer prime_archive et changer statut)
+      await sortieConteneurService.archiverSortie(parseInt(sortie.id));
+      
+      // Recharger les sorties pour mettre à jour la liste
+      await loadSorties();
+      
       toast({
         title: "Sortie validée",
         description: "La sortie a été envoyée vers les Archives Sortie."

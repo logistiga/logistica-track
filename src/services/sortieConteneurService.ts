@@ -133,6 +133,11 @@ class SortieConteneurService {
     await apiService.delete(`/sorties/${id}`);
   }
 
+  async archiverSortie(id: number): Promise<SortieConteneur> {
+    const response = await apiService.post(`/sorties/${id}/archiver`, {});
+    return response.data;
+  }
+
   async confirmerRetour(id: number, retourData: RetourData): Promise<SortieConteneur> {
     console.log('🔄 Service: Confirming return for sortie ID:', id);
     console.log('📤 Service: Return data received:', retourData);
