@@ -36,12 +36,14 @@ class SortieConteneur extends Model
         'observations',
         'created_by',
         'updated_by',
+        'archived_at',
     ];
 
     protected $casts = [
         'date_sortie' => 'date',
         'date_retour' => 'date',
         'date_fin_franchise' => 'date',
+        'archived_at' => 'datetime',
         'prime_chauffeur' => 'decimal:2',
         'jours_bad' => 'integer',
     ];

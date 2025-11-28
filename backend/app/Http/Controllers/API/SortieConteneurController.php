@@ -43,7 +43,7 @@ class SortieConteneurController extends Controller
             //     return $this->sortieService->getAllSorties($request->all());
             // });
 
-            // Récupérer directement sans cache
+            // Récupérer directement sans cache (les sorties archivées sont filtrées automatiquement)
             $result = $this->sortieService->getAllSorties($request->all());
             
             // Log pour déboguer
@@ -250,8 +250,8 @@ class SortieConteneurController extends Controller
                 'updated_at' => now(),
             ]);
 
-            // Changer le statut de la sortie à 'archive'
-            $sortie->update(['statut' => 'archive']);
+            // Marquer la sortie comme archivée avec timestamp
+            $sortie->update(['archived_at' => now()]);
 
             $this->cacheService->invalidateAllCaches();
 
