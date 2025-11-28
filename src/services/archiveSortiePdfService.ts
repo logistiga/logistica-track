@@ -138,7 +138,7 @@ class ArchiveSortiePdfService {
     this.addField(doc, 'PV de sortie:', archive.pvSortie || '-', rightCol, currentY);
     currentY += 7;
     
-    this.addField(doc, 'PV de rentrée:', archive.pvRentree || '-', rightCol, currentY);
+    this.addField(doc, 'PV de rentrée:', archive.pvRentreePort || '-', rightCol, currentY);
     currentY += 7;
     
     this.addField(doc, 'Destination:', archive.destinationInitiale, rightCol, currentY);

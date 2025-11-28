@@ -25,7 +25,7 @@ export interface ArchiveSortie {
   nomTransitaire?: string;
   numeroOrdre?: string;
   pvSortie?: string;
-  pvRentree?: string;
+  pvRentreePort?: string;
   observations?: string;
   dateArchivage: string;
 }

@@ -95,7 +95,7 @@ export function ArchiveSortieDetailsDialog({ archive, open, onOpenChange }: Arch
               </div>
               <div>
                 <span className="text-sm text-muted-foreground">PV de rentrée</span>
-                <p className="font-medium">{archive.pvRentree || "-"}</p>
+                <p className="font-medium">{archive.pvRentreePort || "-"}</p>
               </div>
               <div>
                 <span className="text-sm text-muted-foreground">Destination</span>

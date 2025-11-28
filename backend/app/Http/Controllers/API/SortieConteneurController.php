@@ -238,7 +238,7 @@ class SortieConteneurController extends Controller
                     'sc.nom_transitaire as nomTransitaire',
                     'sc.numero_ordre as numeroOrdre',
                     'sc.pv_sortie as pvSortie',
-                    'sc.pv_rentree as pvRentree',
+                    'sc.pv_rentree_port as pvRentreePort',
                     'pa.observations',
                     'pa.date_paiement as dateArchivage'
                 )
@@ -294,7 +294,7 @@ class SortieConteneurController extends Controller
                     'sc.nom_transitaire as nomTransitaire',
                     'sc.numero_ordre as numeroOrdre',
                     'sc.pv_sortie as pvSortie',
-                    'sc.pv_rentree as pvRentree',
+                    'sc.pv_rentree_port as pvRentreePort',
                     'pa.observations',
                     'pa.date_paiement as dateArchivage'
                 );

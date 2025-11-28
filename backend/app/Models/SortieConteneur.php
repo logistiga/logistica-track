@@ -14,6 +14,9 @@ class SortieConteneur extends Model
     protected $fillable = [
         'numero_conteneur',
         'numero_bl',
+        'numero_ordre',
+        'pv_sortie',
+        'pv_rentree_port',
         'code_armateur',
         'camion_id',
         'remorque_id',
