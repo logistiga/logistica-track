@@ -211,6 +211,7 @@ class SortieConteneurController extends Controller
                 ->join('sortie_conteneurs as sc', 'pa.sortie_id', '=', 'sc.id')
                 ->join('armateurs as a', 'sc.code_armateur', '=', 'a.code')
                 ->leftJoin('detentions as d', 'sc.id', '=', 'd.sortie_conteneur_id')
+                ->leftJoin('vehicules as vc', 'sc.camion_id', '=', 'vc.id')
                 ->leftJoin('vehicules as vr', 'sc.remorque_id', '=', 'vr.id')
                 ->select(
                     'pa.id',
@@ -230,7 +231,7 @@ class SortieConteneurController extends Controller
                     DB::raw('COALESCE(d.cout_total, 0) as montantTotalDetention'),
                     DB::raw("CASE WHEN d.id IS NOT NULL AND COALESCE(d.cout_total, 0) > 0 THEN 'paye' ELSE 'sans-frais' END as statutPaiement"),
                     'pa.montant_prime as montantPrime',
-                    'pa.camion',
+                    'vc.immatriculation as camion',
                     'vr.immatriculation as remorque',
                     'pa.chauffeur',
                     'sc.numero_bl as numeroBL',
@@ -263,6 +264,7 @@ class SortieConteneurController extends Controller
                 ->join('sortie_conteneurs as sc', 'pa.sortie_id', '=', 'sc.id')
                 ->join('armateurs as a', 'sc.code_armateur', '=', 'a.code')
                 ->leftJoin('detentions as d', 'sc.id', '=', 'd.sortie_conteneur_id')
+                ->leftJoin('vehicules as vc', 'sc.camion_id', '=', 'vc.id')
                 ->leftJoin('vehicules as vr', 'sc.remorque_id', '=', 'vr.id')
                 ->select(
                     'pa.id',
@@ -282,7 +284,7 @@ class SortieConteneurController extends Controller
                     DB::raw('COALESCE(d.cout_total, 0) as montantTotalDetention'),
                     DB::raw("CASE WHEN d.id IS NOT NULL AND COALESCE(d.cout_total, 0) > 0 THEN 'paye' ELSE 'sans-frais' END as statutPaiement"),
                     'pa.montant_prime as montantPrime',
-                    'pa.camion',
+                    'vc.immatriculation as camion',
                     'vr.immatriculation as remorque',
                     'pa.chauffeur',
                     'sc.numero_bl as numeroBL',
