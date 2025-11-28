@@ -12,6 +12,7 @@ class Stockage extends Model
     protected $table = 'stockages';
 
     protected $fillable = [
+        'sortie_conteneur_id',
         'nom_client',
         'numero_conteneur',
         'provenance',
@@ -36,6 +37,11 @@ class Stockage extends Model
     ];
 
     // Relations
+    public function sortieConteneur()
+    {
+        return $this->belongsTo(\App\Models\SortieConteneur::class, 'sortie_conteneur_id');
+    }
+
     public function createdBy()
     {
         return $this->belongsTo(User::class, 'created_by');
