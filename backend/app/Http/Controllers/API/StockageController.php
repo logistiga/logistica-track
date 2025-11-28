@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Models\Stockage;
+use App\Models\Archive;
 use App\Http\Resources\StockageResource;
 use App\Http\Requests\StoreStockageRequest;
 use App\Http\Requests\UpdateStockageRequest;
@@ -182,6 +183,54 @@ class StockageController extends Controller
         return $this->successResponse(
             StockageResource::collection($stockages),
             'Stockages actifs récupérés avec succès'
+        );
+    }
+
+    /**
+     * Archiver un stockage (après paiement)
+     */
+    public function archiver(Request $request, Stockage $stockage): JsonResponse
+    {
+        $request->validate([
+            'numero_facture' => 'required|string',
+            'date_facturation' => 'required|date',
+            'montant_total' => 'required|numeric|min:0',
+        ]);
+
+        // Créer l'archive
+        Archive::create([
+            'type_archive' => 'base_operation',
+            'reference_originale' => 'STOCK-' . $stockage->id,
+            'donnees_originales' => [
+                'type_operation' => 'stockage',
+                'numero_conteneur' => $stockage->numero_conteneur,
+                'nom_client' => $stockage->nom_client,
+                'provenance' => $stockage->provenance,
+                'date_arrivee_base' => $stockage->date_arrivee->format('Y-m-d'),
+                'date_sortie_base' => $stockage->date_sortie ? $stockage->date_sortie->format('Y-m-d') : null,
+                'camion_arrivee' => $stockage->camion_arrivee,
+                'remorque_arrivee' => $stockage->remorque_arrivee,
+                'camion_sortie' => $stockage->camion_sortie,
+                'remorque_sortie' => $stockage->remorque_sortie,
+                'jours_gratuits' => $stockage->jours_gratuits ?? 0,
+                'jours_payants' => $stockage->jours_payants ?? 0,
+                'montant_total_facture' => $request->montant_total,
+                'date_facturation' => $request->date_facturation,
+                'numero_facture' => $request->numero_facture,
+                'original_data' => $stockage->toArray(),
+            ],
+            'date_archivage' => now(),
+            'motif_archivage' => 'Stockage payé et archivé',
+            'archive_par' => auth()->id(),
+            'commentaires' => $request->commentaires,
+        ]);
+
+        // Supprimer le stockage après archivage
+        $stockage->delete();
+
+        return $this->successResponse(
+            null,
+            'Stockage archivé avec succès'
         );
     }
 }

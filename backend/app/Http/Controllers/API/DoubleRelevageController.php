@@ -4,15 +4,19 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Models\DoubleRelevage;
+use App\Models\Archive;
 use App\Http\Resources\DoubleRelevageResource;
 use App\Http\Requests\StoreDoubleRelevageRequest;
 use App\Http\Requests\UpdateDoubleRelevageRequest;
 use App\Services\DoubleRelevageService;
+use App\Traits\ApiResponseTrait;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
 class DoubleRelevageController extends Controller
 {
+    use ApiResponseTrait;
+    
     protected DoubleRelevageService $doubleRelevageService;
 
     public function __construct(DoubleRelevageService $doubleRelevageService)
@@ -143,6 +147,54 @@ class DoubleRelevageController extends Controller
         return $this->successResponse(
             DoubleRelevageResource::collection($operations),
             'Opérations en attente récupérées avec succès'
+        );
+    }
+
+    /**
+     * Archiver une opération de double relevage (après paiement)
+     */
+    public function archiver(Request $request, DoubleRelevage $doubleRelevage): JsonResponse
+    {
+        $request->validate([
+            'numero_facture' => 'required|string',
+            'date_facturation' => 'required|date',
+            'montant_total' => 'required|numeric|min:0',
+        ]);
+
+        // Créer l'archive
+        Archive::create([
+            'type_archive' => 'base_operation',
+            'reference_originale' => 'DR-' . $doubleRelevage->id,
+            'donnees_originales' => [
+                'type_operation' => 'double-relevage',
+                'numero_conteneur' => $doubleRelevage->numero_conteneur,
+                'nom_client' => $doubleRelevage->nom_client,
+                'provenance' => $doubleRelevage->provenance,
+                'date_arrivee_base' => $doubleRelevage->date_arrivee->format('Y-m-d'),
+                'date_sortie_base' => $doubleRelevage->date_sortie ? $doubleRelevage->date_sortie->format('Y-m-d') : null,
+                'camion_arrivee' => $doubleRelevage->camion_arrivee,
+                'remorque_arrivee' => $doubleRelevage->remorque_arrivee,
+                'camion_sortie' => $doubleRelevage->camion_sortie,
+                'remorque_sortie' => $doubleRelevage->remorque_sortie,
+                'jours_gratuits' => 0,
+                'jours_payants' => 0,
+                'montant_total_facture' => $request->montant_total,
+                'date_facturation' => $request->date_facturation,
+                'numero_facture' => $request->numero_facture,
+                'original_data' => $doubleRelevage->toArray(),
+            ],
+            'date_archivage' => now(),
+            'motif_archivage' => 'Double relevage payé et archivé',
+            'archive_par' => auth()->id(),
+            'commentaires' => $request->commentaires,
+        ]);
+
+        // Supprimer l'opération après archivage
+        $doubleRelevage->delete();
+
+        return $this->successResponse(
+            null,
+            'Double relevage archivé avec succès'
         );
     }
 }

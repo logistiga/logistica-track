@@ -17,6 +17,7 @@ Route::prefix('stockages')->name('stockages.')->group(function () {
         Route::put('/', [StockageController::class, 'update'])->middleware('role:admin,manager,operator')->name('update');
         Route::delete('/', [StockageController::class, 'destroy'])->middleware('role:admin')->name('destroy');
         Route::post('/sortie', [StockageController::class, 'sortie'])->middleware('role:admin,manager,operator')->name('sortie');
+        Route::post('/archiver', [StockageController::class, 'archiver'])->middleware('role:admin,manager')->name('archiver');
     });
 });
 
@@ -32,6 +33,7 @@ Route::prefix('double-relevages')->name('double-relevages.')->group(function () 
         Route::put('/', [DoubleRelevageController::class, 'update'])->middleware('role:admin,manager,operator')->name('update');
         Route::delete('/', [DoubleRelevageController::class, 'destroy'])->middleware('role:admin')->name('destroy');
         Route::post('/confirmer', [DoubleRelevageController::class, 'confirmer'])->middleware('role:admin,manager,operator')->name('confirmer');
+        Route::post('/archiver', [DoubleRelevageController::class, 'archiver'])->middleware('role:admin,manager')->name('archiver');
     });
 });
 
