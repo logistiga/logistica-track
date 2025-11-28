@@ -21,8 +21,10 @@ export function StockageTab({ camions, remorques }: StockageTabProps) {
   const [stockages, setStockages] = useState<Stockage[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isSortieDialogOpen, setIsSortieDialogOpen] = useState(false);
   const [selectedStockage, setSelectedStockage] = useState<Stockage | null>(null);
+  const [editingStockage, setEditingStockage] = useState<Stockage | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
@@ -130,6 +132,47 @@ export function StockageTab({ camions, remorques }: StockageTabProps) {
     }
   };
 
+  const handleEditStockage = (stockage: Stockage) => {
+    setEditingStockage(stockage);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleUpdateStockage = async (data: any) => {
+    if (!editingStockage) return;
+
+    try {
+      const stockageData = {
+        nom_client: data.nomClient,
+        numero_conteneur: data.numeroConteneur,
+        provenance: data.provenance,
+        date_arrivee: data.dateArrivee,
+        camion_proprietaire: data.camionProprietaire,
+        plaque_camion: data.plaqueCamion,
+        plaque_remorque: data.plaqueRemorque,
+        jours_gratuits: data.joursGratuits,
+        prix_par_jour: data.prixParJour,
+        observations: data.observations,
+      };
+
+      await stockageService.updateStockage(editingStockage.id, stockageData);
+      setIsEditDialogOpen(false);
+      setEditingStockage(null);
+      loadStockages();
+      
+      toast({
+        title: "Succès",
+        description: "Stockage mis à jour avec succès"
+      });
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour du stockage:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de mettre à jour le stockage",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleDeleteStockage = async (id: number) => {
     try {
       await stockageService.deleteStockage(id);
@@ -230,7 +273,11 @@ export function StockageTab({ camions, remorques }: StockageTabProps) {
                   <TableCell>{getStatusBadge(item.statut)}</TableCell>
                   <TableCell>
                     <div className="flex space-x-1">
-                      <Button variant="outline" size="sm">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleEditStockage(item)}
+                      >
                         <Edit className="w-3 h-3" />
                       </Button>
                       <Button 
@@ -260,6 +307,32 @@ export function StockageTab({ camions, remorques }: StockageTabProps) {
           </Table>
         </CardContent>
       </Card>
+
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Modifier le stockage</DialogTitle>
+          </DialogHeader>
+          {editingStockage && (
+            <StockageForm 
+              onSubmit={handleUpdateStockage}
+              camionsParc={camionsParc}
+              remorquesParc={remorquesParc}
+              initialData={{
+                nomClient: editingStockage.nom_client,
+                numeroConteneur: editingStockage.numero_conteneur,
+                provenance: editingStockage.provenance,
+                dateArrivee: editingStockage.date_arrivee,
+                camionProprietaire: editingStockage.camion_proprietaire,
+                plaqueCamion: editingStockage.plaque_camion,
+                plaqueRemorque: editingStockage.plaque_remorque,
+                joursGratuits: editingStockage.jours_gratuits,
+                prixParJour: editingStockage.prix_par_jour,
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={isSortieDialogOpen} onOpenChange={setIsSortieDialogOpen}>
         <DialogContent>
