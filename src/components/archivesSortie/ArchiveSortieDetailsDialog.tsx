@@ -1,8 +1,12 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
 import { ArchiveSortie } from "@/types/archivesSortie";
 import { formatCurrency } from "@/lib/currency";
+import { archiveSortiePdfService } from "@/services/archiveSortiePdfService";
+import { Download } from "lucide-react";
+import { toast } from "sonner";
 
 interface ArchiveSortieDetailsDialogProps {
   archive: ArchiveSortie | null;
@@ -29,11 +33,27 @@ export function ArchiveSortieDetailsDialog({ archive, open, onOpenChange }: Arch
     return labels[archive.responsabilite];
   };
 
+  const handleDownloadPdf = () => {
+    try {
+      archiveSortiePdfService.generateArchivePdf(archive);
+      toast.success('PDF téléchargé avec succès');
+    } catch (error) {
+      console.error('Erreur lors de la génération du PDF:', error);
+      toast.error('Erreur lors de la génération du PDF');
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Détails de l'archive - {archive.numeroConteneur}</DialogTitle>
+          <div className="flex items-center justify-between">
+            <DialogTitle>Détails de l'archive - {archive.numeroConteneur}</DialogTitle>
+            <Button onClick={handleDownloadPdf} size="sm" className="gap-2">
+              <Download className="h-4 w-4" />
+              Télécharger PDF
+            </Button>
+          </div>
         </DialogHeader>
 
         <div className="space-y-6">
