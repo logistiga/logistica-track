@@ -1,12 +1,15 @@
 import { useState, useMemo, useEffect } from "react";
-import { ArchiveSortieFilters } from "@/types/archivesSortie";
+import { ArchiveSortie, ArchiveSortieFilters } from "@/types/archivesSortie";
 import { ArchiveSortieStats } from "@/components/archivesSortie/ArchiveSortieStats";
 import { ArchiveSortieFiltersDialog } from "@/components/archivesSortie/ArchiveSortieFiltersDialog";
 import { ArchiveSortieTable } from "@/components/archivesSortie/ArchiveSortieTable";
+import { ArchiveSortieDetailsDialog } from "@/components/archivesSortie/ArchiveSortieDetailsDialog";
 import { useArchiveSortie } from "@/hooks/useArchiveSortie";
 
 export default function ArchivesSortie() {
   const { archives, loading, searchArchivesSortie, exportArchivesSortie } = useArchiveSortie();
+  const [selectedArchive, setSelectedArchive] = useState<ArchiveSortie | null>(null);
+  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   
   const [filters, setFilters] = useState<ArchiveSortieFilters>({
     dateDebut: "",
@@ -33,12 +36,13 @@ export default function ArchivesSortie() {
     exportArchivesSortie(format, filters);
   };
 
-  const handleViewInvoice = (archive: any) => {
+  const handleViewInvoice = (archive: ArchiveSortie) => {
     console.log('Voir note de débit:', archive.numeroFactureDetention);
   };
 
-  const handleViewDetails = (archive: any) => {
-    console.log('Voir détails:', archive.numeroConteneur);
+  const handleViewDetails = (archive: ArchiveSortie) => {
+    setSelectedArchive(archive);
+    setDetailsDialogOpen(true);
   };
 
   return (
@@ -66,6 +70,12 @@ export default function ArchivesSortie() {
         archives={archives}
         onViewInvoice={handleViewInvoice}
         onViewDetails={handleViewDetails}
+      />
+
+      <ArchiveSortieDetailsDialog
+        archive={selectedArchive}
+        open={detailsDialogOpen}
+        onOpenChange={setDetailsDialogOpen}
       />
     </div>
   );

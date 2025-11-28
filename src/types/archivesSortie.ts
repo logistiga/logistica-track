@@ -17,9 +17,12 @@ export interface ArchiveSortie {
   dateFacturationDetention?: string;
   numeroFactureDetention?: string;
   statutPaiement: "paye" | "sans-frais";
-  pvSortie?: string;
-  pvRentreePort?: string;
-  numeroOrdre?: string;
+  montantPrime?: number;
+  camion?: string;
+  chauffeur?: string;
+  numeroBL?: string;
+  nomTransitaire?: string;
+  observations?: string;
   dateArchivage: string;
 }
 
