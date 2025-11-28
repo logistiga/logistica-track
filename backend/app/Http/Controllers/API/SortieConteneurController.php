@@ -235,20 +235,22 @@ class SortieConteneurController extends Controller
             $camion = $sortie->camion;
             $chauffeur = $camion ? $camion->libelle_complet : 'Non défini';
 
-            // Créer l'archive
-            DB::table('prime_archives')->insert([
-                'sortie_id' => $sortie->id,
-                'numero_conteneur' => $sortie->numero_conteneur,
-                'chauffeur' => $chauffeur,
-                'montant_prime' => $sortie->prime_chauffeur ?? 0,
-                'date_sortie' => $sortie->date_sortie,
-                'date_paiement' => now(),
-                'numero_semaine' => date('W'),
-                'nom_client' => $sortie->nom_client,
-                'observations' => 'Archivé depuis Ordre - PV Sortie: ' . $sortie->pv_sortie . ', PV Rentrée: ' . $sortie->pv_rentree_port . ', N° Ordre: ' . $sortie->numero_ordre,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
+            // Créer ou mettre à jour l'archive (éviter les doublons)
+            DB::table('prime_archives')->updateOrInsert(
+                ['sortie_id' => $sortie->id],
+                [
+                    'numero_conteneur' => $sortie->numero_conteneur,
+                    'chauffeur' => $chauffeur,
+                    'montant_prime' => $sortie->prime_chauffeur ?? 0,
+                    'date_sortie' => $sortie->date_sortie,
+                    'date_paiement' => now(),
+                    'numero_semaine' => date('W'),
+                    'nom_client' => $sortie->nom_client,
+                    'observations' => 'Archivé depuis Ordre - PV Sortie: ' . $sortie->pv_sortie . ', PV Rentrée: ' . $sortie->pv_rentree_port . ', N° Ordre: ' . $sortie->numero_ordre,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]
+            );
 
             // Marquer la sortie comme archivée avec timestamp
             $sortie->update(['archived_at' => now()]);
