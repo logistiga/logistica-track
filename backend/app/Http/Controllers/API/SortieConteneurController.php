@@ -145,10 +145,31 @@ class SortieConteneurController extends Controller
     public function update(UpdateSortieConteneurRequest $request, SortieConteneur $sortie): JsonResponse
     {
         try {
+            \Log::info('🎯 CONTROLLER: Update request received', [
+                'sortie_id' => $sortie->id,
+                'validated_data' => $request->validated(),
+                'before_update' => [
+                    'numero_ordre' => $sortie->numero_ordre,
+                    'pv_sortie' => $sortie->pv_sortie,
+                    'pv_rentree_port' => $sortie->pv_rentree_port,
+                ]
+            ]);
+
             DB::beginTransaction();
 
             $oldData = $sortie->toArray();
             $updatedSortie = $this->sortieService->updateSortie($sortie, $request->validated());
+
+            // Vérifier immédiatement après update
+            $freshData = SortieConteneur::find($sortie->id);
+            \Log::info('🔍 CONTROLLER: After update verification', [
+                'sortie_id' => $sortie->id,
+                'fresh_from_db' => [
+                    'numero_ordre' => $freshData->numero_ordre,
+                    'pv_sortie' => $freshData->pv_sortie,
+                    'pv_rentree_port' => $freshData->pv_rentree_port,
+                ]
+            ]);
 
             $this->cacheService->invalidateAllCaches();
 
@@ -166,6 +187,10 @@ class SortieConteneurController extends Controller
             DB::rollback();
             return $this->errorResponse('Données invalides', 422, $e->errors());
         } catch (\Exception $e) {
+            \Log::error('❌ CONTROLLER: Error updating sortie', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
             DB::rollback();
             return $this->errorResponse('Erreur lors de la mise à jour de la sortie', 500);
         }
