@@ -22,6 +22,7 @@ Route::prefix('sorties')->name('sorties.')->group(function () {
         Route::get('/', [SortieConteneurController::class, 'show'])->name('show');
         Route::put('/', [SortieConteneurController::class, 'update'])->middleware('role:admin,manager,operator')->name('update');
         Route::delete('/', [SortieConteneurController::class, 'destroy'])->middleware('role:admin')->name('destroy');
+        Route::post('/archiver', [SortieConteneurController::class, 'archiver'])->middleware('role:admin,manager,operator')->name('archiver');
         Route::post('/return', [SortieRetourController::class, 'return'])->middleware('role:admin,manager,operator')->name('return');
         Route::get('/detention', [SortieConteneurController::class, 'detention'])->name('detention');
         Route::get('/facture', [SortieConteneurController::class, 'facture'])->name('facture');

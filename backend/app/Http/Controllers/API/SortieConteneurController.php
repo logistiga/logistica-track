@@ -197,6 +197,68 @@ class SortieConteneurController extends Controller
     }
 
     /**
+     * Archiver une sortie (créer prime_archive et changer statut)
+     */
+    public function archiver(SortieConteneur $sortie): JsonResponse
+    {
+        try {
+            // Vérifier que la sortie est retournée au port
+            if ($sortie->statut !== 'retourne_port') {
+                return $this->errorResponse('Seules les sorties retournées au port peuvent être archivées', 400);
+            }
+
+            // Vérifier que les champs obligatoires sont remplis
+            if (!$sortie->pv_sortie || !$sortie->pv_rentree_port || !$sortie->numero_ordre) {
+                return $this->errorResponse('Les champs PV Sortie, PV Rentrée et N° Ordre sont obligatoires', 400);
+            }
+
+            DB::beginTransaction();
+
+            // Récupérer le chauffeur (nom du camion/véhicule)
+            $camion = $sortie->camion;
+            $chauffeur = $camion ? $camion->libelle_complet : 'Non défini';
+
+            // Créer l'archive
+            DB::table('prime_archives')->insert([
+                'sortie_id' => $sortie->id,
+                'numero_conteneur' => $sortie->numero_conteneur,
+                'chauffeur' => $chauffeur,
+                'montant_prime' => $sortie->prime_chauffeur ?? 0,
+                'date_sortie' => $sortie->date_sortie,
+                'date_paiement' => now(),
+                'numero_semaine' => date('W'),
+                'nom_client' => $sortie->nom_client,
+                'observations' => 'Archivé depuis Ordre - PV Sortie: ' . $sortie->pv_sortie . ', PV Rentrée: ' . $sortie->pv_rentree_port . ', N° Ordre: ' . $sortie->numero_ordre,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            // Changer le statut de la sortie à 'archive'
+            $sortie->update(['statut' => 'archive']);
+
+            $this->cacheService->invalidateAllCaches();
+
+            // Logger l'activité
+            logActivity('sortie_archived', $sortie, 'Sortie archivée depuis Ordre');
+
+            DB::commit();
+
+            return $this->successResponse(
+                new SortieConteneurResource($sortie->load(['armateur', 'camion', 'remorque'])),
+                'Sortie archivée avec succès'
+            );
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            \Log::error('❌ Error archiving sortie', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return $this->errorResponse('Erreur lors de l\'archivage de la sortie: ' . $e->getMessage(), 500);
+        }
+    }
+
+    /**
      * Supprimer une sortie
      */
     public function destroy(SortieConteneur $sortie): JsonResponse

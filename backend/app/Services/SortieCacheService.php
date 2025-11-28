@@ -28,9 +28,14 @@ class SortieCacheService
      */
     public function invalidateAllCaches(): void
     {
+        // Invalider les clés définies
         foreach (self::CACHE_KEYS as $key) {
             Cache::forget($key);
         }
+        
+        // Invalider TOUS les caches qui commencent par 'sorties_'
+        // Cela inclut les clés générées dynamiquement
+        Cache::flush(); // Alternative: utiliser tags si disponible
     }
 
     /**
