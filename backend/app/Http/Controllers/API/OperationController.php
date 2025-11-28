@@ -443,25 +443,26 @@ class OperationController extends Controller
     {
         try {
             // Fetch archived operations (completed with invoicing)
-            $archives = DB::table('operations')
-                ->where('statut', 'terminee')
-                ->whereNotNull('date_fin')
+            $archives = DB::table('operations as o')
+                ->leftJoin('users as u', 'o.responsable_id', '=', 'u.id')
+                ->where('o.statut', 'terminee')
+                ->whereNotNull('o.date_fin')
                 ->select(
-                    'id',
-                    'numero_operation as numeroOperation',
-                    'type_operation as typeOperation',
-                    'date_prevue as dateExecution',
-                    'vehicule_id as camion',
+                    'o.id',
+                    'o.numero_operation as numeroOperation',
+                    'o.type_operation as typeOperation',
+                    'o.date_prevue as dateExecution',
+                    DB::raw("'' as camion"),
                     DB::raw("'' as remorque"),
-                    'responsable as client',
-                    'description as instructions',
-                    DB::raw('0 as montantTotal'),
-                    DB::raw("DATE(date_fin) as dateFacturation"),
-                    DB::raw("CONCAT('FACT-', id) as numeroFacture"),
+                    DB::raw("COALESCE(u.name, 'N/A') as client"),
+                    'o.description as instructions',
+                    DB::raw("COALESCE(o.cout_reel, o.cout_estime, 0) as montantTotal"),
+                    DB::raw("DATE(o.date_fin) as dateFacturation"),
+                    DB::raw("CONCAT('FACT-', o.id) as numeroFacture"),
                     DB::raw("'paye' as statutPaiement"),
-                    'date_fin as dateArchivage'
+                    'o.date_fin as dateArchivage'
                 )
-                ->orderBy('date_fin', 'desc')
+                ->orderBy('o.date_fin', 'desc')
                 ->get();
 
             return $this->successResponse($archives, 'Archives récupérées avec succès');
@@ -477,46 +478,47 @@ class OperationController extends Controller
     public function archivesSearch(Request $request): JsonResponse
     {
         try {
-            $query = DB::table('operations')
-                ->where('statut', 'terminee')
-                ->whereNotNull('date_fin');
+            $query = DB::table('operations as o')
+                ->leftJoin('users as u', 'o.responsable_id', '=', 'u.id')
+                ->where('o.statut', 'terminee')
+                ->whereNotNull('o.date_fin');
 
             // Apply filters
-            if ($request->filled('dateDebut') && $request->filled('dateFin')) {
-                $query->whereBetween('date_fin', [
-                    $request->dateDebut,
-                    $request->dateFin
+            if ($request->filled('date_debut') && $request->filled('date_fin')) {
+                $query->whereBetween('o.date_fin', [
+                    $request->date_debut,
+                    $request->date_fin
                 ]);
             }
 
-            if ($request->filled('typeOperation')) {
-                $query->where('type_operation', $request->typeOperation);
+            if ($request->filled('type_operation')) {
+                $query->where('o.type_operation', $request->type_operation);
             }
 
             if ($request->filled('client')) {
-                $query->where('responsable', 'like', '%' . $request->client . '%');
+                $query->where('u.name', 'like', '%' . $request->client . '%');
             }
 
-            if ($request->filled('numeroOperation')) {
-                $query->where('numero_operation', 'like', '%' . $request->numeroOperation . '%');
+            if ($request->filled('numero_operation')) {
+                $query->where('o.numero_operation', 'like', '%' . $request->numero_operation . '%');
             }
 
             $archives = $query->select(
-                    'id',
-                    'numero_operation as numeroOperation',
-                    'type_operation as typeOperation',
-                    'date_prevue as dateExecution',
-                    'vehicule_id as camion',
+                    'o.id',
+                    'o.numero_operation as numeroOperation',
+                    'o.type_operation as typeOperation',
+                    'o.date_prevue as dateExecution',
+                    DB::raw("'' as camion"),
                     DB::raw("'' as remorque"),
-                    'responsable as client',
-                    'description as instructions',
-                    DB::raw('0 as montantTotal'),
-                    DB::raw("DATE(date_fin) as dateFacturation"),
-                    DB::raw("CONCAT('FACT-', id) as numeroFacture"),
+                    DB::raw("COALESCE(u.name, 'N/A') as client"),
+                    'o.description as instructions',
+                    DB::raw("COALESCE(o.cout_reel, o.cout_estime, 0) as montantTotal"),
+                    DB::raw("DATE(o.date_fin) as dateFacturation"),
+                    DB::raw("CONCAT('FACT-', o.id) as numeroFacture"),
                     DB::raw("'paye' as statutPaiement"),
-                    'date_fin as dateArchivage'
+                    'o.date_fin as dateArchivage'
                 )
-                ->orderBy('date_fin', 'desc')
+                ->orderBy('o.date_fin', 'desc')
                 ->get();
 
             return $this->successResponse($archives, 'Recherche effectuée avec succès');
