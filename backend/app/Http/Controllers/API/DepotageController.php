@@ -150,6 +150,17 @@ class DepotageController extends Controller
             'updated_by' => Auth::id()
         ]);
 
+        // Mettre à jour la sortie conteneur originale si liée
+        if ($depotage->sortie_conteneur_id) {
+            $sortieConteneur = \App\Models\SortieConteneur::find($depotage->sortie_conteneur_id);
+            if ($sortieConteneur) {
+                $sortieConteneur->update([
+                    'statut' => 'retourne_port',
+                    'date_retour' => now(),
+                ]);
+            }
+        }
+
         return response()->json([
             'status' => 'success',
             'message' => 'Dépotage terminé avec succès',

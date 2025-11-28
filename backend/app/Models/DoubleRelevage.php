@@ -12,6 +12,7 @@ class DoubleRelevage extends Model
     protected $table = 'double_relevages';
 
     protected $fillable = [
+        'sortie_conteneur_id',
         'nom_client',
         'numero_conteneur',
         'provenance',
@@ -38,6 +39,11 @@ class DoubleRelevage extends Model
     ];
 
     // Relations
+    public function sortieConteneur()
+    {
+        return $this->belongsTo(\App\Models\SortieConteneur::class, 'sortie_conteneur_id');
+    }
+
     public function createdBy()
     {
         return $this->belongsTo(User::class, 'created_by');

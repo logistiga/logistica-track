@@ -53,6 +53,7 @@ export function ArriveeBaseTab({ camions, remorques }: ArriveeBaseTabProps) {
   const handleStockageSubmit = async (formData: any) => {
     try {
       const stockageData = {
+        sortie_conteneur_id: selectedArrivee?.id,
         nom_client: formData.nomClient,
         numero_conteneur: formData.numeroConteneur,
         provenance: formData.provenance,
@@ -92,6 +93,7 @@ export function ArriveeBaseTab({ camions, remorques }: ArriveeBaseTabProps) {
   const handleDoubleRelevageSubmit = async (formData: any) => {
     try {
       const doubleRelevageData = {
+        sortie_conteneur_id: selectedArrivee?.id,
         nom_client: formData.nomClient,
         numero_conteneur: formData.numeroConteneur,
         provenance: formData.provenance,
@@ -131,6 +133,7 @@ export function ArriveeBaseTab({ camions, remorques }: ArriveeBaseTabProps) {
   const handleDepotageSubmit = async (formData: any) => {
     try {
       const depotageData = {
+        sortie_conteneur_id: selectedArrivee?.id,
         nom_client: formData.nomClient,
         numero_conteneur: formData.numeroConteneur,
         date_depotage: formData.dateDepotage,

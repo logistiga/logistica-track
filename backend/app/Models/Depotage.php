@@ -11,6 +11,7 @@ class Depotage extends Model
     use HasFactory;
 
     protected $fillable = [
+        'sortie_conteneur_id',
         'nom_client',
         'numero_conteneur',
         'provenance',
@@ -52,6 +53,11 @@ class Depotage extends Model
     /**
      * Relations
      */
+    public function sortieConteneur(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\SortieConteneur::class, 'sortie_conteneur_id');
+    }
+
     public function createdBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');

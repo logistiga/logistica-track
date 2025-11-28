@@ -3,6 +3,7 @@ import { apiConfig } from '../config/api';
 
 export interface Depotage {
   id: number;
+  sortie_conteneur_id?: number;
   nom_client: string;
   numero_conteneur: string;
   date_depotage: string;
@@ -20,6 +21,7 @@ export interface Depotage {
 }
 
 export interface CreateDepotageData {
+  sortie_conteneur_id?: number;
   nom_client: string;
   numero_conteneur: string;
   date_depotage: string;
@@ -39,14 +41,6 @@ export interface DepotageStats {
 }
 
 class DepotageService {
-  private getStoredDepotages(): Depotage[] {
-    const stored = localStorage.getItem('depotages');
-    return stored ? JSON.parse(stored) : [];
-  }
-
-  private saveDepotages(depotages: Depotage[]): void {
-    localStorage.setItem('depotages', JSON.stringify(depotages));
-  }
   async getDepotages(params?: {
     statut?: string;
     search?: string;
@@ -61,189 +55,63 @@ class DepotageService {
       last_page: number;
     };
   }> {
-    console.log('🔄 Loading depotages (localStorage fallback due to backend issues)');
+    const queryParams = new URLSearchParams();
+    if (params?.statut) queryParams.append('statut', params.statut);
+    if (params?.search) queryParams.append('search', params.search);
+    if (params?.per_page) queryParams.append('per_page', params.per_page.toString());
+    if (params?.page) queryParams.append('page', params.page.toString());
     
-    try {
-      let depotages = this.getStoredDepotages();
-      
-      // Apply filters
-      if (params?.statut) {
-        depotages = depotages.filter(d => d.statut === params.statut);
-      }
-      
-      if (params?.search) {
-        const search = params.search.toLowerCase();
-        depotages = depotages.filter(d => 
-          d.nom_client.toLowerCase().includes(search) ||
-          d.numero_conteneur.toLowerCase().includes(search)
-        );
-      }
-      
-      // Apply pagination
-      const perPage = params?.per_page || 10;
-      const page = params?.page || 1;
-      const total = depotages.length;
-      const lastPage = Math.ceil(total / perPage);
-      const start = (page - 1) * perPage;
-      const paginatedData = depotages.slice(start, start + perPage);
-      
-      console.log('✅ Depotages loaded from localStorage:', paginatedData);
-      
-      return {
-        data: paginatedData,
-        pagination: {
-          total,
-          per_page: perPage,
-          current_page: page,
-          last_page: lastPage
-        }
-      };
-    } catch (error) {
-      console.error('❌ Error loading depotages:', error);
-      return {
-        data: [],
-        pagination: {
-          total: 0,
-          per_page: 10,
-          current_page: 1,
-          last_page: 1
-        }
-      };
-    }
+    const queryString = queryParams.toString();
+    const endpoint = queryString ? `${apiConfig.endpoints.depotages}?${queryString}` : apiConfig.endpoints.depotages;
+    
+    const response = await apiService.get(endpoint);
+    return {
+      data: response.data,
+      pagination: response.pagination
+    };
   }
 
   async getDepotage(id: number): Promise<Depotage> {
-    console.log('🔄 Getting depotage (localStorage fallback):', id);
-    
-    const depotages = this.getStoredDepotages();
-    const depotage = depotages.find(d => d.id === id);
-    
-    if (!depotage) {
-      throw new Error('Dépotage non trouvé');
-    }
-    
-    return depotage;
+    const response = await apiService.get(`${apiConfig.endpoints.depotages}/${id}`);
+    return response.data;
   }
 
   async createDepotage(data: CreateDepotageData): Promise<Depotage> {
-    console.log('🔄 Creating depotage (localStorage fallback due to backend issues):', data);
-    
-    const depotages = this.getStoredDepotages();
-    const newDepotage: Depotage = {
-      id: Date.now(),
-      ...data,
-      statut: 'en_cours' as const,
-      statut_label: 'En cours',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      prix_depotage_formate: `${data.prix_depotage?.toLocaleString()} FCFA`
-    };
-    
-    depotages.push(newDepotage);
-    this.saveDepotages(depotages);
-    console.log('✅ Depotage created successfully');
-    return newDepotage;
+    const response = await apiService.post(apiConfig.endpoints.depotages, data);
+    return response.data;
   }
 
   async updateDepotage(id: number, data: Partial<CreateDepotageData>): Promise<Depotage> {
-    console.log('🔄 Updating depotage (localStorage fallback):', id, data);
-    
-    const depotages = this.getStoredDepotages();
-    const depotageIndex = depotages.findIndex(d => d.id === id);
-    
-    if (depotageIndex === -1) {
-      throw new Error('Dépotage non trouvé');
-    }
-    
-    depotages[depotageIndex] = {
-      ...depotages[depotageIndex],
-      ...data,
-      updated_at: new Date().toISOString()
-    };
-    
-    this.saveDepotages(depotages);
-    console.log('✅ Depotage updated successfully');
-    return depotages[depotageIndex];
+    const response = await apiService.put(`${apiConfig.endpoints.depotages}/${id}`, data);
+    return response.data;
   }
 
   async deleteDepotage(id: number): Promise<void> {
-    console.log('🔄 Deleting depotage (localStorage fallback):', id);
-    
-    const depotages = this.getStoredDepotages();
-    const filteredDepotages = depotages.filter(d => d.id !== id);
-    this.saveDepotages(filteredDepotages);
-    console.log('✅ Depotage deleted successfully');
+    await apiService.delete(`${apiConfig.endpoints.depotages}/${id}`);
   }
 
   async terminerDepotage(id: number): Promise<Depotage> {
-    console.log('🔄 Terminating depotage (localStorage fallback):', id);
-    
-    const depotages = this.getStoredDepotages();
-    const depotageIndex = depotages.findIndex(d => d.id === id);
-    
-    if (depotageIndex === -1) {
-      throw new Error('Dépotage non trouvé');
-    }
-    
-    depotages[depotageIndex] = {
-      ...depotages[depotageIndex],
-      statut: 'termine' as const,
-      statut_label: 'Terminé',
-      updated_at: new Date().toISOString()
-    };
-    
-    this.saveDepotages(depotages);
-    console.log('✅ Depotage terminated successfully');
-    return depotages[depotageIndex];
+    const response = await apiService.post(`${apiConfig.endpoints.depotages}/${id}/terminer`, {});
+    return response.data;
   }
 
   async getDepotagesEnCours(): Promise<Depotage[]> {
-    console.log('🔄 Getting depotages en cours (localStorage fallback)');
-    
-    const depotages = this.getStoredDepotages();
-    return depotages.filter(d => d.statut === 'en_cours');
+    const response = await apiService.get(`${apiConfig.endpoints.depotages}/en-cours`);
+    return response.data;
   }
 
   async getStats(): Promise<DepotageStats> {
-    console.log('🔄 Getting depotage stats (localStorage fallback)');
-    
-    try {
-      const depotages = this.getStoredDepotages();
-      const today = new Date().toDateString();
-      const currentMonth = new Date().getMonth();
-      const currentYear = new Date().getFullYear();
-      
-      const stats: DepotageStats = {
-        total_en_cours: depotages.filter(d => d.statut === 'en_cours').length,
-        termines_aujourdhui: depotages.filter(d => 
-          d.statut === 'termine' && 
-          new Date(d.updated_at).toDateString() === today
-        ).length,
-        operations_mois: depotages.filter(d => {
-          const depotageDate = new Date(d.date_depotage);
-          return depotageDate.getMonth() === currentMonth && 
-                 depotageDate.getFullYear() === currentYear;
-        }).length,
-        montant_mensuel: depotages
-          .filter(d => {
-            const depotageDate = new Date(d.date_depotage);
-            return depotageDate.getMonth() === currentMonth && 
-                   depotageDate.getFullYear() === currentYear;
-          })
-          .reduce((total, d) => total + d.prix_depotage, 0)
-      };
-      
-      console.log('✅ Depotage stats loaded from localStorage:', stats);
-      return stats;
-    } catch (error) {
-      console.error('❌ Error loading depotage stats:', error);
-      return {
-        total_en_cours: 0,
-        termines_aujourdhui: 0,
-        operations_mois: 0,
-        montant_mensuel: 0
-      };
-    }
+    const response = await apiService.get(`${apiConfig.endpoints.depotages}/stats`);
+    return response.data;
+  }
+
+  async archiverDepotage(id: number, data: {
+    numero_facture: string;
+    date_facturation: string;
+    montant_total: number;
+    commentaires?: string;
+  }): Promise<void> {
+    await apiService.post(`${apiConfig.endpoints.depotages}/${id}/archiver`, data);
   }
 }
 

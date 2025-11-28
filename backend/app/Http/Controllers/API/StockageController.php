@@ -131,6 +131,17 @@ class StockageController extends Controller
             'updated_by' => auth()->id()
         ]);
 
+        // Mettre à jour la sortie conteneur originale si liée
+        if ($stockage->sortie_conteneur_id) {
+            $sortieConteneur = \App\Models\SortieConteneur::find($stockage->sortie_conteneur_id);
+            if ($sortieConteneur) {
+                $sortieConteneur->update([
+                    'statut' => 'retourne_port',
+                    'date_retour' => $request->date_sortie,
+                ]);
+            }
+        }
+
         $stockage->load(['createdBy', 'updatedBy']);
 
         $joursDetention = $stockage->jours_detention;

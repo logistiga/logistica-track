@@ -121,6 +121,17 @@ class DoubleRelevageController extends Controller
             auth()->id()
         );
 
+        // Mettre à jour la sortie conteneur originale si liée
+        if ($doubleRelevage->sortie_conteneur_id) {
+            $sortieConteneur = \App\Models\SortieConteneur::find($doubleRelevage->sortie_conteneur_id);
+            if ($sortieConteneur) {
+                $sortieConteneur->update([
+                    'statut' => 'retourne_port',
+                    'date_retour' => $operation->date_confirmation ?? now(),
+                ]);
+            }
+        }
+
         return $this->successResponse(
             new DoubleRelevageResource($operation),
             'Opération confirmée avec succès'
