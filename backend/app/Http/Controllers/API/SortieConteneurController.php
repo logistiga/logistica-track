@@ -236,6 +236,9 @@ class SortieConteneurController extends Controller
                     'pa.chauffeur',
                     'sc.numero_bl as numeroBL',
                     'sc.nom_transitaire as nomTransitaire',
+                    'sc.numero_ordre as numeroOrdre',
+                    'sc.pv_sortie as pvSortie',
+                    'sc.pv_rentree as pvRentree',
                     'pa.observations',
                     'pa.date_paiement as dateArchivage'
                 )
@@ -289,6 +292,9 @@ class SortieConteneurController extends Controller
                     'pa.chauffeur',
                     'sc.numero_bl as numeroBL',
                     'sc.nom_transitaire as nomTransitaire',
+                    'sc.numero_ordre as numeroOrdre',
+                    'sc.pv_sortie as pvSortie',
+                    'sc.pv_rentree as pvRentree',
                     'pa.observations',
                     'pa.date_paiement as dateArchivage'
                 );

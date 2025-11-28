@@ -86,6 +86,18 @@ export function ArchiveSortieDetailsDialog({ archive, open, onOpenChange }: Arch
                 <p className="font-medium">{archive.nomTransitaire || "-"}</p>
               </div>
               <div>
+                <span className="text-sm text-muted-foreground">Numéro d'ordre</span>
+                <p className="font-medium">{archive.numeroOrdre || "-"}</p>
+              </div>
+              <div>
+                <span className="text-sm text-muted-foreground">PV de sortie</span>
+                <p className="font-medium">{archive.pvSortie || "-"}</p>
+              </div>
+              <div>
+                <span className="text-sm text-muted-foreground">PV de rentrée</span>
+                <p className="font-medium">{archive.pvRentree || "-"}</p>
+              </div>
+              <div>
                 <span className="text-sm text-muted-foreground">Destination</span>
                 <p className="font-medium capitalize">{archive.destinationInitiale}</p>
               </div>

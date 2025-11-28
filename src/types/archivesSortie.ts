@@ -23,6 +23,9 @@ export interface ArchiveSortie {
   chauffeur?: string;
   numeroBL?: string;
   nomTransitaire?: string;
+  numeroOrdre?: string;
+  pvSortie?: string;
+  pvRentree?: string;
   observations?: string;
   dateArchivage: string;
 }
