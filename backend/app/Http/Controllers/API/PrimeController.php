@@ -58,12 +58,18 @@ class PrimeController extends Controller
 
             // Mapper les données pour le format attendu par le frontend
             $primes = $sorties->map(function ($sortie) {
+                // L'immatriculation vient du camion
+                $immatriculation = $sortie->camion?->immatriculation ?? 'N/A';
+                
+                // Le chauffeur n'est pas encore dans la base - utiliser le libellé du camion temporairement
+                $chauffeur = $sortie->camion?->libelle_complet ?? 'N/A';
+                
                 return [
                     'id' => $sortie->id,
                     'sortie_id' => $sortie->id,
                     'numero_tc' => $sortie->numero_conteneur,
-                    'camion' => $sortie->camion?->libelle_complet ?? $sortie->camion_id ?? 'N/A',
-                    'chauffeur' => $sortie->chauffeur_nom ?? '',
+                    'immatriculation' => $immatriculation,
+                    'chauffeur' => $chauffeur,
                     'date_sortie' => $sortie->date_sortie,
                     'date_retour' => $sortie->date_retour,
                     'montant_prime' => (float) $sortie->prime_chauffeur,
@@ -218,12 +224,15 @@ class PrimeController extends Controller
             DB::beginTransaction();
 
             foreach ($sorties as $sortie) {
+                $immatriculation = $sortie->camion?->immatriculation ?? 'N/A';
+                $chauffeur = $sortie->camion?->libelle_complet ?? 'N/A';
+                
                 // Créer l'archive
                 PrimeArchive::create([
                     'sortie_id' => $sortie->id,
                     'numero_conteneur' => $sortie->numero_conteneur,
-                    'camion' => $sortie->camion?->libelle_complet ?? $sortie->camion_id ?? 'N/A',
-                    'chauffeur' => $sortie->chauffeur_nom,
+                    'camion' => $immatriculation,
+                    'chauffeur' => $chauffeur,
                     'date_sortie' => $sortie->date_sortie,
                     'date_retour' => $sortie->date_retour,
                     'montant_prime' => $sortie->prime_chauffeur,
