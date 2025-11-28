@@ -28,6 +28,9 @@ class UpdateSortieConteneurRequest extends FormRequest
             'date_fin_franchise' => 'nullable|date',
             'nom_transitaire' => 'sometimes|string|max:255',
             'observations' => 'nullable|string',
+            'numero_ordre' => 'nullable|string|max:100',
+            'pv_sortie' => 'nullable|string|max:100',
+            'pv_rentree_port' => 'nullable|string|max:100',
         ];
     }
 
