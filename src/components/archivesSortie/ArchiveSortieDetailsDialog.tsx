@@ -132,13 +132,13 @@ export function ArchiveSortieDetailsDialog({ archive, open, onOpenChange }: Arch
               </div>
               <div>
                 <span className="text-sm text-muted-foreground">Dépassement</span>
-                <p className="font-medium">
+                <div className="font-medium">
                   {archive.joursDepassement > 0 ? (
                     <Badge variant="destructive">{archive.joursDepassement} jours</Badge>
                   ) : (
                     <Badge variant="outline">Aucun</Badge>
                   )}
-                </p>
+                </div>
               </div>
               <div>
                 <span className="text-sm text-muted-foreground">Responsabilité</span>
@@ -146,22 +146,22 @@ export function ArchiveSortieDetailsDialog({ archive, open, onOpenChange }: Arch
               </div>
               <div>
                 <span className="text-sm text-muted-foreground">Montant détention</span>
-                <p className="font-medium text-lg">
+                <div className="font-medium text-lg">
                   {archive.montantTotalDetention 
                     ? formatCurrency(archive.montantTotalDetention)
                     : <span className="text-muted-foreground">Sans frais</span>
                   }
-                </p>
+                </div>
               </div>
               <div>
                 <span className="text-sm text-muted-foreground">Statut paiement</span>
-                <p className="font-medium">
+                <div className="font-medium">
                   {archive.statutPaiement === "paye" ? (
                     <Badge variant="default" className="bg-green-500">Payé</Badge>
                   ) : (
                     <Badge variant="outline">Sans frais</Badge>
                   )}
-                </p>
+                </div>
               </div>
             </div>
           </div>
