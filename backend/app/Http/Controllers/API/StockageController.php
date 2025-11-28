@@ -44,6 +44,7 @@ class StockageController extends Controller
         return $this->successResponse(
             StockageResource::collection($stockages->items()),
             'Stockages récupérés avec succès',
+            200,
             [
                 'pagination' => [
                     'total' => $stockages->total(),
