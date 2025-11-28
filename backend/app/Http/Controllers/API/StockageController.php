@@ -71,7 +71,6 @@ class StockageController extends Controller
         return $this->successResponse(
             new StockageResource($stockage),
             'Stockage enregistré avec succès',
-            [],
             201
         );
     }
@@ -151,6 +150,7 @@ class StockageController extends Controller
         return $this->successResponse(
             new StockageResource($stockage),
             'Sortie confirmée avec succès',
+            200,
             [
                 'detention' => [
                     'jours' => $joursDetention,
