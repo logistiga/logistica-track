@@ -80,8 +80,43 @@ class SortieCreationService
             // Gestion des changements de véhicules
             $this->handleVehiculeChanges($sortie, $data);
 
-            // Mettre à jour la sortie
-            $sortie->update($data);
+            // TEST: Utiliser SQL brut pour contourner Eloquent
+            if (isset($data['numero_ordre']) || isset($data['pv_sortie']) || isset($data['pv_rentree_port'])) {
+                $updateFields = [];
+                $bindings = [];
+                
+                if (isset($data['numero_ordre'])) {
+                    $updateFields[] = 'numero_ordre = ?';
+                    $bindings[] = $data['numero_ordre'];
+                }
+                if (isset($data['pv_sortie'])) {
+                    $updateFields[] = 'pv_sortie = ?';
+                    $bindings[] = $data['pv_sortie'];
+                }
+                if (isset($data['pv_rentree_port'])) {
+                    $updateFields[] = 'pv_rentree_port = ?';
+                    $bindings[] = $data['pv_rentree_port'];
+                }
+                
+                $bindings[] = $sortie->id;
+                
+                $sql = "UPDATE sortie_conteneurs SET " . implode(', ', $updateFields) . ", updated_at = NOW() WHERE id = ?";
+                
+                Log::info('🔧 Executing RAW SQL:', [
+                    'sql' => $sql,
+                    'bindings' => $bindings
+                ]);
+                
+                DB::update($sql, $bindings);
+                
+                // Supprimer ces champs du tableau $data pour ne pas les traiter deux fois
+                unset($data['numero_ordre'], $data['pv_sortie'], $data['pv_rentree_port']);
+            }
+
+            // Mettre à jour les autres champs avec Eloquent
+            if (!empty($data)) {
+                $sortie->update($data);
+            }
             
             // Recharger depuis la DB pour vérifier
             $sortie->refresh();
