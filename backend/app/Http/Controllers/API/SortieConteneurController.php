@@ -228,6 +228,12 @@ class SortieConteneurController extends Controller
                     DB::raw('COALESCE(d.jours_logistiga, 0) as joursLogistiga'),
                     DB::raw('COALESCE(d.cout_total, 0) as montantTotalDetention'),
                     DB::raw("CASE WHEN d.id IS NOT NULL AND COALESCE(d.cout_total, 0) > 0 THEN 'paye' ELSE 'sans-frais' END as statutPaiement"),
+                    'pa.montant_prime as montantPrime',
+                    'pa.camion',
+                    'pa.chauffeur',
+                    'sc.numero_bl as numeroBL',
+                    'sc.nom_transitaire as nomTransitaire',
+                    'pa.observations',
                     'pa.date_paiement as dateArchivage'
                 )
                 ->orderBy('pa.date_paiement', 'desc')
@@ -272,6 +278,12 @@ class SortieConteneurController extends Controller
                     DB::raw('COALESCE(d.jours_logistiga, 0) as joursLogistiga'),
                     DB::raw('COALESCE(d.cout_total, 0) as montantTotalDetention'),
                     DB::raw("CASE WHEN d.id IS NOT NULL AND COALESCE(d.cout_total, 0) > 0 THEN 'paye' ELSE 'sans-frais' END as statutPaiement"),
+                    'pa.montant_prime as montantPrime',
+                    'pa.camion',
+                    'pa.chauffeur',
+                    'sc.numero_bl as numeroBL',
+                    'sc.nom_transitaire as nomTransitaire',
+                    'pa.observations',
                     'pa.date_paiement as dateArchivage'
                 );
 
