@@ -67,15 +67,42 @@ class SortieCreationService
         DB::beginTransaction();
 
         try {
+            Log::info('🔄 Updating sortie:', [
+                'sortie_id' => $sortie->id,
+                'data_received' => $data,
+                'before_update' => [
+                    'numero_ordre' => $sortie->numero_ordre,
+                    'pv_sortie' => $sortie->pv_sortie,
+                    'pv_rentree_port' => $sortie->pv_rentree_port,
+                ]
+            ]);
+
             // Gestion des changements de véhicules
             $this->handleVehiculeChanges($sortie, $data);
 
+            // Mettre à jour la sortie
             $sortie->update($data);
+            
+            // Recharger depuis la DB pour vérifier
+            $sortie->refresh();
+
+            Log::info('✅ Sortie updated successfully:', [
+                'sortie_id' => $sortie->id,
+                'after_update' => [
+                    'numero_ordre' => $sortie->numero_ordre,
+                    'pv_sortie' => $sortie->pv_sortie,
+                    'pv_rentree_port' => $sortie->pv_rentree_port,
+                ]
+            ]);
 
             DB::commit();
 
             return $sortie->load(['armateur', 'camion', 'remorque']);
         } catch (\Exception $e) {
+            Log::error('❌ Error updating sortie:', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
             DB::rollback();
             throw $e;
         }
