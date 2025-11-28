@@ -48,27 +48,45 @@ export function useOrdre() {
     setLoading(true);
     try {
       const data = await sortieConteneurService.getSorties();
+      console.log('📥 Raw API data received:', data);
+      
       // Filtrer uniquement les sorties retournées au port (en attente de validation)
       // Exclure les sorties déjà archivées
       const sortiesEnCours = Array.isArray(data)
         ? data.filter((s: any) => s.statut === 'retourne_port')
         : [];
       
-      // Mapper au format OrdreSortieStandard
-      const mappedSorties: OrdreSortieStandard[] = sortiesEnCours.map((s: any) => ({
-        id: s.id?.toString() || '',
-        numeroConteneur: s.numero_conteneur || s.numeroConteneur || '',
-        typeConteneur: s.armateur?.type_conteneur || s.type_conteneur || '',
-        codeArmateur: s.code_armateur || s.armateur?.code || '',
-        nomClient: s.nom_client || s.client?.nom || '',
-        destination: s.destination || '',
-        dateSortie: s.date_sortie || s.dateSortie || '',
-        pvSortie: s.pv_sortie || s.pvSortie || '',
-        pvRentreePort: s.pv_rentree_port || s.pvRentreePort || '',
-        numeroOrdre: s.numero_ordre || s.numeroOrdre || '',
-        statut: 'en-attente'
-      }));
+      console.log('🔍 Filtered sorties (retourne_port):', sortiesEnCours);
       
+      // Mapper au format OrdreSortieStandard
+      const mappedSorties: OrdreSortieStandard[] = sortiesEnCours.map((s: any) => {
+        console.log('🗺️ Mapping sortie:', {
+          id: s.id,
+          numero_conteneur: s.numero_conteneur,
+          pv_sortie: s.pv_sortie,
+          pvSortie: s.pvSortie,
+          pv_rentree_port: s.pv_rentree_port,
+          pvRentreePort: s.pvRentreePort,
+          numero_ordre: s.numero_ordre,
+          numeroOrdre: s.numeroOrdre
+        });
+        
+        return {
+          id: s.id?.toString() || '',
+          numeroConteneur: s.numero_conteneur || s.numeroConteneur || '',
+          typeConteneur: s.armateur?.type_conteneur || s.type_conteneur || '',
+          codeArmateur: s.code_armateur || s.armateur?.code || '',
+          nomClient: s.nom_client || s.client?.nom || '',
+          destination: s.destination || '',
+          dateSortie: s.date_sortie || s.dateSortie || '',
+          pvSortie: s.pv_sortie || s.pvSortie || '',
+          pvRentreePort: s.pv_rentree_port || s.pvRentreePort || '',
+          numeroOrdre: s.numero_ordre || s.numeroOrdre || '',
+          statut: 'en-attente'
+        };
+      });
+      
+      console.log('✅ Final mapped sorties:', mappedSorties);
       setSorties(mappedSorties);
     } catch (error) {
       console.error('Erreur lors du chargement des sorties:', error);
@@ -106,22 +124,17 @@ export function useOrdre() {
   // Mettre à jour une sortie
   const updateSortie = async (data: UpdateOrdreSortieData) => {
     try {
+      console.log('📤 Updating sortie:', data);
+      
       await sortieConteneurService.updateSortie(parseInt(data.id), {
         pv_sortie: data.pvSortie,
         pv_rentree_port: data.pvRentreePort,
         numero_ordre: data.numeroOrdre
       } as any);
       
-      setSorties(prev => prev.map(sortie =>
-        sortie.id === data.id 
-          ? { 
-              ...sortie, 
-              pvSortie: data.pvSortie,
-              pvRentreePort: data.pvRentreePort,
-              numeroOrdre: data.numeroOrdre
-            } 
-          : sortie
-      ));
+      // IMPORTANT: Recharger toutes les sorties depuis le backend pour avoir les données fraîches
+      console.log('🔄 Reloading sorties from backend...');
+      await loadSorties();
       
       toast({
         title: "Informations mises à jour",
