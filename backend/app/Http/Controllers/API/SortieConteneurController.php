@@ -36,11 +36,27 @@ class SortieConteneurController extends Controller
     public function index(Request $request): JsonResponse
     {
         try {
-            $cacheKey = $this->cacheService->generateCacheKey('sorties', $request->all());
+            // TEMPORAIRE: Désactiver le cache pour déboguer
+            // $cacheKey = $this->cacheService->generateCacheKey('sorties', $request->all());
             
-            $result = $this->cacheService->remember($cacheKey, CACHE_SHORT, function () use ($request) {
-                return $this->sortieService->getAllSorties($request->all());
-            });
+            // $result = $this->cacheService->remember($cacheKey, CACHE_SHORT, function () use ($request) {
+            //     return $this->sortieService->getAllSorties($request->all());
+            // });
+
+            // Récupérer directement sans cache
+            $result = $this->sortieService->getAllSorties($request->all());
+            
+            // Log pour déboguer
+            if (!empty($result['data'])) {
+                $firstSortie = $result['data'][0];
+                \Log::info('🔍 CONTROLLER INDEX: First sortie raw data', [
+                    'id' => $firstSortie->id,
+                    'numero_ordre' => $firstSortie->numero_ordre,
+                    'pv_sortie' => $firstSortie->pv_sortie,
+                    'pv_rentree_port' => $firstSortie->pv_rentree_port,
+                    'all_attributes' => $firstSortie->getAttributes()
+                ]);
+            }
 
             return $this->successResponse(
                 SortieConteneurResource::collection($result['data'])->additional([
@@ -51,6 +67,7 @@ class SortieConteneurController extends Controller
             );
 
         } catch (\Exception $e) {
+            \Log::error('❌ Error in index:', ['message' => $e->getMessage()]);
             return $this->errorResponse('Erreur lors de la récupération des sorties', 500);
         }
     }
