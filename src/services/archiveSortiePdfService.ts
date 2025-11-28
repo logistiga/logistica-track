@@ -98,10 +98,10 @@ class ArchiveSortiePdfService {
     
     // Fond du contenu
     doc.setFillColor(250, 250, 250);
-    doc.roundedRect(20, startY + 8, pageWidth - 40, 35, 2, 2, 'F');
+    doc.roundedRect(20, startY + 8, pageWidth - 40, 49, 2, 2, 'F');
     doc.setDrawColor(230, 230, 230);
     doc.setLineWidth(0.3);
-    doc.roundedRect(20, startY + 8, pageWidth - 40, 35, 2, 2, 'S');
+    doc.roundedRect(20, startY + 8, pageWidth - 40, 49, 2, 2, 'S');
     
     // Contenu
     const contentY = startY + 14;
@@ -123,6 +123,9 @@ class ArchiveSortiePdfService {
     currentY += 7;
     
     this.addField(doc, 'Client:', archive.nomClient, leftCol, currentY);
+    currentY += 7;
+    
+    this.addField(doc, 'Numéro d\'ordre:', archive.numeroOrdre || '-', leftCol, currentY);
     
     // Colonne droite
     currentY = contentY;
@@ -132,9 +135,15 @@ class ArchiveSortiePdfService {
     this.addField(doc, 'Transitaire:', archive.nomTransitaire || '-', rightCol, currentY);
     currentY += 7;
     
+    this.addField(doc, 'PV de sortie:', archive.pvSortie || '-', rightCol, currentY);
+    currentY += 7;
+    
+    this.addField(doc, 'PV de rentrée:', archive.pvRentree || '-', rightCol, currentY);
+    currentY += 7;
+    
     this.addField(doc, 'Destination:', archive.destinationInitiale, rightCol, currentY);
     
-    return startY + 45;
+    return startY + 59;
   }
 
   private addTransportInfo(doc: jsPDF, archive: ArchiveSortie, pageWidth: number, startY: number): number {
