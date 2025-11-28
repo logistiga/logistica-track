@@ -23,7 +23,6 @@ Route::prefix('sorties')->name('sorties.')->group(function () {
         Route::put('/', [SortieConteneurController::class, 'update'])->middleware('role:admin,manager,operator')->name('update');
         Route::delete('/', [SortieConteneurController::class, 'destroy'])->middleware('role:admin')->name('destroy');
         Route::post('/return', [SortieRetourController::class, 'return'])->middleware('role:admin,manager,operator')->name('return');
-        Route::post('/archiver', [SortieConteneurController::class, 'archiverSortie'])->middleware('role:admin,manager,operator')->name('archiver');
         Route::get('/detention', [SortieConteneurController::class, 'detention'])->name('detention');
         Route::get('/facture', [SortieConteneurController::class, 'facture'])->name('facture');
         Route::get('/timeline', [SortieConteneurController::class, 'timeline'])->name('timeline');

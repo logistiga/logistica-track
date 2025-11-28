@@ -211,46 +211,20 @@ export function useOrdre() {
   // Confirmer une sortie (l'envoyer aux archives)
   const confirmSortie = async (sortie: OrdreSortieStandard) => {
     try {
-      // Vérifier que tous les champs obligatoires sont remplis
-      if (!sortie.pvSortie || !sortie.pvRentreePort || !sortie.numeroOrdre) {
-        toast({
-          title: "Champs manquants",
-          description: "Veuillez renseigner PV Sortie, PV Rentrée et N° Ordre avant de valider.",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      console.log('📦 Archiving sortie:', sortie);
-      
-      // Appeler l'endpoint d'archivage
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/sorties/${sortie.id}/archiver`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Accept': 'application/json',
-          'ngrok-skip-browser-warning': 'true'
-        }
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Erreur lors de l\'archivage');
-      }
-
-      // Retirer la sortie de la liste
+      // Marquer la sortie comme archivée
+      await sortieConteneurService.updateSortie(parseInt(sortie.id), {
+        statut: 'archive'
+      } as any);
       setSorties(prev => prev.filter(s => s.id !== sortie.id));
-      
       toast({
-        title: "Sortie validée et archivée",
+        title: "Sortie validée",
         description: "La sortie a été envoyée vers les Archives Sortie."
       });
     } catch (error) {
       console.error('Erreur lors de la validation:', error);
       toast({
         title: "Erreur",
-        description: error instanceof Error ? error.message : "Impossible de valider la sortie.",
+        description: "Impossible de valider la sortie.",
         variant: "destructive"
       });
     }
