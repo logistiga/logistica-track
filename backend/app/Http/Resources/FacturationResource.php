@@ -17,6 +17,8 @@ class FacturationResource extends JsonResource
             'numero_facture' => $this->numero_facture,
             'sortie_conteneur_id' => $this->sortie_conteneur_id,
             'type_operation' => $this->type_operation,
+            'numero_conteneur' => $this->numero_conteneur ?? $this->sortieConteneur?->numero_conteneur,
+            'nom_client' => $this->nom_client ?? $this->sortieConteneur?->nom_client,
             'date_facture' => $this->date_facture->format('Y-m-d'),
             'date_echeance' => $this->date_echeance->format('Y-m-d'),
             'montant_transport' => $this->montant_transport,
