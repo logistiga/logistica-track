@@ -22,6 +22,8 @@ class FacturationService
             'numero_facture' => $numeroFacture,
             'sortie_conteneur_id' => $data['sortie_conteneur_id'] ?? null,
             'type_operation' => $data['type_operation'],
+            'numero_conteneur' => $data['numero_conteneur'] ?? null,
+            'nom_client' => $data['nom_client'] ?? null,
             'date_facture' => now(),
             'date_echeance' => now()->addDays(30),
             'montant_transport' => 0,
