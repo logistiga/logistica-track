@@ -67,9 +67,9 @@ class Stockage extends Model
     public function getJoursStockageAttribute()
     {
         if ($this->date_sortie) {
-            return $this->date_arrivee->diffInDays($this->date_sortie);
+            return (int) $this->date_arrivee->diffInDays($this->date_sortie);
         }
-        return $this->date_arrivee->diffInDays(now());
+        return (int) $this->date_arrivee->diffInDays(now());
     }
 
     public function getJoursDetentionAttribute()
