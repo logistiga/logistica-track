@@ -5,14 +5,17 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\DepotageResource;
 use App\Models\Depotage;
+use App\Models\Archive;
 use App\Http\Requests\StoreDepotageRequest;
 use App\Http\Requests\UpdateDepotageRequest;
+use App\Traits\ApiResponseTrait;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 
 class DepotageController extends Controller
 {
+    use ApiResponseTrait;
     /**
      * Afficher la liste des dépotages
      */
@@ -37,19 +40,19 @@ class DepotageController extends Controller
         $perPage = $request->get('per_page', 15);
         $depotages = $query->paginate($perPage);
 
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Dépotages récupérés avec succès',
-            'data' => DepotageResource::collection($depotages->items()),
-            'pagination' => [
-                'total' => $depotages->total(),
-                'per_page' => $depotages->perPage(),
-                'current_page' => $depotages->currentPage(),
-                'last_page' => $depotages->lastPage(),
-                'from' => $depotages->firstItem(),
-                'to' => $depotages->lastItem(),
+        return $this->successResponse(
+            DepotageResource::collection($depotages->items()),
+            'Dépotages récupérés avec succès',
+            200,
+            [
+                'pagination' => [
+                    'total' => $depotages->total(),
+                    'per_page' => $depotages->perPage(),
+                    'current_page' => $depotages->currentPage(),
+                    'last_page' => $depotages->lastPage(),
+                ]
             ]
-        ]);
+        );
     }
 
     /**
@@ -72,11 +75,7 @@ class DepotageController extends Controller
                 ->sum('prix_depotage'),
         ];
 
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Statistiques récupérées avec succès',
-            'data' => $stats
-        ]);
+        return $this->successResponse($stats, 'Statistiques récupérées avec succès');
     }
 
     /**
@@ -89,11 +88,11 @@ class DepotageController extends Controller
 
         $depotage = Depotage::create($data);
 
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Dépotage créé avec succès',
-            'data' => new DepotageResource($depotage)
-        ], 201);
+        return $this->successResponse(
+            new DepotageResource($depotage),
+            'Dépotage créé avec succès',
+            201
+        );
     }
 
     /**
@@ -103,11 +102,10 @@ class DepotageController extends Controller
     {
         $depotage->load(['createdBy', 'updatedBy']);
 
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Dépotage récupéré avec succès',
-            'data' => new DepotageResource($depotage)
-        ]);
+        return $this->successResponse(
+            new DepotageResource($depotage),
+            'Dépotage récupéré avec succès'
+        );
     }
 
     /**
@@ -120,11 +118,10 @@ class DepotageController extends Controller
 
         $depotage->update($data);
 
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Dépotage mis à jour avec succès',
-            'data' => new DepotageResource($depotage->fresh())
-        ]);
+        return $this->successResponse(
+            new DepotageResource($depotage->fresh()),
+            'Dépotage mis à jour avec succès'
+        );
     }
 
     /**
@@ -134,10 +131,10 @@ class DepotageController extends Controller
     {
         $depotage->delete();
 
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Dépotage supprimé avec succès'
-        ]);
+        return $this->successResponse(
+            null,
+            'Dépotage supprimé avec succès'
+        );
     }
 
     /**
@@ -162,18 +159,18 @@ class DepotageController extends Controller
         }
 
         // Créer une archive automatiquement
-        \App\Models\Archive::create([
+        Archive::create([
             'type_archive' => 'base_operation',
             'reference_originale' => 'depotage_' . $depotage->id,
             'donnees_originales' => [
                 'type_operation' => 'depotage',
                 'numero_conteneur' => $depotage->numero_conteneur,
                 'nom_client' => $depotage->nom_client ?? 'N/A',
-                'provenance' => $depotage->lieu_depotage ?? 'Base',
+                'provenance' => $depotage->provenance ?? 'Base',
                 'date_arrivee_base' => $depotage->date_depotage,
                 'date_sortie_base' => now()->format('Y-m-d'),
-                'camion_arrivee' => $depotage->numero_camion ?? 'N/A',
-                'remorque_arrivee' => '',
+                'camion_arrivee' => $depotage->plaque_camion ?? 'N/A',
+                'remorque_arrivee' => $depotage->plaque_remorque ?? '',
                 'camion_sortie' => '',
                 'remorque_sortie' => '',
                 'jours_gratuits' => 0,
@@ -185,11 +182,10 @@ class DepotageController extends Controller
             'archive_par' => Auth::id(),
         ]);
 
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Dépotage terminé avec succès',
-            'data' => new DepotageResource($depotage->fresh())
-        ]);
+        return $this->successResponse(
+            new DepotageResource($depotage->fresh()),
+            'Dépotage terminé avec succès'
+        );
     }
 
     /**
@@ -201,10 +197,9 @@ class DepotageController extends Controller
             ->orderBy('date_depotage', 'asc')
             ->get();
 
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Dépotages en cours récupérés avec succès',
-            'data' => DepotageResource::collection($depotages)
-        ]);
+        return $this->successResponse(
+            DepotageResource::collection($depotages),
+            'Dépotages en cours récupérés avec succès'
+        );
     }
 }
