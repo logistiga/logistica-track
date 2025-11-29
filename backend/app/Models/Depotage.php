@@ -30,7 +30,7 @@ class Depotage extends Model
     protected $casts = [
         'date_depotage' => 'date',
         'camion_proprietaire' => 'boolean',
-        'prix_depotage' => 'decimal:2',
+        'prix_depotage' => 'integer',
     ];
 
     protected $appends = ['statut_label', 'prix_depotage_formate'];
