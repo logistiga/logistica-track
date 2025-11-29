@@ -167,6 +167,10 @@ class DoubleRelevageController extends Controller
                 'numero_conteneur' => $doubleRelevage->numero_conteneur,
                 'nom_client' => $doubleRelevage->nom_client,
                 'montant_operation' => $montantOperation,
+                'camion_ameneur_plaque' => $doubleRelevage->camion_ameneur_plaque,
+                'camion_ameneur_remorque' => $doubleRelevage->camion_ameneur_remorque,
+                'camion_recuperateur_plaque' => $doubleRelevage->camion_recuperateur_plaque,
+                'camion_recuperateur_remorque' => $doubleRelevage->camion_recuperateur_remorque,
             ]);
         }
 
