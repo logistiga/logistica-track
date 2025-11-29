@@ -88,21 +88,21 @@ export function FacturationTable({
                   <TableCell className="font-medium">{formatCurrency(facture.montantAPayer)}</TableCell>
                   <TableCell>{facture.dateSortieOperation}</TableCell>
                   <TableCell>
-                    {facture.typeOperation === "stockage" && facture.joursPayants && (
+                    {facture.typeOperation === "stockage" && (
                       <div className="text-xs text-muted-foreground">
-                        {facture.joursGratuits}j gratuits + {facture.joursPayants}j payants
+                        Jours gratuits: {facture.joursGratuits || 0}
                         <br />
-                        ({formatCurrency(facture.tarifJournalier || 0)}/jour)
+                        Jours payants: {facture.joursPayants || 0}
                       </div>
                     )}
-                    {(facture.typeOperation === "double_relevage" || facture.typeOperation === "depotage") && (
+                    {facture.typeOperation === "double_relevage" && (
                       <div className="text-xs text-muted-foreground">
-                        Opération forfaitaire
+                        Montant: {formatCurrency(facture.montantAPayer)}
                       </div>
                     )}
-                    {facture.notes && (
-                      <div className="text-xs text-muted-foreground italic mt-1">
-                        {facture.notes}
+                    {facture.typeOperation === "depotage" && (
+                      <div className="text-xs text-muted-foreground">
+                        Montant dépotage: {formatCurrency(facture.montantAPayer)}
                       </div>
                     )}
                   </TableCell>
