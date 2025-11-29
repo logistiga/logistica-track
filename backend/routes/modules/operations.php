@@ -22,6 +22,7 @@ Route::prefix('operations')->name('operations.')->group(function () {
     Route::prefix('{operation}')->group(function () {
         Route::get('/', [OperationController::class, 'show'])->name('show');
         Route::put('/', [OperationController::class, 'update'])->middleware('role:admin,manager,operator')->name('update');
+        Route::put('/statut', [OperationController::class, 'updateStatut'])->middleware('role:admin,manager,operator')->name('update-statut');
         Route::delete('/', [OperationController::class, 'destroy'])->middleware('role:admin')->name('destroy');
         Route::post('/start', [OperationController::class, 'start'])->middleware('role:admin,manager,operator')->name('start');
         Route::post('/complete', [OperationController::class, 'complete'])->middleware('role:admin,manager,operator')->name('complete');
