@@ -77,7 +77,7 @@ class DetentionService
                 ? Carbon::parse($data['date_fin_detention']) 
                 : now();
             
-            $joursDetention = $dateDebut->diffInDays($dateFin);
+            $joursDetention = (int) $dateDebut->diffInDays($dateFin);
             
             return Detention::create([
                 'sortie_conteneur_id' => $data['sortie_conteneur_id'],
@@ -117,7 +117,7 @@ class DetentionService
                     ? Carbon::parse($data['date_fin_detention'])
                     : ($detention->date_fin_detention ?? now());
                 
-                $joursDetention = $dateDebut->diffInDays($dateFin);
+                $joursDetention = (int) $dateDebut->diffInDays($dateFin);
                 $coutParJour = $data['cout_par_jour'] ?? $detention->cout_par_jour;
                 
                 $data['jours_detention'] = $joursDetention;
@@ -178,7 +178,7 @@ class DetentionService
             return;
         }
 
-        $joursReels = $sortie->date_sortie->diffInDays($sortie->date_retour);
+        $joursReels = (int) $sortie->date_sortie->diffInDays($sortie->date_retour);
         $joursAutorises = $this->determinerJoursAutorises($sortie);
 
         if ($joursReels <= $joursAutorises) {
