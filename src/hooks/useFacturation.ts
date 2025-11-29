@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { facturationService } from '@/services/facturationService';
+import { facturationPdfService } from '@/services/facturationPdfService';
 import { FactureInterne, CreateFactureData } from '@/types/facturation';
 import { useToast } from '@/hooks/use-toast';
 
@@ -152,15 +153,10 @@ export function useFacturation() {
 
   const generatePDF = async (facture: FactureInterne) => {
     try {
-      const blob = await facturationService.generatePDF(facture.id);
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${facture.numeroFacture}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      console.log('📄 Generating PDF for facture:', facture);
+      
+      // Utiliser le service PDF local pour générer et télécharger le PDF
+      facturationPdfService.generateFacturePdf(facture);
       
       toast({
         title: 'PDF généré',
