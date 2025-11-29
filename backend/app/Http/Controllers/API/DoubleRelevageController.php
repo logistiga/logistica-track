@@ -132,6 +132,30 @@ class DoubleRelevageController extends Controller
             }
         }
 
+        // Créer une archive automatiquement
+        Archive::create([
+            'type_archive' => 'base_operation',
+            'reference_originale' => 'double_relevage_' . $doubleRelevage->id,
+            'donnees_originales' => [
+                'type_operation' => 'double-relevage',
+                'numero_conteneur' => $doubleRelevage->numero_conteneur,
+                'nom_client' => $doubleRelevage->nom_client,
+                'provenance' => $doubleRelevage->provenance,
+                'date_arrivee_base' => $doubleRelevage->date_arrivee->format('Y-m-d'),
+                'date_sortie_base' => $operation->date_confirmation ? $operation->date_confirmation->format('Y-m-d') : now()->format('Y-m-d'),
+                'camion_arrivee' => $doubleRelevage->camion_arrivee,
+                'remorque_arrivee' => $doubleRelevage->remorque_arrivee,
+                'camion_sortie' => $doubleRelevage->camion_sortie,
+                'remorque_sortie' => $doubleRelevage->remorque_sortie,
+                'jours_gratuits' => 0,
+                'jours_payants' => 0,
+                'montant_total_facture' => 0,
+            ],
+            'date_archivage' => now(),
+            'motif_archivage' => 'Sortie de conteneur - Double relevage',
+            'archive_par' => auth()->id(),
+        ]);
+
         return $this->successResponse(
             new DoubleRelevageResource($operation),
             'Opération confirmée avec succès'

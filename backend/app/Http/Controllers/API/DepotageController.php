@@ -161,6 +161,30 @@ class DepotageController extends Controller
             }
         }
 
+        // Créer une archive automatiquement
+        \App\Models\Archive::create([
+            'type_archive' => 'base_operation',
+            'reference_originale' => 'depotage_' . $depotage->id,
+            'donnees_originales' => [
+                'type_operation' => 'depotage',
+                'numero_conteneur' => $depotage->numero_conteneur,
+                'nom_client' => $depotage->nom_client ?? 'N/A',
+                'provenance' => $depotage->lieu_depotage ?? 'Base',
+                'date_arrivee_base' => $depotage->date_depotage,
+                'date_sortie_base' => now()->format('Y-m-d'),
+                'camion_arrivee' => $depotage->numero_camion ?? 'N/A',
+                'remorque_arrivee' => '',
+                'camion_sortie' => '',
+                'remorque_sortie' => '',
+                'jours_gratuits' => 0,
+                'jours_payants' => 0,
+                'montant_total_facture' => $depotage->prix_depotage ?? 0,
+            ],
+            'date_archivage' => now(),
+            'motif_archivage' => 'Sortie de conteneur - Dépotage',
+            'archive_par' => Auth::id(),
+        ]);
+
         return response()->json([
             'status' => 'success',
             'message' => 'Dépotage terminé avec succès',
