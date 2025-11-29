@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 interface DepotageFormData {
   nomClient: string;
   numeroConteneur: string;
+  provenance: string;
   dateDepotage: string;
   camionProprietaire: boolean;
   plaqueCamion: string;
@@ -29,6 +30,7 @@ export function DepotageForm({ onSubmit, initialData, camionsParc = [], remorque
   const [formData, setFormData] = useState<DepotageFormData>({
     nomClient: initialData?.nomClient || "",
     numeroConteneur: initialData?.numeroConteneur || "",
+    provenance: initialData?.provenance || "",
     dateDepotage: new Date().toISOString().split('T')[0],
     camionProprietaire: true,
     plaqueCamion: "",
@@ -64,6 +66,17 @@ export function DepotageForm({ onSubmit, initialData, camionsParc = [], remorque
           value={formData.numeroConteneur}
           onChange={(e) => setFormData({ ...formData, numeroConteneur: e.target.value })}
           placeholder="Ex: MSKU1234567"
+          required
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="provenance">Provenance *</Label>
+        <Input
+          id="provenance"
+          value={formData.provenance}
+          onChange={(e) => setFormData({ ...formData, provenance: e.target.value })}
+          placeholder="Ex: PORT, MAERSK, MSC..."
           required
         />
       </div>
