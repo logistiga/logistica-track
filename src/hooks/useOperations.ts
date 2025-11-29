@@ -127,6 +127,36 @@ export function useOperations() {
     }
   };
 
+  // Démarrer une opération
+  const startOperation = async (id: string) => {
+    setLoading(true);
+    try {
+      const updated = await operationService.updateStatut(id, 'en-cours');
+      setOperations(prev => prev.map(op => op.id === id ? updated : op));
+      showToast('Succès', 'Opération démarrée');
+    } catch (error) {
+      console.error('Erreur:', error);
+      showToast('Erreur', 'Impossible de démarrer l\'opération');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Terminer une opération
+  const completeOperation = async (id: string) => {
+    setLoading(true);
+    try {
+      const updated = await operationService.updateStatut(id, 'terminee');
+      setOperations(prev => prev.map(op => op.id === id ? updated : op));
+      showToast('Succès', 'Opération terminée');
+    } catch (error) {
+      console.error('Erreur:', error);
+      showToast('Erreur', 'Impossible de terminer l\'opération');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const showToast = (title: string, description: string) => {
     toast({ title, description });
   };
@@ -146,6 +176,8 @@ export function useOperations() {
     updateOperation,
     deleteOperation,
     confirmOperation,
+    startOperation,
+    completeOperation,
     loadOperations,
     showToast
   };
