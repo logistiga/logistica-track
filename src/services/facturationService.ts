@@ -19,7 +19,10 @@ export class FacturationService {
     
     const response = await apiService.get(endpoint);
     
+    console.log('📦 API Response:', response);
+    
     if (response.success && response.data) {
+      console.log('✅ Factures récupérées:', response.data.length);
       return response.data.map(this.transformFacturation);
     }
     
