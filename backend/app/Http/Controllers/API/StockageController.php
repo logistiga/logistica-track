@@ -147,6 +147,29 @@ class StockageController extends Controller
         $joursDetention = $stockage->jours_detention;
         $montantDetention = $stockage->montant_detention;
 
+        // Créer une archive automatiquement
+        Archive::create([
+            'type_archive' => 'base_operation',
+            'reference_originale' => 'stockage_' . $stockage->id,
+            'donnees_originales' => [
+                'type_operation' => 'stockage',
+                'numero_conteneur' => $stockage->numero_conteneur,
+                'nom_client' => $stockage->nom_client,
+                'provenance' => $stockage->provenance,
+                'date_arrivee_base' => $stockage->date_arrivee->format('Y-m-d'),
+                'date_sortie_base' => $stockage->date_sortie->format('Y-m-d'),
+                'camion_arrivee' => $stockage->plaque_camion,
+                'remorque_arrivee' => $stockage->plaque_remorque,
+                'jours_gratuits' => $stockage->jours_gratuits,
+                'jours_payants' => $joursDetention,
+                'montant_total_facture' => $montantDetention,
+            ],
+            'date_archivage' => now(),
+            'motif_archivage' => 'Sortie de conteneur - Stockage',
+            'archive_par' => auth()->id(),
+            'commentaires' => $request->observations,
+        ]);
+
         return $this->successResponse(
             new StockageResource($stockage),
             'Sortie confirmée avec succès',
