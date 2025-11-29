@@ -131,6 +131,9 @@ class StockageController extends Controller
             'updated_by' => auth()->id()
         ]);
 
+        // Recharger le modèle pour que les casts soient appliqués
+        $stockage->refresh();
+
         // Mettre à jour la sortie conteneur originale si liée
         if ($stockage->sortie_conteneur_id) {
             $sortieConteneur = \App\Models\SortieConteneur::find($stockage->sortie_conteneur_id);
