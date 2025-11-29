@@ -14,6 +14,7 @@ class Facturation extends Model
         'date_facture',
         'date_echeance',
         'sortie_conteneur_id',
+        'type_operation',
         'montant_transport',
         'montant_detention',
         'montant_autres',

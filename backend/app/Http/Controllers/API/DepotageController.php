@@ -8,6 +8,7 @@ use App\Models\Depotage;
 use App\Models\Archive;
 use App\Http\Requests\StoreDepotageRequest;
 use App\Http\Requests\UpdateDepotageRequest;
+use App\Services\FacturationService;
 use App\Traits\ApiResponseTrait;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -181,6 +182,19 @@ class DepotageController extends Controller
             'motif_archivage' => 'Sortie de conteneur - Dépotage',
             'archive_par' => Auth::id(),
         ]);
+
+        // Créer une facture automatiquement si montant > 0
+        $montantDepotage = $depotage->prix_depotage ?? 0;
+        if ($montantDepotage > 0) {
+            $facturationService = app(FacturationService::class);
+            $facturationService->createFactureFromBaseOperation([
+                'type_operation' => 'depotage',
+                'sortie_conteneur_id' => $depotage->sortie_conteneur_id,
+                'numero_conteneur' => $depotage->numero_conteneur,
+                'nom_client' => $depotage->nom_client ?? 'N/A',
+                'montant_operation' => $montantDepotage,
+            ]);
+        }
 
         return $this->successResponse(
             new DepotageResource($depotage->fresh()),
