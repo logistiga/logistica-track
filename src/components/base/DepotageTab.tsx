@@ -73,6 +73,7 @@ export function DepotageTab({ camions, remorques }: DepotageTabProps) {
       const depotageData = {
         nom_client: formData.nomClient,
         numero_conteneur: formData.numeroConteneur,
+        provenance: formData.provenance,
         date_depotage: formData.dateDepotage,
         camion_proprietaire: formData.camionProprietaire,
         plaque_camion: formData.plaqueCamion,

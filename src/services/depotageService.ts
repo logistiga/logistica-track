@@ -24,6 +24,7 @@ export interface CreateDepotageData {
   sortie_conteneur_id?: number;
   nom_client: string;
   numero_conteneur: string;
+  provenance: string;
   date_depotage: string;
   camion_proprietaire: boolean;
   plaque_camion: string;

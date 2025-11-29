@@ -136,6 +136,7 @@ export function ArriveeBaseTab({ camions, remorques }: ArriveeBaseTabProps) {
         sortie_conteneur_id: selectedArrivee?.id,
         nom_client: formData.nomClient,
         numero_conteneur: formData.numeroConteneur,
+        provenance: formData.provenance,
         date_depotage: formData.dateDepotage,
         camion_proprietaire: formData.camionProprietaire,
         plaque_camion: formData.plaqueCamion,
