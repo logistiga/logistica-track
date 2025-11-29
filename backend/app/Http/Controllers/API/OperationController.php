@@ -4,6 +4,9 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Traits\ApiResponseTrait;
+use App\Models\Operation;
+use App\Http\Requests\StoreOperationRequest;
+use App\Http\Requests\UpdateOperationRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -19,40 +22,57 @@ class OperationController extends Controller
     public function index(Request $request): JsonResponse
     {
         try {
-            $query = DB::table('operations')
-                ->select('*')
-                ->orderBy('created_at', 'desc');
+            $query = Operation::query()->orderBy('created_at', 'desc');
 
-            // Apply filters
+            // Filtres
             if ($request->filled('statut')) {
                 $query->where('statut', $request->statut);
             }
 
-            if ($request->filled('type')) {
-                $query->where('type_operation', $request->type);
+            if ($request->filled('type_operation')) {
+                $query->where('type_operation', $request->type_operation);
+            }
+
+            if ($request->filled('date_debut')) {
+                $query->whereDate('date_debut', '>=', $request->date_debut);
+            }
+
+            if ($request->filled('date_fin')) {
+                $query->whereDate('date_debut', '<=', $request->date_fin);
             }
 
             if ($request->filled('search')) {
                 $search = $request->search;
                 $query->where(function ($q) use ($search) {
                     $q->where('numero_operation', 'like', "%{$search}%")
-                      ->orWhere('description', 'like', "%{$search}%");
+                      ->orWhere('description', 'like', "%{$search}%")
+                      ->orWhereJsonContains('vehicules_assignes', $search);
                 });
             }
 
-            $perPage = $request->input('per_page', 15);
-            $operations = $query->paginate($perPage);
+            $operations = $query->get()->map(function ($operation) {
+                return [
+                    'id' => (string) $operation->id,
+                    'typeOperation' => $operation->type_operation,
+                    'dateDebut' => $operation->date_debut ? $operation->date_debut->format('Y-m-d') : null,
+                    'dateFin' => $operation->date_fin ? $operation->date_fin->format('Y-m-d') : null,
+                    'duree' => $operation->duree,
+                    'camion' => $operation->vehicules_assignes['camion'] ?? '',
+                    'remorque' => $operation->vehicules_assignes['remorque'] ?? '',
+                    'client' => $operation->vehicules_assignes['client'] ?? '',
+                    'tarifJournalier' => $operation->tarif_journalier,
+                    'montant' => (int) ($operation->cout_estime ?? $operation->cout_reel ?? 0),
+                    'lieuDepart' => $operation->lieu_depart,
+                    'destination' => $operation->destination,
+                    'instructions' => $operation->notes ?? $operation->description,
+                    'statut' => $operation->statut,
+                    'dateCreation' => $operation->created_at->format('Y-m-d H:i:s')
+                ];
+            });
 
-            return $this->successResponse([
-                'operations' => $operations->items(),
-                'pagination' => [
-                    'current_page' => $operations->currentPage(),
-                    'last_page' => $operations->lastPage(),
-                    'per_page' => $operations->perPage(),
-                    'total' => $operations->total(),
-                ]
-            ]);
+            return $this->successResponse($operations);
         } catch (\Exception $e) {
+            \Log::error('Erreur index operations: ' . $e->getMessage());
             return $this->errorResponse('Erreur lors de la récupération des opérations', 500);
         }
     }
@@ -60,33 +80,69 @@ class OperationController extends Controller
     /**
      * Store a newly created operation
      */
-    public function store(Request $request): JsonResponse
+    public function store(StoreOperationRequest $request): JsonResponse
     {
         try {
-            $validated = $request->validate([
-                'numero_operation' => 'required|string|unique:operations',
-                'type_operation' => 'required|in:chargement,dechargement,transfert,maintenance',
-                'description' => 'required|string',
-                'vehicule_id' => 'nullable|exists:vehicules,id',
-                'sortie_conteneur_id' => 'nullable|exists:sortie_conteneurs,id',
-                'date_prevue' => 'required|date',
-                'duree_estimee' => 'nullable|integer',
-                'priorite' => 'required|in:basse,normale,haute,urgente',
-                'lieu' => 'required|string',
-                'responsable' => 'required|string',
-                'observations' => 'nullable|string',
+            $validated = $request->validated();
+
+            // Générer un numéro d'opération unique
+            $numeroOperation = 'OP-' . strtoupper(substr($validated['type_operation'], 0, 3)) . '-' . date('YmdHis');
+
+            // Calculer la durée si c'est une location
+            $duree = null;
+            if ($validated['type_operation'] === 'location' && isset($validated['date_fin'])) {
+                $debut = Carbon::parse($validated['date_debut']);
+                $fin = Carbon::parse($validated['date_fin']);
+                $duree = $debut->diffInDays($fin);
+            }
+
+            // Calculer le montant pour les locations
+            $montant = $validated['montant'] ?? null;
+            if ($validated['type_operation'] === 'location' && $duree && isset($validated['tarif_journalier'])) {
+                $montant = $duree * $validated['tarif_journalier'];
+            }
+
+            $operation = Operation::create([
+                'numero_operation' => $numeroOperation,
+                'type_operation' => $validated['type_operation'],
+                'description' => $validated['instructions'] ?? '',
+                'date_debut' => $validated['date_debut'],
+                'date_fin' => $validated['date_fin'] ?? null,
+                'duree' => $duree,
+                'tarif_journalier' => $validated['tarif_journalier'] ?? null,
+                'cout_estime' => $montant,
+                'lieu_depart' => $validated['lieu_depart'] ?? null,
+                'destination' => $validated['destination'] ?? null,
+                'vehicules_assignes' => [
+                    'camion' => $validated['camion'],
+                    'remorque' => $validated['remorque'],
+                    'client' => $validated['client']
+                ],
+                'notes' => $validated['instructions'] ?? '',
+                'statut' => 'en-attente',
+                'priorite' => 'normale'
             ]);
 
-            $validated['statut'] = 'planifiee';
-            $validated['created_at'] = now();
-            $validated['updated_at'] = now();
-
-            $operationId = DB::table('operations')->insertGetId($validated);
-            $operation = DB::table('operations')->find($operationId);
-
-            return $this->successResponse($operation, 'Opération créée avec succès', 201);
+            return $this->successResponse([
+                'id' => (string) $operation->id,
+                'typeOperation' => $operation->type_operation,
+                'dateDebut' => $operation->date_debut->format('Y-m-d'),
+                'dateFin' => $operation->date_fin ? $operation->date_fin->format('Y-m-d') : null,
+                'duree' => $operation->duree,
+                'camion' => $validated['camion'],
+                'remorque' => $validated['remorque'],
+                'client' => $validated['client'],
+                'tarifJournalier' => $operation->tarif_journalier,
+                'montant' => (int) $operation->cout_estime,
+                'lieuDepart' => $operation->lieu_depart,
+                'destination' => $operation->destination,
+                'instructions' => $operation->notes,
+                'statut' => $operation->statut,
+                'dateCreation' => $operation->created_at->format('Y-m-d H:i:s')
+            ], 'Opération créée avec succès', 201);
         } catch (\Exception $e) {
-            return $this->errorResponse('Erreur lors de la création de l\'opération', 500);
+            \Log::error('Erreur store operation: ' . $e->getMessage());
+            return $this->errorResponse('Erreur lors de la création de l\'opération: ' . $e->getMessage(), 500);
         }
     }
 
@@ -96,14 +152,31 @@ class OperationController extends Controller
     public function show(int $operation): JsonResponse
     {
         try {
-            $operationData = DB::table('operations')->find($operation);
+            $operationData = Operation::find($operation);
 
             if (!$operationData) {
                 return $this->errorResponse('Opération non trouvée', 404);
             }
 
-            return $this->successResponse($operationData);
+            return $this->successResponse([
+                'id' => (string) $operationData->id,
+                'typeOperation' => $operationData->type_operation,
+                'dateDebut' => $operationData->date_debut->format('Y-m-d'),
+                'dateFin' => $operationData->date_fin ? $operationData->date_fin->format('Y-m-d') : null,
+                'duree' => $operationData->duree,
+                'camion' => $operationData->vehicules_assignes['camion'] ?? '',
+                'remorque' => $operationData->vehicules_assignes['remorque'] ?? '',
+                'client' => $operationData->vehicules_assignes['client'] ?? '',
+                'tarifJournalier' => $operationData->tarif_journalier,
+                'montant' => (int) ($operationData->cout_estime ?? $operationData->cout_reel ?? 0),
+                'lieuDepart' => $operationData->lieu_depart,
+                'destination' => $operationData->destination,
+                'instructions' => $operationData->notes,
+                'statut' => $operationData->statut,
+                'dateCreation' => $operationData->created_at->format('Y-m-d H:i:s')
+            ]);
         } catch (\Exception $e) {
+            \Log::error('Erreur show operation: ' . $e->getMessage());
             return $this->errorResponse('Erreur lors de la récupération de l\'opération', 500);
         }
     }
@@ -111,36 +184,100 @@ class OperationController extends Controller
     /**
      * Update the specified operation
      */
-    public function update(Request $request, int $operation): JsonResponse
+    public function update(UpdateOperationRequest $request, int $operation): JsonResponse
     {
         try {
-            $operationData = DB::table('operations')->find($operation);
+            $operationData = Operation::find($operation);
+
+            if (!$operationData) {
+                return $this->errorResponse('Opération non trouvée', 404);
+            }
+
+            $validated = $request->validated();
+
+            // Mettre à jour les champs simples
+            if (isset($validated['date_debut'])) $operationData->date_debut = $validated['date_debut'];
+            if (isset($validated['date_fin'])) $operationData->date_fin = $validated['date_fin'];
+            if (isset($validated['tarif_journalier'])) $operationData->tarif_journalier = $validated['tarif_journalier'];
+            if (isset($validated['lieu_depart'])) $operationData->lieu_depart = $validated['lieu_depart'];
+            if (isset($validated['destination'])) $operationData->destination = $validated['destination'];
+            if (isset($validated['instructions'])) $operationData->notes = $validated['instructions'];
+            if (isset($validated['statut'])) $operationData->statut = $validated['statut'];
+
+            // Mettre à jour vehicules_assignes si nécessaire
+            if (isset($validated['camion']) || isset($validated['remorque']) || isset($validated['client'])) {
+                $vehicules = $operationData->vehicules_assignes ?? [];
+                if (isset($validated['camion'])) $vehicules['camion'] = $validated['camion'];
+                if (isset($validated['remorque'])) $vehicules['remorque'] = $validated['remorque'];
+                if (isset($validated['client'])) $vehicules['client'] = $validated['client'];
+                $operationData->vehicules_assignes = $vehicules;
+            }
+
+            // Recalculer durée et montant pour les locations
+            $operationData->save();
+
+            return $this->successResponse([
+                'id' => (string) $operationData->id,
+                'typeOperation' => $operationData->type_operation,
+                'dateDebut' => $operationData->date_debut->format('Y-m-d'),
+                'dateFin' => $operationData->date_fin ? $operationData->date_fin->format('Y-m-d') : null,
+                'duree' => $operationData->duree,
+                'camion' => $operationData->vehicules_assignes['camion'] ?? '',
+                'remorque' => $operationData->vehicules_assignes['remorque'] ?? '',
+                'client' => $operationData->vehicules_assignes['client'] ?? '',
+                'tarifJournalier' => $operationData->tarif_journalier,
+                'montant' => (int) ($operationData->cout_estime ?? $operationData->cout_reel ?? 0),
+                'lieuDepart' => $operationData->lieu_depart,
+                'destination' => $operationData->destination,
+                'instructions' => $operationData->notes,
+                'statut' => $operationData->statut,
+                'dateCreation' => $operationData->created_at->format('Y-m-d H:i:s')
+            ], 'Opération mise à jour avec succès');
+        } catch (\Exception $e) {
+            \Log::error('Erreur update operation: ' . $e->getMessage());
+            return $this->errorResponse('Erreur lors de la mise à jour de l\'opération', 500);
+        }
+    }
+
+    /**
+     * Update operation status
+     */
+    public function updateStatut(Request $request, int $operation): JsonResponse
+    {
+        try {
+            $operationData = Operation::find($operation);
 
             if (!$operationData) {
                 return $this->errorResponse('Opération non trouvée', 404);
             }
 
             $validated = $request->validate([
-                'type_operation' => 'sometimes|in:chargement,dechargement,transfert,maintenance',
-                'description' => 'sometimes|string',
-                'vehicule_id' => 'nullable|exists:vehicules,id',
-                'sortie_conteneur_id' => 'nullable|exists:sortie_conteneurs,id',
-                'date_prevue' => 'sometimes|date',
-                'duree_estimee' => 'nullable|integer',
-                'priorite' => 'sometimes|in:basse,normale,haute,urgente',
-                'lieu' => 'sometimes|string',
-                'responsable' => 'sometimes|string',
-                'observations' => 'nullable|string',
+                'statut' => 'required|in:planifiee,en-attente,en-cours,terminee,confirmee,annulee'
             ]);
 
-            $validated['updated_at'] = now();
+            $operationData->statut = $validated['statut'];
+            $operationData->save();
 
-            DB::table('operations')->where('id', $operation)->update($validated);
-            $updatedOperation = DB::table('operations')->find($operation);
-
-            return $this->successResponse($updatedOperation, 'Opération mise à jour avec succès');
+            return $this->successResponse([
+                'id' => (string) $operationData->id,
+                'typeOperation' => $operationData->type_operation,
+                'dateDebut' => $operationData->date_debut->format('Y-m-d'),
+                'dateFin' => $operationData->date_fin ? $operationData->date_fin->format('Y-m-d') : null,
+                'duree' => $operationData->duree,
+                'camion' => $operationData->vehicules_assignes['camion'] ?? '',
+                'remorque' => $operationData->vehicules_assignes['remorque'] ?? '',
+                'client' => $operationData->vehicules_assignes['client'] ?? '',
+                'tarifJournalier' => $operationData->tarif_journalier,
+                'montant' => (int) ($operationData->cout_estime ?? $operationData->cout_reel ?? 0),
+                'lieuDepart' => $operationData->lieu_depart,
+                'destination' => $operationData->destination,
+                'instructions' => $operationData->notes,
+                'statut' => $operationData->statut,
+                'dateCreation' => $operationData->created_at->format('Y-m-d H:i:s')
+            ], 'Statut mis à jour avec succès');
         } catch (\Exception $e) {
-            return $this->errorResponse('Erreur lors de la mise à jour de l\'opération', 500);
+            \Log::error('Erreur updateStatut operation: ' . $e->getMessage());
+            return $this->errorResponse('Erreur lors de la mise à jour du statut', 500);
         }
     }
 
@@ -150,16 +287,17 @@ class OperationController extends Controller
     public function destroy(int $operation): JsonResponse
     {
         try {
-            $operationData = DB::table('operations')->find($operation);
+            $operationData = Operation::find($operation);
 
             if (!$operationData) {
                 return $this->errorResponse('Opération non trouvée', 404);
             }
 
-            DB::table('operations')->where('id', $operation)->delete();
+            $operationData->delete();
 
             return $this->successResponse(null, 'Opération supprimée avec succès');
         } catch (\Exception $e) {
+            \Log::error('Erreur destroy operation: ' . $e->getMessage());
             return $this->errorResponse('Erreur lors de la suppression de l\'opération', 500);
         }
     }
