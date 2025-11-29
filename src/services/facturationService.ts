@@ -1,4 +1,5 @@
 import { apiService } from './apiService';
+import { apiConfig } from '@/config/api';
 import { FactureInterne, CreateFactureData } from '@/types/facturation';
 
 export class FacturationService {
@@ -88,8 +89,14 @@ export class FacturationService {
   }
 
   async generatePDF(id: string): Promise<Blob> {
-    const response = await fetch(`${apiService['baseUrl']}/facturations/${id}/pdf`, {
-      headers: apiService['getAuthHeaders'](),
+    const token = localStorage.getItem('auth_token');
+    const response = await fetch(`${apiConfig.baseUrl}/facturations/${id}/pdf`, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/pdf',
+        'ngrok-skip-browser-warning': 'true',
+        ...(token && { 'Authorization': `Bearer ${token}` })
+      },
     });
     
     if (!response.ok) {
