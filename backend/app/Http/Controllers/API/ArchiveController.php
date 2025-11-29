@@ -17,6 +17,7 @@ class ArchiveController extends Controller
         try {
             $archives = Archive::with('archivePar')
                 ->where('type_archive', 'base_operation')
+                ->whereNotNull('donnees_originales->date_sortie_base')
                 ->orderBy('date_archivage', 'desc')
                 ->get()
                 ->map(function ($archive) {
@@ -60,7 +61,8 @@ class ArchiveController extends Controller
     {
         try {
             $query = Archive::with('archivePar')
-                ->where('type_archive', 'base_operation');
+                ->where('type_archive', 'base_operation')
+                ->whereNotNull('donnees_originales->date_sortie_base');
 
             // Filtrer par dates
             if ($request->has('dateDebut')) {
