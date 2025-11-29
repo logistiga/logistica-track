@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreStockageRequest extends FormRequest
 {
@@ -15,7 +16,14 @@ class StoreStockageRequest extends FormRequest
     {
         return [
             'nom_client' => 'required|string|max:255',
-            'numero_conteneur' => 'required|string|max:100|unique:stockages,numero_conteneur',
+            'numero_conteneur' => [
+                'required',
+                'string',
+                'max:100',
+                Rule::unique('stockages', 'numero_conteneur')->where(function ($query) {
+                    return $query->whereIn('statut', ['stocke', 'en_attente_sortie']);
+                })
+            ],
             'provenance' => 'required|string|max:255',
             'date_arrivee' => 'required|date',
             'camion_proprietaire' => 'boolean',
