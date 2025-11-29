@@ -277,7 +277,7 @@ export function StockageTab({ camions, remorques }: StockageTabProps) {
                       {formatCurrency(item.montant_detention)}
                     </div>
                     <div className="text-xs text-muted-foreground">
-                      {item.jours_detention} jours payants
+                      {Math.floor(item.jours_detention)} jours payants
                     </div>
                   </TableCell>
                   <TableCell>{getStatusBadge(item.statut)}</TableCell>
