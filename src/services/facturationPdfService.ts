@@ -14,21 +14,27 @@ class FacturationPdfService {
 
     // Header avec logo
     currentY = this.addHeader(doc, pageWidth, currentY);
-    currentY += 5;
+    currentY += 8;
 
     // Titre principal
     currentY = this.addTitle(doc, facture, pageWidth, currentY);
+    currentY += 10;
+
+    // Section Informations Client (layout 2 colonnes)
+    currentY = this.addClientInfo(doc, facture, pageWidth, currentY);
     currentY += 8;
 
-    // Section Informations Client
-    currentY = this.addClientInfo(doc, facture, pageWidth, currentY);
-    currentY += 5;
+    // Section Transport (Camion et Remorque)
+    if (facture.camion || facture.remorque) {
+      currentY = this.addTransportInfo(doc, facture, pageWidth, currentY);
+      currentY += 8;
+    }
 
-    // Section Détails selon le type d'opération
+    // Section Détails de l'opération
     currentY = this.addOperationDetails(doc, facture, pageWidth, currentY);
-    currentY += 5;
+    currentY += 10;
 
-    // Section Montant
+    // Section Montants - Format moderne
     currentY = this.addAmountSection(doc, facture, pageWidth, currentY);
 
     // Footer
@@ -50,214 +56,324 @@ class FacturationPdfService {
       console.error('Erreur lors du chargement du logo:', e);
     }
 
-    return startY + logoHeight + 8;
+    return startY + logoHeight;
   }
 
   private addTitle(doc: jsPDF, facture: FactureInterne, pageWidth: number, startY: number): number {
-    // Ligne de séparation
+    // Ligne de séparation supérieure
     doc.setDrawColor(59, 130, 246);
-    doc.setLineWidth(0.8);
-    doc.line(20, startY, pageWidth - 20, startY);
+    doc.setLineWidth(1);
+    doc.line(15, startY, pageWidth - 15, startY);
     
-    // Titre principal avec fond coloré
+    // Titre principal avec fond coloré moderne
     doc.setFillColor(59, 130, 246);
-    doc.roundedRect(20, startY + 3, pageWidth - 40, 12, 2, 2, 'F');
+    doc.roundedRect(15, startY + 2, pageWidth - 30, 14, 3, 3, 'F');
     
-    doc.setFontSize(18);
+    doc.setFontSize(20);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(255, 255, 255);
-    doc.text('NOTE DE FACTURATION INTERNE', pageWidth / 2, startY + 12, { align: 'center' });
+    doc.text('NOTE DE FACTURATION INTERNE', pageWidth / 2, startY + 11, { align: 'center' });
     
-    // Informations de la facture
-    doc.setFillColor(245, 245, 245);
-    doc.roundedRect(20, startY + 18, pageWidth - 40, 9, 2, 2, 'F');
+    // Informations de référence (2 colonnes)
+    const infoY = startY + 20;
+    doc.setFillColor(248, 250, 252);
+    doc.roundedRect(15, infoY, pageWidth - 30, 10, 2, 2, 'F');
+    doc.setDrawColor(226, 232, 240);
+    doc.setLineWidth(0.2);
+    doc.roundedRect(15, infoY, pageWidth - 30, 10, 2, 2, 'S');
     
-    doc.setFontSize(8);
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(71, 85, 105);
+    
+    // Colonne gauche
+    doc.text('Date d\'émission:', 20, infoY + 4);
     doc.setFont('helvetica', 'normal');
-    doc.setTextColor(0, 0, 0);
+    doc.setTextColor(15, 23, 42);
     const dateFacture = new Date(facture.dateFacture).toLocaleDateString('fr-FR');
-    doc.text(`Date d'émission: ${dateFacture}`, 25, startY + 24);
-    doc.text(`N° Facture: ${facture.numeroFacture}`, pageWidth - 25, startY + 24, { align: 'right' });
+    doc.text(dateFacture, 20, infoY + 7.5);
     
-    return startY + 30;
+    // Colonne droite
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(71, 85, 105);
+    doc.text('N° Facture:', pageWidth - 60, infoY + 4);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(15, 23, 42);
+    doc.text(facture.numeroFacture, pageWidth - 60, infoY + 7.5);
+    
+    return infoY + 12;
   }
 
   private addClientInfo(doc: jsPDF, facture: FactureInterne, pageWidth: number, startY: number): number {
-    // En-tête de section
+    // En-tête de section moderne
     doc.setFillColor(59, 130, 246);
-    doc.roundedRect(20, startY, pageWidth - 40, 8, 2, 2, 'F');
-    doc.setFontSize(10);
+    doc.roundedRect(15, startY, pageWidth - 30, 9, 2, 2, 'F');
+    doc.setFontSize(11);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(255, 255, 255);
-    doc.text('INFORMATIONS CLIENT', 25, startY + 5.5);
+    doc.text('INFORMATIONS CLIENT', 20, startY + 6);
     
-    // Fond du contenu
-    doc.setFillColor(250, 250, 250);
-    doc.roundedRect(20, startY + 8, pageWidth - 40, 22, 2, 2, 'F');
-    doc.setDrawColor(230, 230, 230);
-    doc.setLineWidth(0.1);
-    doc.roundedRect(20, startY + 8, pageWidth - 40, 22, 2, 2, 'S');
+    // Contenu avec layout 2 colonnes
+    const contentHeight = 20;
+    doc.setFillColor(255, 255, 255);
+    doc.roundedRect(15, startY + 9, pageWidth - 30, contentHeight, 2, 2, 'F');
+    doc.setDrawColor(226, 232, 240);
+    doc.setLineWidth(0.3);
+    doc.roundedRect(15, startY + 9, pageWidth - 30, contentHeight, 2, 2, 'S');
     
-    // Contenu
+    const contentY = startY + 15;
+    const colWidth = (pageWidth - 30) / 2;
+    
+    // Colonne gauche - Client
     doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(71, 85, 105);
+    doc.text('Client:', 20, contentY);
     doc.setFont('helvetica', 'normal');
-    doc.setTextColor(0, 0, 0);
-    let contentY = startY + 14;
+    doc.setTextColor(15, 23, 42);
+    doc.setFontSize(10);
+    doc.text(facture.nomClient || 'N/A', 20, contentY + 5);
     
-    this.addField(doc, 'Client:', facture.nomClient, 25, contentY);
-    contentY += 6;
-    this.addField(doc, 'Numéro Conteneur:', facture.numeroConteneur, 25, contentY);
+    // Colonne droite - Numéro conteneur
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(71, 85, 105);
+    doc.text('Numéro Conteneur:', 15 + colWidth, contentY);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(15, 23, 42);
+    doc.setFontSize(10);
+    doc.text(facture.numeroConteneur || 'N/A', 15 + colWidth, contentY + 5);
     
-    return startY + 32;
+    return startY + 9 + contentHeight;
+  }
+
+  private addTransportInfo(doc: jsPDF, facture: FactureInterne, pageWidth: number, startY: number): number {
+    // En-tête de section
+    doc.setFillColor(16, 185, 129);
+    doc.roundedRect(15, startY, pageWidth - 30, 9, 2, 2, 'F');
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(255, 255, 255);
+    doc.text('INFORMATIONS TRANSPORT', 20, startY + 6);
+    
+    // Contenu avec layout 2 colonnes
+    const contentHeight = 16;
+    doc.setFillColor(255, 255, 255);
+    doc.roundedRect(15, startY + 9, pageWidth - 30, contentHeight, 2, 2, 'F');
+    doc.setDrawColor(226, 232, 240);
+    doc.setLineWidth(0.3);
+    doc.roundedRect(15, startY + 9, pageWidth - 30, contentHeight, 2, 2, 'S');
+    
+    const contentY = startY + 15;
+    const colWidth = (pageWidth - 30) / 2;
+    
+    // Colonne gauche - Camion
+    if (facture.camion) {
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(71, 85, 105);
+      doc.text('Camion:', 20, contentY);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(15, 23, 42);
+      doc.setFontSize(10);
+      doc.text(facture.camion, 20, contentY + 5);
+    }
+    
+    // Colonne droite - Remorque
+    if (facture.remorque) {
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(71, 85, 105);
+      doc.text('Remorque:', 15 + colWidth, contentY);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(15, 23, 42);
+      doc.setFontSize(10);
+      doc.text(facture.remorque, 15 + colWidth, contentY + 5);
+    }
+    
+    return startY + 9 + contentHeight;
   }
 
   private addOperationDetails(doc: jsPDF, facture: FactureInterne, pageWidth: number, startY: number): number {
+    const typeLabel = this.getOperationLabel(facture.typeOperation);
+    
     // En-tête de section
-    doc.setFillColor(59, 130, 246);
-    doc.roundedRect(20, startY, pageWidth - 40, 8, 2, 2, 'F');
-    doc.setFontSize(10);
+    doc.setFillColor(139, 92, 246);
+    doc.roundedRect(15, startY, pageWidth - 30, 9, 2, 2, 'F');
+    doc.setFontSize(11);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(255, 255, 255);
+    doc.text(`DÉTAILS - ${typeLabel.toUpperCase()}`, 20, startY + 6);
     
-    const typeLabel = this.getOperationLabel(facture.typeOperation);
-    doc.text(`DÉTAILS - ${typeLabel.toUpperCase()}`, 25, startY + 5.5);
-    
-    // Calcul de la hauteur selon le type d'opération
-    let contentHeight = 22;
-    if (facture.typeOperation === 'stockage' && (facture.joursGratuits || facture.joursPayants)) {
-      contentHeight = 34;
+    // Calcul de la hauteur
+    let contentHeight = 24;
+    if (facture.typeOperation === 'stockage') {
+      contentHeight = 40;
     }
     
-    // Fond du contenu
-    doc.setFillColor(250, 250, 250);
-    doc.roundedRect(20, startY + 8, pageWidth - 40, contentHeight, 2, 2, 'F');
-    doc.setDrawColor(230, 230, 230);
-    doc.setLineWidth(0.1);
-    doc.roundedRect(20, startY + 8, pageWidth - 40, contentHeight, 2, 2, 'S');
+    // Contenu
+    doc.setFillColor(255, 255, 255);
+    doc.roundedRect(15, startY + 9, pageWidth - 30, contentHeight, 2, 2, 'F');
+    doc.setDrawColor(226, 232, 240);
+    doc.setLineWidth(0.3);
+    doc.roundedRect(15, startY + 9, pageWidth - 30, contentHeight, 2, 2, 'S');
     
-    // Contenu selon le type
+    let contentY = startY + 15;
+    const colWidth = (pageWidth - 30) / 2;
+    
+    // Type d'opération et date (1ère ligne, 2 colonnes)
     doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(71, 85, 105);
+    doc.text('Type d\'opération:', 20, contentY);
     doc.setFont('helvetica', 'normal');
-    doc.setTextColor(0, 0, 0);
-    let contentY = startY + 14;
-    
-    this.addField(doc, 'Type d\'opération:', typeLabel, 25, contentY);
-    contentY += 6;
+    doc.setTextColor(15, 23, 42);
+    doc.text(typeLabel, 20, contentY + 4);
     
     const dateOperation = new Date(facture.dateSortieOperation).toLocaleDateString('fr-FR');
-    this.addField(doc, 'Date de sortie:', dateOperation, 25, contentY);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(71, 85, 105);
+    doc.text('Date de sortie:', 15 + colWidth, contentY);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(15, 23, 42);
+    doc.text(dateOperation, 15 + colWidth, contentY + 4);
     
+    // Détails spécifiques selon le type
     if (facture.typeOperation === 'stockage') {
-      contentY += 6;
-      if (facture.joursGratuits !== undefined) {
-        this.addField(doc, 'Jours gratuits:', facture.joursGratuits.toString(), 25, contentY);
-      }
+      contentY += 12;
       
-      contentY += 6;
-      if (facture.joursPayants !== undefined) {
-        this.addField(doc, 'Jours payants:', facture.joursPayants.toString(), 25, contentY);
-      }
+      // Jours gratuits et Jours à facturer (2ème ligne, 2 colonnes)
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(71, 85, 105);
+      doc.text('Jours gratuits:', 20, contentY);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(15, 23, 42);
+      doc.setFontSize(11);
+      doc.text((facture.joursGratuits || 0).toString(), 20, contentY + 5);
       
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(71, 85, 105);
+      doc.text('Jours à facturer:', 15 + colWidth, contentY);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(220, 38, 38);
+      doc.setFontSize(11);
+      doc.text((facture.joursPayants || 0).toString(), 15 + colWidth, contentY + 5);
+      
+      // Tarif journalier (3ème ligne)
       if (facture.tarifJournalier !== undefined) {
-        contentY += 6;
-        this.addField(doc, 'Tarif journalier:', formatCurrency(facture.tarifJournalier), 25, contentY);
+        contentY += 12;
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(71, 85, 105);
+        doc.text('Tarif journalier:', 20, contentY);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(15, 23, 42);
+        doc.setFontSize(11);
+        doc.text(formatCurrency(facture.tarifJournalier), 20, contentY + 5);
       }
     }
     
-    if (facture.notes) {
-      contentY += 8;
-      doc.setFontSize(8);
-      doc.setFont('helvetica', 'italic');
-      doc.setTextColor(80, 80, 80);
-      doc.text('Notes:', 25, contentY);
-      const splitNotes = doc.splitTextToSize(facture.notes, pageWidth - 50);
-      doc.text(splitNotes, 25, contentY + 4);
-    }
-    
-    return startY + contentHeight + 10;
+    return startY + 9 + contentHeight;
   }
 
   private addAmountSection(doc: jsPDF, facture: FactureInterne, pageWidth: number, startY: number): number {
     // En-tête de section
-    doc.setFillColor(59, 130, 246);
-    doc.roundedRect(20, startY, pageWidth - 40, 8, 2, 2, 'F');
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(255, 255, 255);
-    doc.text('MONTANT À PAYER', 25, startY + 5.5);
-    
-    // Calcul de la hauteur
-    let contentHeight = 16;
-    if (facture.montantTva || facture.montantTtc) {
-      contentHeight = 28;
-    }
-    
-    // Fond du contenu
-    doc.setFillColor(250, 250, 250);
-    doc.roundedRect(20, startY + 8, pageWidth - 40, contentHeight, 2, 2, 'F');
-    doc.setDrawColor(230, 230, 230);
-    doc.setLineWidth(0.1);
-    doc.roundedRect(20, startY + 8, pageWidth - 40, contentHeight, 2, 2, 'S');
-    
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(0, 0, 0);
-    let contentY = startY + 14;
-    
-    this.addField(doc, 'Montant HT:', formatCurrency(facture.montantAPayer), 25, contentY);
-    
-    if (facture.montantTva !== undefined) {
-      contentY += 6;
-      this.addField(doc, 'TVA (18%):', formatCurrency(facture.montantTva), 25, contentY);
-    }
-    
-    // Montant total avec fond accentué
-    contentY += 8;
-    doc.setFillColor(59, 130, 246);
-    doc.roundedRect(25, contentY - 4, pageWidth - 50, 8, 1, 1, 'F');
-    
+    doc.setFillColor(245, 158, 11);
+    doc.roundedRect(15, startY, pageWidth - 30, 9, 2, 2, 'F');
     doc.setFontSize(11);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(255, 255, 255);
-    doc.text('MONTANT TOTAL:', 30, contentY + 1.5);
+    doc.text('MONTANT À PAYER', 20, startY + 6);
+    
+    // Calcul de la hauteur
+    const hasTva = facture.montantTva !== undefined && facture.montantTva > 0;
+    const contentHeight = hasTva ? 44 : 28;
+    
+    // Contenu
+    doc.setFillColor(255, 255, 255);
+    doc.roundedRect(15, startY + 9, pageWidth - 30, contentHeight, 2, 2, 'F');
+    doc.setDrawColor(226, 232, 240);
+    doc.setLineWidth(0.3);
+    doc.roundedRect(15, startY + 9, pageWidth - 30, contentHeight, 2, 2, 'S');
+    
+    let contentY = startY + 17;
+    
+    // Montant HT
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(71, 85, 105);
+    doc.text('Montant HT:', 20, contentY);
+    
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(15, 23, 42);
+    doc.setFontSize(12);
+    doc.text(formatCurrency(facture.montantAPayer), pageWidth - 20, contentY, { align: 'right' });
+    
+    // TVA si applicable
+    if (hasTva) {
+      contentY += 10;
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(71, 85, 105);
+      doc.text('TVA (18%):', 20, contentY);
+      
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(15, 23, 42);
+      doc.setFontSize(12);
+      doc.text(formatCurrency(facture.montantTva!), pageWidth - 20, contentY, { align: 'right' });
+    }
+    
+    // Ligne de séparation
+    contentY += 8;
+    doc.setDrawColor(226, 232, 240);
+    doc.setLineWidth(0.5);
+    doc.line(20, contentY, pageWidth - 20, contentY);
+    
+    // MONTANT TOTAL (très visible)
+    contentY += 8;
+    doc.setFillColor(59, 130, 246);
+    doc.roundedRect(20, contentY - 5, pageWidth - 40, 12, 2, 2, 'F');
+    
+    doc.setFontSize(13);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(255, 255, 255);
+    doc.text('MONTANT TOTAL:', 25, contentY + 2);
     
     const montantFinal = facture.montantTtc !== undefined ? facture.montantTtc : facture.montantAPayer;
-    doc.text(formatCurrency(montantFinal), pageWidth - 30, contentY + 1.5, { align: 'right' });
+    doc.setFontSize(16);
+    doc.text(formatCurrency(montantFinal), pageWidth - 25, contentY + 2, { align: 'right' });
     
-    return startY + contentHeight + 10;
+    return startY + 9 + contentHeight;
   }
 
   private addFooter(doc: jsPDF, pageWidth: number, pageHeight: number): void {
     const footerY = pageHeight - 25;
     
     // Ligne de séparation
-    doc.setDrawColor(200, 200, 200);
-    doc.setLineWidth(0.3);
-    doc.line(20, footerY, pageWidth - 20, footerY);
+    doc.setDrawColor(203, 213, 225);
+    doc.setLineWidth(0.5);
+    doc.line(15, footerY, pageWidth - 15, footerY);
     
     // Informations de l'entreprise
-    doc.setFontSize(8);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(100, 100, 100);
-    
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(71, 85, 105);
     doc.text('LOGISTIGA SARL', pageWidth / 2, footerY + 5, { align: 'center' });
-    doc.text('Zone Industrielle, Dakar, Sénégal', pageWidth / 2, footerY + 9, { align: 'center' });
-    doc.text('Tél: +221 33 XXX XX XX | Email: contact@logistiga.com', pageWidth / 2, footerY + 13, { align: 'center' });
+    
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(100, 116, 139);
+    doc.text('Transport - Stockage - Manutention', pageWidth / 2, footerY + 9, { align: 'center' });
+    doc.text('Zone Industrielle, Dakar, Sénégal', pageWidth / 2, footerY + 13, { align: 'center' });
+    doc.text('Tél: +221 33 XXX XX XX | Email: contact@logistiga.com', pageWidth / 2, footerY + 17, { align: 'center' });
     
     // Date de génération
     doc.setFontSize(7);
     doc.setFont('helvetica', 'italic');
+    doc.setTextColor(148, 163, 184);
     const generationDate = new Date().toLocaleString('fr-FR');
-    doc.text(`Document généré le ${generationDate}`, pageWidth / 2, footerY + 18, { align: 'center' });
-  }
-
-  private addField(doc: jsPDF, label: string, value: string, x: number, y: number): void {
-    doc.setFont('helvetica', 'bold');
-    doc.text(label, x, y);
-    
-    doc.setFont('helvetica', 'normal');
-    const labelWidth = doc.getTextWidth(label);
-    doc.text(value, x + labelWidth + 2, y);
+    doc.text(`Document généré le ${generationDate}`, pageWidth / 2, footerY + 21, { align: 'center' });
   }
 
   private getOperationLabel(type: string): string {
