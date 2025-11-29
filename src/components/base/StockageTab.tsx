@@ -11,6 +11,7 @@ import { StockageStats } from "./StockageStats";
 import { SortieStockageDialog } from "./SortieStockageDialog";
 import { toast } from "@/hooks/use-toast";
 import { stockageService, Stockage } from "@/services/stockageService";
+import { formatCurrency } from "@/lib/currency";
 
 interface StockageTabProps {
   camions: Array<{id: string, numeroParc: string, immatriculation: string, statut: string}>;
@@ -247,6 +248,7 @@ export function StockageTab({ camions, remorques }: StockageTabProps) {
                 <TableHead>Date Arrivée</TableHead>
                 <TableHead>Camion</TableHead>
                 <TableHead>Franchise</TableHead>
+                <TableHead>Montant Actuel</TableHead>
                 <TableHead>Statut</TableHead>
                 <TableHead className="w-32">Actions</TableHead>
               </TableRow>
@@ -268,6 +270,14 @@ export function StockageTab({ camions, remorques }: StockageTabProps) {
                     <div className="text-xs">
                       <div>{item.jours_gratuits} jours</div>
                       <div>{item.prix_par_jour_formate}/j</div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="font-semibold text-sm">
+                      {formatCurrency(item.montant_detention)}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {item.jours_detention} jours payants
                     </div>
                   </TableCell>
                   <TableCell>{getStatusBadge(item.statut)}</TableCell>
