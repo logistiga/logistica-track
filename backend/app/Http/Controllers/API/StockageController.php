@@ -185,6 +185,11 @@ class StockageController extends Controller
                 'montant_detention' => $montantDetention,
                 'jours_gratuits' => $stockage->jours_gratuits,
                 'jours_detention' => $joursDetention,
+                'plaque_camion' => $stockage->plaque_camion,
+                'plaque_remorque' => $stockage->plaque_remorque,
+                'prix_par_jour' => $stockage->prix_par_jour,
+                'date_arrivee' => $stockage->date_arrivee->format('Y-m-d'),
+                'date_sortie' => $stockage->date_sortie->format('Y-m-d'),
             ]);
         }
 

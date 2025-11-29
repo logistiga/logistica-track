@@ -25,7 +25,10 @@ class FacturationPdfService {
     currentY += 8;
 
     // Section Transport (Camion et Remorque)
-    if (facture.camion || facture.remorque) {
+    const details = facture.detailsOperation;
+    const hasTransportInfo = details?.plaque_camion || details?.plaque_remorque || facture.camion || facture.remorque;
+    
+    if (hasTransportInfo) {
       currentY = this.addTransportInfo(doc, facture, pageWidth, currentY);
       currentY += 8;
     }
@@ -148,6 +151,11 @@ class FacturationPdfService {
   }
 
   private addTransportInfo(doc: jsPDF, facture: FactureInterne, pageWidth: number, startY: number): number {
+    // Get info from detailsOperation first, fallback to direct properties
+    const details = facture.detailsOperation;
+    const camion = details?.plaque_camion || facture.camion;
+    const remorque = details?.plaque_remorque || facture.remorque;
+
     // En-tête de section
     doc.setFillColor(16, 185, 129);
     doc.roundedRect(15, startY, pageWidth - 30, 9, 2, 2, 'F');
@@ -168,7 +176,7 @@ class FacturationPdfService {
     const colWidth = (pageWidth - 30) / 2;
     
     // Colonne gauche - Camion
-    if (facture.camion) {
+    if (camion) {
       doc.setFontSize(9);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(71, 85, 105);
@@ -176,11 +184,11 @@ class FacturationPdfService {
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(15, 23, 42);
       doc.setFontSize(10);
-      doc.text(facture.camion, 20, contentY + 5);
+      doc.text(camion, 20, contentY + 5);
     }
     
     // Colonne droite - Remorque
-    if (facture.remorque) {
+    if (remorque) {
       doc.setFontSize(9);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(71, 85, 105);
@@ -188,7 +196,7 @@ class FacturationPdfService {
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(15, 23, 42);
       doc.setFontSize(10);
-      doc.text(facture.remorque, 15 + colWidth, contentY + 5);
+      doc.text(remorque, 15 + colWidth, contentY + 5);
     }
     
     return startY + 9 + contentHeight;
@@ -196,6 +204,7 @@ class FacturationPdfService {
 
   private addOperationDetails(doc: jsPDF, facture: FactureInterne, pageWidth: number, startY: number): number {
     const typeLabel = this.getOperationLabel(facture.typeOperation);
+    const details = facture.detailsOperation;
     
     // En-tête de section
     doc.setFillColor(139, 92, 246);
@@ -205,10 +214,14 @@ class FacturationPdfService {
     doc.setTextColor(255, 255, 255);
     doc.text(`DÉTAILS - ${typeLabel.toUpperCase()}`, 20, startY + 6);
     
-    // Calcul de la hauteur
+    // Calcul de la hauteur dynamique
     let contentHeight = 24;
     if (facture.typeOperation === 'stockage') {
+      contentHeight = details?.date_arrivee ? 56 : 40;
+    } else if (facture.typeOperation === 'double_relevage' && details) {
       contentHeight = 40;
+    } else if (facture.typeOperation === 'depotage' && details?.type_marchandise) {
+      contentHeight = 32;
     }
     
     // Contenu
@@ -242,14 +255,36 @@ class FacturationPdfService {
     if (facture.typeOperation === 'stockage') {
       contentY += 12;
       
-      // Jours gratuits et Jours à facturer (2ème ligne, 2 colonnes)
+      // Dates si disponibles
+      if (details?.date_arrivee) {
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(71, 85, 105);
+        doc.text('Date arrivée:', 20, contentY);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(15, 23, 42);
+        doc.text(new Date(details.date_arrivee).toLocaleDateString('fr-FR'), 20, contentY + 4);
+        
+        if (details.date_sortie) {
+          doc.setFont('helvetica', 'bold');
+          doc.setTextColor(71, 85, 105);
+          doc.text('Date sortie:', 15 + colWidth, contentY);
+          doc.setFont('helvetica', 'normal');
+          doc.setTextColor(15, 23, 42);
+          doc.text(new Date(details.date_sortie).toLocaleDateString('fr-FR'), 15 + colWidth, contentY + 4);
+        }
+        contentY += 12;
+      }
+      
+      // Jours gratuits et Jours à facturer
+      doc.setFontSize(9);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(71, 85, 105);
       doc.text('Jours gratuits:', 20, contentY);
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(15, 23, 42);
       doc.setFontSize(11);
-      doc.text((facture.joursGratuits || 0).toString(), 20, contentY + 5);
+      doc.text((details?.jours_gratuits || facture.joursGratuits || 0).toString(), 20, contentY + 5);
       
       doc.setFontSize(9);
       doc.setFont('helvetica', 'bold');
@@ -258,10 +293,11 @@ class FacturationPdfService {
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(220, 38, 38);
       doc.setFontSize(11);
-      doc.text((facture.joursPayants || 0).toString(), 15 + colWidth, contentY + 5);
+      doc.text((details?.jours_detention || facture.joursPayants || 0).toString(), 15 + colWidth, contentY + 5);
       
-      // Tarif journalier (3ème ligne)
-      if (facture.tarifJournalier !== undefined) {
+      // Tarif journalier
+      const tarifJour = details?.prix_par_jour || facture.tarifJournalier;
+      if (tarifJour !== undefined) {
         contentY += 12;
         doc.setFontSize(9);
         doc.setFont('helvetica', 'bold');
@@ -270,7 +306,73 @@ class FacturationPdfService {
         doc.setFont('helvetica', 'normal');
         doc.setTextColor(15, 23, 42);
         doc.setFontSize(11);
-        doc.text(formatCurrency(facture.tarifJournalier), 20, contentY + 5);
+        doc.text(formatCurrency(tarifJour), 20, contentY + 5);
+      }
+    } else if (facture.typeOperation === 'double_relevage' && details) {
+      contentY += 12;
+      
+      // Camion ameneur
+      if (details.camion_ameneur_plaque) {
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(71, 85, 105);
+        doc.text('Camion ameneur:', 20, contentY);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(15, 23, 42);
+        doc.text(details.camion_ameneur_plaque, 20, contentY + 4);
+        
+        if (details.camion_ameneur_remorque) {
+          doc.setFont('helvetica', 'bold');
+          doc.setTextColor(71, 85, 105);
+          doc.text('Remorque:', 15 + colWidth, contentY);
+          doc.setFont('helvetica', 'normal');
+          doc.setTextColor(15, 23, 42);
+          doc.text(details.camion_ameneur_remorque, 15 + colWidth, contentY + 4);
+        }
+        contentY += 12;
+      }
+      
+      // Camion récupérateur
+      if (details.camion_recuperateur_plaque) {
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(71, 85, 105);
+        doc.text('Camion récupérateur:', 20, contentY);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(15, 23, 42);
+        doc.text(details.camion_recuperateur_plaque, 20, contentY + 4);
+        
+        if (details.camion_recuperateur_remorque) {
+          doc.setFont('helvetica', 'bold');
+          doc.setTextColor(71, 85, 105);
+          doc.text('Remorque:', 15 + colWidth, contentY);
+          doc.setFont('helvetica', 'normal');
+          doc.setTextColor(15, 23, 42);
+          doc.text(details.camion_recuperateur_remorque, 15 + colWidth, contentY + 4);
+        }
+      }
+    } else if (facture.typeOperation === 'depotage') {
+      contentY += 12;
+      
+      if (details?.date_depotage) {
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(71, 85, 105);
+        doc.text('Date dépotage:', 20, contentY);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(15, 23, 42);
+        doc.text(new Date(details.date_depotage).toLocaleDateString('fr-FR'), 20, contentY + 4);
+        contentY += 12;
+      }
+      
+      if (details?.type_marchandise) {
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(71, 85, 105);
+        doc.text('Type marchandise:', 20, contentY);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(15, 23, 42);
+        doc.text(details.type_marchandise, 20, contentY + 4);
       }
     }
     

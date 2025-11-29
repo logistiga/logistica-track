@@ -193,6 +193,11 @@ class DepotageController extends Controller
                 'numero_conteneur' => $depotage->numero_conteneur,
                 'nom_client' => $depotage->nom_client ?? 'N/A',
                 'montant_operation' => $montantDepotage,
+                'plaque_camion' => $depotage->plaque_camion,
+                'plaque_remorque' => $depotage->plaque_remorque,
+                'type_marchandise' => $depotage->type_marchandise,
+                'prix_depotage' => $depotage->prix_depotage,
+                'date_depotage' => $depotage->date_depotage->format('Y-m-d'),
             ]);
         }
 
