@@ -16,12 +16,16 @@ export function OperationDialog({ onSubmit, camions, remorques, clients }: Opera
   const [isOpen, setIsOpen] = useState(false);
   const [formData, setFormData] = useState<CreateOperationData>({
     typeOperation: "location",
-    dateExecution: "",
+    dateDebut: new Date().toISOString().split('T')[0],
+    dateFin: "",
     camion: "",
     remorque: "",
     client: "",
-    instructions: "",
-    montant: 0
+    tarifJournalier: 0,
+    montant: 0,
+    lieuDepart: "",
+    destination: "",
+    instructions: ""
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -29,12 +33,16 @@ export function OperationDialog({ onSubmit, camions, remorques, clients }: Opera
     onSubmit(formData);
     setFormData({
       typeOperation: "location",
-      dateExecution: "",
+      dateDebut: new Date().toISOString().split('T')[0],
+      dateFin: "",
       camion: "",
       remorque: "",
       client: "",
-      instructions: "",
-      montant: 0
+      tarifJournalier: 0,
+      montant: 0,
+      lieuDepart: "",
+      destination: "",
+      instructions: ""
     });
     setIsOpen(false);
   };

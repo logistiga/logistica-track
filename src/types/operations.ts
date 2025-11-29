@@ -1,24 +1,46 @@
 export interface Operation {
   id: string;
   typeOperation: "location" | "transport" | "double-relevage" | "logistique";
-  dateExecution: string;
+  
+  // Dates
+  dateDebut: string;
+  dateFin?: string;
+  duree?: number; // Durée en jours (calculée)
+  
+  // Véhicules
   camion: string;
   remorque: string;
+  
+  // Client
   client: string;
-  instructions: string;
+  
+  // Tarification
+  tarifJournalier?: number; // Pour location
   montant: number;
-  statut: "en-attente" | "confirmee";
+  
+  // Spécifique Transport
+  lieuDepart?: string;
+  destination?: string;
+  
+  // Détails
+  instructions: string;
+  statut: "en-attente" | "en-cours" | "terminee" | "confirmee";
+  
   dateCreation: string;
 }
 
 export interface CreateOperationData {
   typeOperation: "location" | "transport" | "double-relevage" | "logistique";
-  dateExecution: string;
+  dateDebut: string;
+  dateFin?: string;
   camion: string;
   remorque: string;
   client: string;
+  tarifJournalier?: number;
+  montant?: number;
+  lieuDepart?: string;
+  destination?: string;
   instructions: string;
-  montant: number;
 }
 
 export const OPERATION_TYPES = [
