@@ -35,7 +35,7 @@ class DoubleRelevage extends Model
         'date_confirmation' => 'date',
         'camion_ameneur_proprietaire' => 'boolean',
         'camion_recuperateur_proprietaire' => 'boolean',
-        'montant_operation' => 'decimal:2',
+        'montant_operation' => 'integer',
     ];
 
     // Relations

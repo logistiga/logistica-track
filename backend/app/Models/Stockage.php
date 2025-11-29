@@ -32,7 +32,7 @@ class Stockage extends Model
         'date_arrivee' => 'date',
         'date_sortie' => 'date',
         'camion_proprietaire' => 'boolean',
-        'prix_par_jour' => 'decimal:2',
+        'prix_par_jour' => 'integer',
         'jours_gratuits' => 'integer',
     ];
 
@@ -79,7 +79,9 @@ class Stockage extends Model
 
     public function getMontantDetentionAttribute()
     {
-        return $this->jours_detention * $this->prix_par_jour;
+        $jours = (int) $this->jours_detention;
+        $prix = (int) $this->prix_par_jour;
+        return $jours * $prix;
     }
 
     public function getStatutLabelAttribute()
