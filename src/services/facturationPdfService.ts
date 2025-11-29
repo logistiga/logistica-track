@@ -1,7 +1,7 @@
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { FactureInterne } from '@/types/facturation';
-import { formatCurrency } from '@/lib/currency';
+import { formatCurrencyForPdf } from '@/lib/currency';
 import logistigaLogo from '@/assets/logistiga-logo-full.png';
 
 class FacturationPdfService {
@@ -214,10 +214,10 @@ class FacturationPdfService {
     doc.setTextColor(255, 255, 255);
     doc.text(`DÉTAILS - ${typeLabel.toUpperCase()}`, 20, startY + 6);
     
-    // Calcul de la hauteur dynamique
+    // Calcul de la hauteur dynamique (compacte pour stockage)
     let contentHeight = 24;
     if (facture.typeOperation === 'stockage') {
-      contentHeight = details?.date_arrivee ? 56 : 40;
+      contentHeight = details?.date_arrivee ? 38 : 28;
     } else if (facture.typeOperation === 'double_relevage' && details) {
       contentHeight = 40;
     } else if (facture.typeOperation === 'depotage' && details?.type_marchandise) {
@@ -253,9 +253,9 @@ class FacturationPdfService {
     
     // Détails spécifiques selon le type
     if (facture.typeOperation === 'stockage') {
-      contentY += 12;
+      contentY += 10;
       
-      // Dates si disponibles
+      // Dates (compactes)
       if (details?.date_arrivee) {
         doc.setFontSize(9);
         doc.setFont('helvetica', 'bold');
@@ -273,40 +273,35 @@ class FacturationPdfService {
           doc.setTextColor(15, 23, 42);
           doc.text(new Date(details.date_sortie).toLocaleDateString('fr-FR'), 15 + colWidth, contentY + 4);
         }
-        contentY += 12;
+        contentY += 10;
       }
       
-      // Jours gratuits et Jours à facturer
+      // Jours (compacts)
       doc.setFontSize(9);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(71, 85, 105);
       doc.text('Jours gratuits:', 20, contentY);
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(15, 23, 42);
-      doc.setFontSize(11);
-      doc.text((details?.jours_gratuits || facture.joursGratuits || 0).toString(), 20, contentY + 5);
+      doc.text((details?.jours_gratuits || facture.joursGratuits || 0).toString(), 20, contentY + 4);
       
-      doc.setFontSize(9);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(71, 85, 105);
       doc.text('Jours à facturer:', 15 + colWidth, contentY);
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(220, 38, 38);
-      doc.setFontSize(11);
-      doc.text((details?.jours_detention || facture.joursPayants || 0).toString(), 15 + colWidth, contentY + 5);
+      doc.text((details?.jours_detention || facture.joursPayants || 0).toString(), 15 + colWidth, contentY + 4);
       
-      // Tarif journalier
+      // Tarif journalier (compact)
       const tarifJour = details?.prix_par_jour || facture.tarifJournalier;
       if (tarifJour !== undefined) {
-        contentY += 12;
-        doc.setFontSize(9);
+        contentY += 10;
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(71, 85, 105);
         doc.text('Tarif journalier:', 20, contentY);
         doc.setFont('helvetica', 'normal');
         doc.setTextColor(15, 23, 42);
-        doc.setFontSize(11);
-        doc.text(formatCurrency(tarifJour), 20, contentY + 5);
+        doc.text(formatCurrencyForPdf(tarifJour), 20, contentY + 4);
       }
     } else if (facture.typeOperation === 'double_relevage' && details) {
       contentY += 12;
@@ -410,7 +405,7 @@ class FacturationPdfService {
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(15, 23, 42);
     doc.setFontSize(12);
-    doc.text(formatCurrency(facture.montantAPayer), pageWidth - 20, contentY, { align: 'right' });
+    doc.text(formatCurrencyForPdf(facture.montantAPayer), pageWidth - 20, contentY, { align: 'right' });
     
     // TVA si applicable
     if (hasTva) {
@@ -423,7 +418,7 @@ class FacturationPdfService {
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(15, 23, 42);
       doc.setFontSize(12);
-      doc.text(formatCurrency(facture.montantTva!), pageWidth - 20, contentY, { align: 'right' });
+      doc.text(formatCurrencyForPdf(facture.montantTva!), pageWidth - 20, contentY, { align: 'right' });
     }
     
     // Ligne de séparation
@@ -444,7 +439,7 @@ class FacturationPdfService {
     
     const montantFinal = facture.montantTtc !== undefined ? facture.montantTtc : facture.montantAPayer;
     doc.setFontSize(16);
-    doc.text(formatCurrency(montantFinal), pageWidth - 25, contentY + 2, { align: 'right' });
+    doc.text(formatCurrencyForPdf(montantFinal), pageWidth - 25, contentY + 2, { align: 'right' });
     
     return startY + 9 + contentHeight;
   }
