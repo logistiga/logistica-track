@@ -3,10 +3,17 @@ import { ArchiveFilters } from "@/types/archives";
 import { ArchiveStats } from "@/components/archives/ArchiveStats";
 import { ArchiveFiltersDialog } from "@/components/archives/ArchiveFiltersDialog";
 import { ArchiveTable } from "@/components/archives/ArchiveTable";
+import { ArchiveDetailsDialog } from "@/components/archives/ArchiveDetailsDialog";
 import { useArchives } from "@/hooks/useArchives";
+import { archiveBasePdfService } from "@/services/archiveBasePdfService";
+import { ArchiveBase } from "@/types/archives";
+import { useToast } from "@/hooks/use-toast";
 
 export default function ArchivesBase() {
   const { archives, loading, searchArchives, exportArchives } = useArchives();
+  const { toast } = useToast();
+  const [selectedArchive, setSelectedArchive] = useState<ArchiveBase | null>(null);
+  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   
   const [filters, setFilters] = useState<ArchiveFilters>({
     dateDebut: "",
@@ -29,12 +36,26 @@ export default function ArchivesBase() {
     exportArchives(format, filters);
   };
 
-  const handleViewInvoice = (archive: any) => {
-    console.log('Voir facture:', archive.numeroFacture);
+  const handleViewInvoice = (archive: ArchiveBase) => {
+    try {
+      archiveBasePdfService.generateArchivePdf(archive);
+      toast({
+        title: "PDF généré",
+        description: `Facture ${archive.numeroFacture} téléchargée avec succès`
+      });
+    } catch (error) {
+      console.error('Erreur lors de la génération du PDF:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de générer le PDF",
+        variant: "destructive"
+      });
+    }
   };
 
-  const handleViewDetails = (archive: any) => {
-    console.log('Voir détails:', archive.numeroConteneur);
+  const handleViewDetails = (archive: ArchiveBase) => {
+    setSelectedArchive(archive);
+    setDetailsDialogOpen(true);
   };
 
   return (
@@ -61,6 +82,12 @@ export default function ArchivesBase() {
         archives={archives}
         onViewInvoice={handleViewInvoice}
         onViewDetails={handleViewDetails}
+      />
+
+      <ArchiveDetailsDialog
+        archive={selectedArchive}
+        open={detailsDialogOpen}
+        onOpenChange={setDetailsDialogOpen}
       />
     </div>
   );
