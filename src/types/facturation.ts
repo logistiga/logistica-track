@@ -15,6 +15,9 @@ export interface FactureInterne {
   montantTva?: number;
   montantTtc?: number;
   notes?: string;
+  // Vehicule information
+  camion?: string;
+  remorque?: string;
 }
 
 export interface CreateFactureData {

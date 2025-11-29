@@ -145,6 +145,8 @@ export class FacturationService {
       montantTva: data.montant_tva ? parseFloat(data.montant_tva) : undefined,
       montantTtc: data.montant_ttc ? parseFloat(data.montant_ttc) : undefined,
       notes: data.notes,
+      camion: data.sortie_conteneur?.camion?.libelle_complet || data.camion,
+      remorque: data.sortie_conteneur?.remorque?.libelle_complet || data.remorque,
     };
   }
 }
