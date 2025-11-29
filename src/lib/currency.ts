@@ -7,6 +7,14 @@ export function formatCurrency(amount: number): string {
   return new Intl.NumberFormat('fr-FR').format(roundedAmount) + ' FCFA';
 }
 
+// Version pour PDF qui utilise des espaces normaux au lieu d'espaces insécables
+export function formatCurrencyForPdf(amount: number): string {
+  const roundedAmount = Math.round(amount);
+  // Formatage manuel avec espaces normaux pour éviter les problèmes d'encodage dans les PDFs
+  const formatted = roundedAmount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+  return formatted + ' FCFA';
+}
+
 // Fonction pour analyser un montant depuis une chaîne formatée
 export function parseCurrency(formattedAmount: string): number {
   return parseInt(formattedAmount.replace(/\s/g, '').replace('FCFA', '')) || 0;
