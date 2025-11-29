@@ -128,10 +128,13 @@ export class FacturationService {
       nomClient: data.sortie_conteneur?.nom_client || data.nom_client || '',
       montantAPayer: parseFloat(data.montant_total || 0),
       dateSortieOperation: data.sortie_conteneur?.date_sortie || data.date_sortie_operation || '',
-      statutPaiement: data.statut === 'payee' ? 'paye' : 'en-attente',
+      statutPaiement: data.statut || 'brouillon',
       joursGratuits: data.jours_gratuits,
       joursPayants: data.jours_payants,
       tarifJournalier: data.tarif_journalier ? parseFloat(data.tarif_journalier) : undefined,
+      montantTva: data.montant_tva ? parseFloat(data.montant_tva) : undefined,
+      montantTtc: data.montant_ttc ? parseFloat(data.montant_ttc) : undefined,
+      notes: data.notes,
     };
   }
 }

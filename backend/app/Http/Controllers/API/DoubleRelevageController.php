@@ -9,6 +9,7 @@ use App\Http\Resources\DoubleRelevageResource;
 use App\Http\Requests\StoreDoubleRelevageRequest;
 use App\Http\Requests\UpdateDoubleRelevageRequest;
 use App\Services\DoubleRelevageService;
+use App\Services\FacturationService;
 use App\Traits\ApiResponseTrait;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -155,6 +156,19 @@ class DoubleRelevageController extends Controller
             'motif_archivage' => 'Sortie de conteneur - Double relevage',
             'archive_par' => auth()->id(),
         ]);
+
+        // Créer une facture automatiquement si montant > 0
+        $montantOperation = $doubleRelevage->montant_operation ?? 0;
+        if ($montantOperation > 0) {
+            $facturationService = app(FacturationService::class);
+            $facturationService->createFactureFromBaseOperation([
+                'type_operation' => 'double_relevage',
+                'sortie_conteneur_id' => $doubleRelevage->sortie_conteneur_id,
+                'numero_conteneur' => $doubleRelevage->numero_conteneur,
+                'nom_client' => $doubleRelevage->nom_client,
+                'montant_operation' => $montantOperation,
+            ]);
+        }
 
         return $this->successResponse(
             new DoubleRelevageResource($operation),

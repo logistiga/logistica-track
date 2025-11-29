@@ -21,24 +21,34 @@ export function FacturationTable({
 }: FacturationTableProps) {
   
   const getStatusBadge = (statut: string) => {
-    return statut === "paye" ? (
-      <Badge variant="default" className="bg-green-500">
-        <CheckCircle className="w-3 h-3 mr-1" />
-        Payé
-      </Badge>
-    ) : (
-      <Badge variant="destructive">
-        En attente
-      </Badge>
-    );
+    switch (statut) {
+      case "payee":
+        return (
+          <Badge variant="default" className="bg-green-500">
+            <CheckCircle className="w-3 h-3 mr-1" />
+            Payé
+          </Badge>
+        );
+      case "envoyee":
+        return <Badge variant="secondary">Envoyée</Badge>;
+      case "annulee":
+        return <Badge variant="destructive">Annulée</Badge>;
+      default:
+        return <Badge variant="outline">Brouillon</Badge>;
+    }
   };
 
   const getOperationBadge = (type: string) => {
-    return type === "stockage" ? (
-      <Badge variant="outline">Stockage</Badge>
-    ) : (
-      <Badge variant="secondary">Double relevage</Badge>
-    );
+    switch (type) {
+      case "stockage":
+        return <Badge variant="outline">Stockage</Badge>;
+      case "double_relevage":
+        return <Badge variant="secondary">Double relevage</Badge>;
+      case "depotage":
+        return <Badge className="bg-purple-500">Dépotage</Badge>;
+      default:
+        return <Badge variant="outline">{type}</Badge>;
+    }
   };
 
   return (
@@ -85,9 +95,14 @@ export function FacturationTable({
                         ({formatCurrency(facture.tarifJournalier || 0)}/jour)
                       </div>
                     )}
-                    {facture.typeOperation === "double-relevage" && (
+                    {(facture.typeOperation === "double_relevage" || facture.typeOperation === "depotage") && (
                       <div className="text-xs text-muted-foreground">
                         Opération forfaitaire
+                      </div>
+                    )}
+                    {facture.notes && (
+                      <div className="text-xs text-muted-foreground italic mt-1">
+                        {facture.notes}
                       </div>
                     )}
                   </TableCell>
@@ -101,7 +116,7 @@ export function FacturationTable({
                       >
                         <FileText className="w-4 h-4" />
                       </Button>
-                      {facture.statutPaiement === "en-attente" && (
+                      {facture.statutPaiement === "brouillon" && (
                         <Button
                           variant="outline"
                           size="sm"

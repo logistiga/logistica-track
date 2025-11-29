@@ -9,6 +9,7 @@ use App\Http\Resources\StockageResource;
 use App\Http\Requests\StoreStockageRequest;
 use App\Http\Requests\UpdateStockageRequest;
 use App\Http\Requests\SortieStockageRequest;
+use App\Services\FacturationService;
 use App\Traits\ApiResponseTrait;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -172,6 +173,20 @@ class StockageController extends Controller
             'archive_par' => auth()->id(),
             'commentaires' => $request->observations,
         ]);
+
+        // Créer une facture automatiquement si montant > 0
+        if ($montantDetention > 0) {
+            $facturationService = app(FacturationService::class);
+            $facturationService->createFactureFromBaseOperation([
+                'type_operation' => 'stockage',
+                'sortie_conteneur_id' => $stockage->sortie_conteneur_id,
+                'numero_conteneur' => $stockage->numero_conteneur,
+                'nom_client' => $stockage->nom_client,
+                'montant_detention' => $montantDetention,
+                'jours_gratuits' => $stockage->jours_gratuits,
+                'jours_detention' => $joursDetention,
+            ]);
+        }
 
         return $this->successResponse(
             new StockageResource($stockage),
