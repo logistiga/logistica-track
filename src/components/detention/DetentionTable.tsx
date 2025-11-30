@@ -4,6 +4,8 @@ import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
+import { MobileTableWrapper } from '@/components/shared/MobileTableWrapper';
+import { DetentionTableMobile } from './DetentionTableMobile';
 import { TABLE_COLUMNS, formatCurrency, formatDate } from './tableConfig';
 
 interface DetentionTableProps {
@@ -71,27 +73,42 @@ export function DetentionTable({ containers, loading, onIdentifyResponsability, 
   };
 
   return (
-    <Card>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            {TABLE_COLUMNS.map((column) => (
-              <TableHead key={column.key} className={column.className}>{column.label}</TableHead>
-            ))}
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {containers.map((container) => (
-            <TableRow key={container.id}>
-              {TABLE_COLUMNS.map((column) => (
-                <TableCell key={column.key} className={column.className}>
-                  {renderCell(container, column)}
-                </TableCell>
+    <>
+      {/* Vue mobile */}
+      <div className="lg:hidden">
+        <DetentionTableMobile
+          detentions={containers}
+          onView={() => {}}
+          onGeneratePDF={onGeneratePDF}
+          onMarkAsPaid={onConfirmPayment}
+        />
+      </div>
+
+      {/* Vue desktop */}
+      <Card className="hidden lg:block">
+        <MobileTableWrapper>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                {TABLE_COLUMNS.map((column) => (
+                  <TableHead key={column.key} className={column.className}>{column.label}</TableHead>
+                ))}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {containers.map((container) => (
+                <TableRow key={container.id}>
+                  {TABLE_COLUMNS.map((column) => (
+                    <TableCell key={column.key} className={column.className}>
+                      {renderCell(container, column)}
+                    </TableCell>
+                  ))}
+                </TableRow>
               ))}
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </Card>
+            </TableBody>
+          </Table>
+        </MobileTableWrapper>
+      </Card>
+    </>
   );
 }

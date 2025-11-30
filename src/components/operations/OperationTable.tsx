@@ -2,6 +2,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { MobileTableWrapper } from "@/components/shared/MobileTableWrapper";
+import { OperationTableMobile } from "./OperationTableMobile";
 import { Edit, Trash2, CheckCircle, FileText, PlayCircle, StopCircle } from "lucide-react";
 import { Operation } from "@/types/operations";
 import { formatCurrency } from "@/lib/currency";
@@ -70,14 +72,35 @@ export function OperationTable({
   }
 
   return (
-    <Card>
-      <CardContent className="p-0">
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Type</TableHead>
-                <TableHead>Période</TableHead>
+    <>
+      {/* Vue mobile avec cartes compactes */}
+      <div className="lg:hidden">
+        <OperationTableMobile
+          operations={operations}
+          onStart={(id) => {
+            const op = operations.find(o => o.id === id);
+            if (op && onStart) onStart(op);
+          }}
+          onComplete={(id) => {
+            const op = operations.find(o => o.id === id);
+            if (op && onComplete) onComplete(op);
+          }}
+          onDelete={(id) => {
+            const op = operations.find(o => o.id === id);
+            if (op) onDelete(op);
+          }}
+        />
+      </div>
+
+      {/* Vue desktop avec table complète */}
+      <Card className="hidden lg:block">
+        <CardContent className="p-0">
+          <MobileTableWrapper>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Période</TableHead>
                 <TableHead>Durée</TableHead>
                 <TableHead>Client</TableHead>
                 <TableHead>Camion</TableHead>
@@ -177,8 +200,9 @@ export function OperationTable({
               ))}
             </TableBody>
           </Table>
-        </div>
-      </CardContent>
-    </Card>
+          </MobileTableWrapper>
+        </CardContent>
+      </Card>
+    </>
   );
 }
