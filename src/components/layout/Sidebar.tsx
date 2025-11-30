@@ -39,7 +39,11 @@ const navigation = [
   { name: "E-mails", href: "/emails", icon: Mail },
 ];
 
-export function Sidebar() {
+interface SidebarProps {
+  onNavigate?: () => void;
+}
+
+export function Sidebar({ onNavigate }: SidebarProps = {}) {
   const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(false);
 
@@ -77,6 +81,7 @@ export function Sidebar() {
             <Link
               key={item.name}
               to={item.href}
+              onClick={onNavigate}
               className={cn(
                 "flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors",
                 isActive 

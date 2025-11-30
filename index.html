@@ -1,17 +1,36 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+    <!-- Mobile Optimization -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Logistica" />
+    
+    <!-- SEO -->
     <title>Logistica - Gestion Transport</title>
     <meta name="description" content="Application de gestion logistique pour le suivi des conteneurs et transport" />
     <meta name="author" content="Logistica" />
+    <meta name="theme-color" content="#1a237e" />
+    
+    <!-- PWA Icons -->
+    <link rel="icon" type="image/png" sizes="192x192" href="/pwa-192x192.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="/pwa-512x512.png" />
+    <link rel="apple-touch-icon" href="/pwa-192x192.png" />
+    
+    <!-- Web Manifest -->
+    <link rel="manifest" href="/manifest.webmanifest" />
 
+    <!-- Open Graph -->
     <meta property="og:title" content="Logistica - Gestion Transport" />
     <meta property="og:description" content="Application de gestion logistique pour le suivi des conteneurs et transport" />
     <meta property="og:type" content="website" />
     <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
 
+    <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@lovable_dev" />
     <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
