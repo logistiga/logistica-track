@@ -3,6 +3,7 @@ import { Notification, NotificationSettings } from "@/types/notifications";
 import { NotificationStats } from "@/components/notifications/NotificationStats";
 import { NotificationList } from "@/components/notifications/NotificationList";
 import { NotificationSettingsCard } from "@/components/notifications/NotificationSettingsCard";
+import { NotificationPermission } from "@/components/notifications/NotificationPermission";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 
@@ -84,7 +85,10 @@ export default function Notifications() {
       <NotificationStats notifications={notifications} />
 
       <div className="grid gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2 space-y-6">
+          {/* Permission pour notifications push */}
+          <NotificationPermission />
+          
           <NotificationList
             notifications={notifications}
             onMarkAsRead={handleMarkAsRead}

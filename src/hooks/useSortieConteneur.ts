@@ -4,6 +4,7 @@ import { sortieConteneurService, CreateSortieConteneurData } from "@/services/so
 import { SortieConteneur as APISortieConteneur } from "@/services/sortieConteneurService";
 import { useToast } from "@/hooks/use-toast";
 import { validateFormData, getEmptyFormData } from "@/utils/sortieUtils";
+import { useNotifications } from "@/hooks/useNotifications";
 
 // Fonction pour convertir l'API response vers le type local
 const convertApiToLocal = (apiSortie: APISortieConteneur): SortieConteneur => {
@@ -57,6 +58,7 @@ const convertApiToLocal = (apiSortie: APISortieConteneur): SortieConteneur => {
 
 export function useSortieConteneur() {
   const { toast } = useToast();
+  const notifications = useNotifications();
   const [sorties, setSorties] = useState<SortieConteneur[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -158,6 +160,9 @@ export function useSortieConteneur() {
           title: "Sortie ajoutée",
           description: "La nouvelle sortie de conteneur a été enregistrée."
         });
+        
+        // Notification push
+        notifications.notifySortieCreated(formData.numeroConteneur);
       }
 
       // Reset form
@@ -286,11 +291,14 @@ export function useSortieConteneur() {
         title: "Retour confirmé",
         description: "Le retour au port a été enregistré."
       });
+      
+      // Notification push
+      notifications.notifySortieReturned(selectedSortie.numeroConteneur);
 
       // Reset form
       setIsReturnDialogOpen(false);
       setSelectedSortie(null);
-      setReturnData({ dateRetour: "", camionRetour: "", remorqueRetour: "" });
+      setReturnData({ dateRetour: "", camionRetour: "", remorqueRetour: "", responsabilite: "" });
       
       console.log('✅ Return confirmation completed successfully');
     } catch (error) {

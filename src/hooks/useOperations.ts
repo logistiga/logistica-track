@@ -3,6 +3,7 @@ import { Operation, CreateOperationData } from "@/types/operations";
 import { operationService } from '@/services/operationService';
 import { vehiculeService, Vehicule } from '@/services/vehiculeService';
 import { useToast } from "@/hooks/use-toast";
+import { useNotifications } from "@/hooks/useNotifications";
 
 // Interface pour adapter les types de véhicules
 interface VehicleOption {
@@ -15,6 +16,7 @@ interface VehicleOption {
 
 export function useOperations() {
   const { toast } = useToast();
+  const notifications = useNotifications();
   const [operations, setOperations] = useState<Operation[]>([]);
   const [rawCamions, setRawCamions] = useState<Vehicule[]>([]);
   const [rawRemorques, setRawRemorques] = useState<Vehicule[]>([]);
@@ -134,6 +136,15 @@ export function useOperations() {
       const updated = await operationService.updateStatut(id, 'en-cours');
       setOperations(prev => prev.map(op => op.id === id ? updated : op));
       showToast('Succès', 'Opération démarrée');
+      
+      // Notification push
+      const operation = operations.find(op => op.id === id);
+      if (operation) {
+        notifications.notifyOperationStarted(
+          operation.typeOperation,
+          `OP-${id.substring(0, 6)}`
+        );
+      }
     } catch (error) {
       console.error('Erreur:', error);
       showToast('Erreur', 'Impossible de démarrer l\'opération');
@@ -149,6 +160,15 @@ export function useOperations() {
       const updated = await operationService.updateStatut(id, 'terminee');
       setOperations(prev => prev.map(op => op.id === id ? updated : op));
       showToast('Succès', 'Opération terminée');
+      
+      // Notification push
+      const operation = operations.find(op => op.id === id);
+      if (operation) {
+        notifications.notifyOperationCompleted(
+          operation.typeOperation,
+          `OP-${id.substring(0, 6)}`
+        );
+      }
     } catch (error) {
       console.error('Erreur:', error);
       showToast('Erreur', 'Impossible de terminer l\'opération');
