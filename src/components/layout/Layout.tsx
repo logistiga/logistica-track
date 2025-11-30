@@ -40,23 +40,21 @@ export function Layout({ children }: LayoutProps) {
         <Sidebar />
       </div>
 
-      {/* Mobile Menu */}
-      <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
-        <SheetContent side="left" className="p-0 w-64">
-          <Sidebar onNavigate={() => setIsMobileMenuOpen(false)} />
-        </SheetContent>
-      </Sheet>
-
       <main className="flex-1 overflow-auto">
         <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-10">
           <div className="flex h-14 items-center justify-between px-4 lg:px-6">
             <div className="flex items-center gap-2">
-              {/* Mobile Menu Button */}
-              <SheetTrigger asChild className="lg:hidden">
-                <Button variant="ghost" size="icon" className="icon-only">
-                  <Menu className="h-5 w-5" />
-                </Button>
-              </SheetTrigger>
+              {/* Mobile Menu */}
+              <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+                <SheetTrigger asChild className="lg:hidden">
+                  <Button variant="ghost" size="icon" className="icon-only">
+                    <Menu className="h-5 w-5" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="p-0 w-64">
+                  <Sidebar onNavigate={() => setIsMobileMenuOpen(false)} />
+                </SheetContent>
+              </Sheet>
               
               <div className="hidden md:block flex-1">
                 <GlobalSearch />
