@@ -1,9 +1,11 @@
+import { useState } from "react";
 import { Sidebar } from "./Sidebar";
 import { GlobalSearch } from "./GlobalSearch";
 import { NotificationCenter } from "@/components/notifications/NotificationCenter";
 import { UserMenu } from "./UserMenu";
 import { Button } from "@/components/ui/button";
-import { LogOut } from "lucide-react";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Menu, LogOut } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 
@@ -12,7 +14,8 @@ interface LayoutProps {
 }
 
 export function Layout({ children }: LayoutProps) {
-  const { logout, user } = useAuth();
+  const { logout } = useAuth();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -32,27 +35,58 @@ export function Layout({ children }: LayoutProps) {
 
   return (
     <div className="flex h-screen bg-background">
-      <Sidebar />
+      {/* Desktop Sidebar */}
+      <div className="hidden lg:block">
+        <Sidebar />
+      </div>
+
+      {/* Mobile Menu */}
+      <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+        <SheetContent side="left" className="p-0 w-64">
+          <Sidebar onNavigate={() => setIsMobileMenuOpen(false)} />
+        </SheetContent>
+      </Sheet>
+
       <main className="flex-1 overflow-auto">
-        <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-          <div className="flex h-14 items-center justify-between px-6">
-            <GlobalSearch />
-            <div className="flex items-center space-x-4">
+        <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-10">
+          <div className="flex h-14 items-center justify-between px-4 lg:px-6">
+            <div className="flex items-center gap-2">
+              {/* Mobile Menu Button */}
+              <SheetTrigger asChild className="lg:hidden">
+                <Button variant="ghost" size="icon" className="icon-only">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              
+              <div className="hidden md:block flex-1">
+                <GlobalSearch />
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-2 lg:space-x-4">
               <NotificationCenter />
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleLogout}
-                className="flex items-center gap-2"
+                className="hidden sm:flex items-center gap-2"
               >
                 <LogOut className="h-4 w-4" />
-                Déconnexion
+                <span className="hidden md:inline">Déconnexion</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handleLogout}
+                className="sm:hidden icon-only"
+              >
+                <LogOut className="h-4 w-4" />
               </Button>
               <UserMenu />
             </div>
           </div>
         </div>
-        <div className="p-6">
+        <div className="p-4 lg:p-6">
           {children}
         </div>
       </main>

@@ -25,6 +25,7 @@ import ArchivesSortie from "./pages/ArchivesSortie";
 import ArchivesOperation from "./pages/ArchivesOperation";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
+import Install from "./pages/Install";
 
 const queryClient = new QueryClient();
 
@@ -38,6 +39,9 @@ const App = () => (
           <Routes>
             {/* Page de login avec AuthProvider */}
             <Route path="/login" element={<Login />} />
+            
+            {/* Page d'installation PWA */}
+            <Route path="/install" element={<Install />} />
             
             {/* Routes protégées avec layout */}
             <Route path="/" element={
