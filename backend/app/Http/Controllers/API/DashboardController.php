@@ -93,6 +93,36 @@ class DashboardController extends Controller
      */
     private function getMainStats(): array
     {
+        // Stats opérations avec détails par type
+        $operationsLocation = DB::table('operations')->where('type_operation', 'location')->count();
+        $operationsTransport = DB::table('operations')->where('type_operation', 'transport')->count();
+        $revenueLocation = DB::table('operations')
+            ->where('type_operation', 'location')
+            ->whereIn('statut', ['terminee', 'confirmee'])
+            ->sum('montant');
+        $revenueTransport = DB::table('operations')
+            ->where('type_operation', 'transport')
+            ->whereIn('statut', ['terminee', 'confirmee'])
+            ->sum('montant');
+
+        // Stats détentions
+        $detentionsActives = DB::table('detentions')
+            ->where('statut', 'active')
+            ->count();
+        $montantDetentions = DB::table('detentions')
+            ->where('statut', 'active')
+            ->sum('cout_total');
+
+        // Stats facturations
+        $facturesEnAttente = DB::table('facturations')
+            ->where('statut', 'brouillon')
+            ->orWhere('statut', 'envoyee')
+            ->count();
+        $montantFacturesEnAttente = DB::table('facturations')
+            ->where('statut', 'brouillon')
+            ->orWhere('statut', 'envoyee')
+            ->sum('montant_total');
+
         return [
             'sorties' => [
                 'total' => DB::table('sortie_conteneurs')->count(),
@@ -115,6 +145,20 @@ class DashboardController extends Controller
                 'planifiees' => DB::table('operations')->where('statut', 'planifiee')->count(),
                 'en_cours' => DB::table('operations')->where('statut', 'en_cours')->count(),
                 'terminees' => DB::table('operations')->where('statut', 'terminee')->count(),
+                'confirmees' => DB::table('operations')->where('statut', 'confirmee')->count(),
+                'location' => $operationsLocation,
+                'transport' => $operationsTransport,
+                'revenue_total' => $revenueLocation + $revenueTransport,
+                'revenue_location' => $revenueLocation,
+                'revenue_transport' => $revenueTransport,
+            ],
+            'detentions' => [
+                'actives' => $detentionsActives,
+                'montant_total' => $montantDetentions,
+            ],
+            'facturations' => [
+                'en_attente' => $facturesEnAttente,
+                'montant_en_attente' => $montantFacturesEnAttente,
             ],
         ];
     }
@@ -283,10 +327,17 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
+        // Répartition des opérations par type
+        $operationsParType = DB::table('operations')
+            ->select('type_operation as type', DB::raw('COUNT(*) as count'))
+            ->groupBy('type_operation')
+            ->get();
+
         return [
             'sorties_par_mois' => $sortiesParMois,
             'repartition_statuts' => $repartitionStatuts,
             'top_armateurs' => $topArmateurs,
+            'operations_par_type' => $operationsParType,
         ];
     }
 
