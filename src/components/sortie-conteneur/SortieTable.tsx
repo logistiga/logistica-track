@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { StatusBadge } from "./StatusBadge";
 import { DetentionStatusButton } from "./DetentionStatusButton";
+import { MobileTableWrapper } from "@/components/shared/MobileTableWrapper";
+import { SortieTableMobile } from "./SortieTableMobile";
 import { Edit, Trash2, CheckCircle, Eye, ChevronLeft, ChevronRight } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -52,50 +54,70 @@ export function SortieTable({
   }
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-        <div className="text-sm text-muted-foreground">
-          {sorties.length} sortie{sorties.length > 1 ? 's' : ''} au total
+    <>
+      {/* Vue mobile avec cartes compactes */}
+      <div className="lg:hidden">
+        <div className="mb-4 flex items-center justify-between">
+          <div className="text-sm text-muted-foreground">
+            {sorties.length} sortie{sorties.length > 1 ? 's' : ''}
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">Afficher:</span>
-          <Select 
-            value={itemsPerPage.toString()} 
-            onValueChange={(value) => {
-              setItemsPerPage(Number(value));
-              setCurrentPage(1);
-            }}
-          >
-            <SelectTrigger className="w-[80px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="5">5</SelectItem>
-              <SelectItem value="10">10</SelectItem>
-              <SelectItem value="20">20</SelectItem>
-              <SelectItem value="50">50</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </CardHeader>
-      <CardContent className="p-0">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>N° Conteneur</TableHead>
-              <TableHead>N° BL</TableHead>
-              <TableHead>Armateur</TableHead>
-              <TableHead>Client</TableHead>
-              <TableHead>Camion</TableHead>
-              <TableHead>Remorque</TableHead>
-              <TableHead>Date Sortie</TableHead>
-              {!showReturnAction && <TableHead>Date Retour</TableHead>}
-              <TableHead>Statut</TableHead>
-              <TableHead>Statut Détention</TableHead>
-              <TableHead>Prime Chauffeur</TableHead>
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
+        <SortieTableMobile
+          sorties={currentItems}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          onReturn={onReturn}
+          onView={onView}
+          showReturnAction={showReturnAction}
+        />
+      </div>
+
+      {/* Vue desktop avec table complète */}
+      <Card className="hidden lg:block">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+          <div className="text-sm text-muted-foreground">
+            {sorties.length} sortie{sorties.length > 1 ? 's' : ''} au total
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">Afficher:</span>
+            <Select 
+              value={itemsPerPage.toString()} 
+              onValueChange={(value) => {
+                setItemsPerPage(Number(value));
+                setCurrentPage(1);
+              }}
+            >
+              <SelectTrigger className="w-[80px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="5">5</SelectItem>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="20">20</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          <MobileTableWrapper>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>N° Conteneur</TableHead>
+                  <TableHead>N° BL</TableHead>
+                  <TableHead>Armateur</TableHead>
+                  <TableHead>Client</TableHead>
+                  <TableHead>Camion</TableHead>
+                  <TableHead>Remorque</TableHead>
+                  <TableHead>Date Sortie</TableHead>
+                  {!showReturnAction && <TableHead>Date Retour</TableHead>}
+                  <TableHead>Statut</TableHead>
+                  <TableHead>Statut Détention</TableHead>
+                  <TableHead>Prime Chauffeur</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
           <TableBody>
             {currentItems.map((sortie) => (
               <TableRow key={sortie.id}>
@@ -178,6 +200,7 @@ export function SortieTable({
             ))}
           </TableBody>
         </Table>
+          </MobileTableWrapper>
         
         {/* Pagination Controls */}
         {totalPages > 1 && (
@@ -209,5 +232,31 @@ export function SortieTable({
         )}
       </CardContent>
     </Card>
+
+    {/* Pagination mobile */}
+    {totalPages > 1 && (
+      <div className="lg:hidden flex items-center justify-between mt-4">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+          disabled={currentPage === 1}
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </Button>
+        <div className="text-sm text-muted-foreground">
+          Page {currentPage}/{totalPages}
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+          disabled={currentPage === totalPages}
+        >
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+      </div>
+    )}
+    </>
   );
-};
+}
