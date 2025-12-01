@@ -93,74 +93,77 @@ class DashboardController extends Controller
      */
     private function getMainStats(): array
     {
-        // Stats opérations avec détails par type
-        $operationsLocation = DB::table('operations')->where('type_operation', 'location')->count();
-        $operationsTransport = DB::table('operations')->where('type_operation', 'transport')->count();
-        $revenueLocation = DB::table('operations')
-            ->where('type_operation', 'location')
-            ->whereIn('statut', ['terminee', 'confirmee'])
-            ->sum('montant');
-        $revenueTransport = DB::table('operations')
-            ->where('type_operation', 'transport')
-            ->whereIn('statut', ['terminee', 'confirmee'])
-            ->sum('montant');
+        try {
+            // Stats opérations avec détails par type
+            $operationsLocation = DB::table('operations')->where('type_operation', 'location')->count();
+            $operationsTransport = DB::table('operations')->where('type_operation', 'transport')->count();
+            $revenueLocation = DB::table('operations')
+                ->where('type_operation', 'location')
+                ->whereIn('statut', ['terminee', 'confirmee'])
+                ->sum('montant');
+            $revenueTransport = DB::table('operations')
+                ->where('type_operation', 'transport')
+                ->whereIn('statut', ['terminee', 'confirmee'])
+                ->sum('montant');
 
-        // Stats détentions
-        $detentionsActives = DB::table('detentions')
-            ->where('statut', 'active')
-            ->count();
-        $montantDetentions = DB::table('detentions')
-            ->where('statut', 'active')
-            ->sum('cout_total');
+            // Stats détentions
+            $detentionsActives = DB::table('detentions')
+                ->where('statut', 'active')
+                ->count();
+            $montantDetentions = DB::table('detentions')
+                ->where('statut', 'active')
+                ->sum('cout_total');
 
-        // Stats facturations
-        $facturesEnAttente = DB::table('facturations')
-            ->where('statut', 'brouillon')
-            ->orWhere('statut', 'envoyee')
-            ->count();
-        $montantFacturesEnAttente = DB::table('facturations')
-            ->where('statut', 'brouillon')
-            ->orWhere('statut', 'envoyee')
-            ->sum('montant_total');
+            // Stats facturations avec correction de la requête
+            $facturesEnAttente = DB::table('facturations')
+                ->whereIn('statut', ['brouillon', 'envoyee'])
+                ->count();
+            $montantFacturesEnAttente = DB::table('facturations')
+                ->whereIn('statut', ['brouillon', 'envoyee'])
+                ->sum('montant_total');
 
-        return [
-            'sorties' => [
-                'total' => DB::table('sortie_conteneurs')->count(),
-                'en_cours' => DB::table('sortie_conteneurs')->where('statut', 'en_cours')->count(),
-                'retournees' => DB::table('sortie_conteneurs')->where('statut', 'retourne_port')->count(),
-                'aujourd_hui' => DB::table('sortie_conteneurs')->whereDate('date_sortie', today())->count(),
-            ],
-            'vehicules' => [
-                'total' => DB::table('vehicules')->count(),
-                'disponibles' => DB::table('vehicules')->where('statut', 'disponible')->count(),
-                'en_mission' => DB::table('vehicules')->where('statut', 'en_mission')->count(),
-                'maintenance' => DB::table('vehicules')->where('statut', 'maintenance')->count(),
-            ],
-            'armateurs' => [
-                'total' => DB::table('armateurs')->count(),
-                'actifs' => DB::table('armateurs')->where('actif', true)->count(),
-            ],
-            'operations' => [
-                'total' => DB::table('operations')->count(),
-                'planifiees' => DB::table('operations')->where('statut', 'planifiee')->count(),
-                'en_cours' => DB::table('operations')->where('statut', 'en_cours')->count(),
-                'terminees' => DB::table('operations')->where('statut', 'terminee')->count(),
-                'confirmees' => DB::table('operations')->where('statut', 'confirmee')->count(),
-                'location' => $operationsLocation,
-                'transport' => $operationsTransport,
-                'revenue_total' => $revenueLocation + $revenueTransport,
-                'revenue_location' => $revenueLocation,
-                'revenue_transport' => $revenueTransport,
-            ],
-            'detentions' => [
-                'actives' => $detentionsActives,
-                'montant_total' => $montantDetentions,
-            ],
-            'facturations' => [
-                'en_attente' => $facturesEnAttente,
-                'montant_en_attente' => $montantFacturesEnAttente,
-            ],
-        ];
+            return [
+                'sorties' => [
+                    'total' => DB::table('sortie_conteneurs')->count(),
+                    'en_cours' => DB::table('sortie_conteneurs')->where('statut', 'en_cours')->count(),
+                    'retournees' => DB::table('sortie_conteneurs')->where('statut', 'retourne_port')->count(),
+                    'aujourd_hui' => DB::table('sortie_conteneurs')->whereDate('date_sortie', today())->count(),
+                ],
+                'vehicules' => [
+                    'total' => DB::table('vehicules')->count(),
+                    'disponibles' => DB::table('vehicules')->where('statut', 'disponible')->count(),
+                    'en_mission' => DB::table('vehicules')->where('statut', 'en_mission')->count(),
+                    'maintenance' => DB::table('vehicules')->where('statut', 'maintenance')->count(),
+                ],
+                'armateurs' => [
+                    'total' => DB::table('armateurs')->count(),
+                    'actifs' => DB::table('armateurs')->where('actif', true)->count(),
+                ],
+                'operations' => [
+                    'total' => DB::table('operations')->count(),
+                    'planifiees' => DB::table('operations')->where('statut', 'planifiee')->count(),
+                    'en_cours' => DB::table('operations')->where('statut', 'en_cours')->count(),
+                    'terminees' => DB::table('operations')->where('statut', 'terminee')->count(),
+                    'confirmees' => DB::table('operations')->where('statut', 'confirmee')->count(),
+                    'location' => $operationsLocation,
+                    'transport' => $operationsTransport,
+                    'revenue_total' => $revenueLocation + $revenueTransport,
+                    'revenue_location' => $revenueLocation,
+                    'revenue_transport' => $revenueTransport,
+                ],
+                'detentions' => [
+                    'actives' => $detentionsActives,
+                    'montant_total' => $montantDetentions,
+                ],
+                'facturations' => [
+                    'en_attente' => $facturesEnAttente,
+                    'montant_en_attente' => $montantFacturesEnAttente,
+                ],
+            ];
+        } catch (\Exception $e) {
+            \Log::error('Dashboard getMainStats error: ' . $e->getMessage());
+            throw $e;
+        }
     }
 
     /**
@@ -300,45 +303,58 @@ class DashboardController extends Controller
      */
     private function getChartsData(): array
     {
-        // Données pour le graphique des sorties par mois
-        $sortiesParMois = DB::table('sortie_conteneurs')
-            ->select(
-                DB::raw('MONTH(date_sortie) as mois'),
-                DB::raw('COUNT(*) as total')
-            )
-            ->where('date_sortie', '>=', now()->subMonths(12))
-            ->groupBy(DB::raw('MONTH(date_sortie)'))
-            ->orderBy('mois')
-            ->get();
+        try {
+            // Données pour le graphique des sorties par mois
+            $sortiesParMois = DB::table('sortie_conteneurs')
+                ->select(
+                    DB::raw('MONTH(date_sortie) as mois'),
+                    DB::raw('COUNT(*) as total')
+                )
+                ->whereNotNull('date_sortie')
+                ->where('date_sortie', '>=', now()->subMonths(12))
+                ->groupBy(DB::raw('MONTH(date_sortie)'))
+                ->orderBy('mois')
+                ->get();
 
-        // Répartition par statut
-        $repartitionStatuts = DB::table('sortie_conteneurs')
-            ->select('statut', DB::raw('COUNT(*) as count'))
-            ->groupBy('statut')
-            ->get();
+            // Répartition par statut
+            $repartitionStatuts = DB::table('sortie_conteneurs')
+                ->select('statut', DB::raw('COUNT(*) as count'))
+                ->groupBy('statut')
+                ->get();
 
-        // Top armateurs
-        $topArmateurs = DB::table('sortie_conteneurs')
-            ->join('armateurs', 'sortie_conteneurs.code_armateur', '=', 'armateurs.code')
-            ->select('armateurs.nom', DB::raw('COUNT(*) as sorties'))
-            ->where('sortie_conteneurs.date_sortie', '>=', now()->subMonths(3))
-            ->groupBy('armateurs.nom')
-            ->orderBy('sorties', 'desc')
-            ->limit(5)
-            ->get();
+            // Top armateurs - avec gestion des codes armateurs NULL
+            $topArmateurs = DB::table('sortie_conteneurs')
+                ->join('armateurs', 'sortie_conteneurs.code_armateur', '=', 'armateurs.code')
+                ->select('armateurs.nom', DB::raw('COUNT(*) as sorties'))
+                ->whereNotNull('sortie_conteneurs.date_sortie')
+                ->where('sortie_conteneurs.date_sortie', '>=', now()->subMonths(3))
+                ->groupBy('armateurs.nom', 'armateurs.code')
+                ->orderBy('sorties', 'desc')
+                ->limit(5)
+                ->get();
 
-        // Répartition des opérations par type
-        $operationsParType = DB::table('operations')
-            ->select('type_operation as type', DB::raw('COUNT(*) as count'))
-            ->groupBy('type_operation')
-            ->get();
+            // Répartition des opérations par type
+            $operationsParType = DB::table('operations')
+                ->select('type_operation as type', DB::raw('COUNT(*) as count'))
+                ->groupBy('type_operation')
+                ->get();
 
-        return [
-            'sorties_par_mois' => $sortiesParMois,
-            'repartition_statuts' => $repartitionStatuts,
-            'top_armateurs' => $topArmateurs,
-            'operations_par_type' => $operationsParType,
-        ];
+            return [
+                'sorties_par_mois' => $sortiesParMois,
+                'repartition_statuts' => $repartitionStatuts,
+                'top_armateurs' => $topArmateurs,
+                'operations_par_type' => $operationsParType,
+            ];
+        } catch (\Exception $e) {
+            \Log::error('Dashboard getChartsData error: ' . $e->getMessage());
+            // Retourner des données vides en cas d'erreur
+            return [
+                'sorties_par_mois' => [],
+                'repartition_statuts' => [],
+                'top_armateurs' => [],
+                'operations_par_type' => [],
+            ];
+        }
     }
 
     /**
