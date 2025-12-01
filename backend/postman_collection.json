@@ -1,0 +1,422 @@
+{
+  "info": {
+    "name": "Logistiga API",
+    "description": "Collection complète des endpoints API Logistiga",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "1.0.0"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{auth_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://your-domain.com/api",
+      "type": "string"
+    },
+    {
+      "key": "auth_token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "🔐 Authentification",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@logistiga.com\",\n  \"password\": \"password123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\",\n  \"password_confirmation\": \"password123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/auth/logout",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "logout"]
+            }
+          }
+        },
+        {
+          "name": "User Info",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/auth/user",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "user"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📊 Dashboard",
+      "item": [
+        {
+          "name": "Dashboard Data",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/dashboard",
+              "host": ["{{base_url}}"],
+              "path": ["dashboard"]
+            }
+          }
+        },
+        {
+          "name": "Stats by Period",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/dashboard/stats?period=month",
+              "host": ["{{base_url}}"],
+              "path": ["dashboard", "stats"],
+              "query": [
+                {
+                  "key": "period",
+                  "value": "month"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🏢 Armateurs",
+      "item": [
+        {
+          "name": "List Armateurs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/armateurs?page=1&per_page=15",
+              "host": ["{{base_url}}"],
+              "path": ["armateurs"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "per_page",
+                  "value": "15"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Armateur",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code_armateur\": \"MSC\",\n  \"nom_armateur\": \"Mediterranean Shipping Company\",\n  \"contact\": \"contact@msc.com\",\n  \"telephone\": \"+225 01 02 03 04\",\n  \"adresse\": \"Abidjan, Côte d'Ivoire\",\n  \"actif\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/armateurs",
+              "host": ["{{base_url}}"],
+              "path": ["armateurs"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🚛 Véhicules",
+      "item": [
+        {
+          "name": "List Vehicules",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/vehicules?type=camion",
+              "host": ["{{base_url}}"],
+              "path": ["vehicules"],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "camion"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Vehicule",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"numero_parc\": \"TR 37\",\n  \"immatriculation\": \"CI 3456 AB\",\n  \"type\": \"camion\",\n  \"actif\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/vehicules",
+              "host": ["{{base_url}}"],
+              "path": ["vehicules"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📦 Sorties Conteneur",
+      "item": [
+        {
+          "name": "List Sorties",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/sorties?statut=en_cours",
+              "host": ["{{base_url}}"],
+              "path": ["sorties"],
+              "query": [
+                {
+                  "key": "statut",
+                  "value": "en_cours"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Sortie",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"numero_tc\": \"ABCD1234567\",\n  \"armateur_id\": 1,\n  \"date_sortie\": \"2024-12-01\",\n  \"camion_id\": 5,\n  \"remorque_id\": 12,\n  \"chauffeur\": \"Jean Dupont\",\n  \"destination\": \"Yamoussoukro\",\n  \"bl\": \"BL123456\",\n  \"client\": \"ABC Trading\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/sorties",
+              "host": ["{{base_url}}"],
+              "path": ["sorties"]
+            }
+          }
+        },
+        {
+          "name": "Retour Conteneur",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"date_retour\": \"2024-12-15\",\n  \"camion_retour_id\": 5,\n  \"remorque_retour_id\": 12\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/sorties/:id/retour",
+              "host": ["{{base_url}}"],
+              "path": ["sorties", ":id", "retour"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🔧 Opérations",
+      "item": [
+        {
+          "name": "List Operations",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/operations?statut=en_cours&type_operation=location",
+              "host": ["{{base_url}}"],
+              "path": ["operations"],
+              "query": [
+                {
+                  "key": "statut",
+                  "value": "en_cours"
+                },
+                {
+                  "key": "type_operation",
+                  "value": "location"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Operation",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"numero_operation\": \"OP-2024-001\",\n  \"type_operation\": \"location\",\n  \"description\": \"Location conteneur frigorifique\",\n  \"priorite\": \"haute\",\n  \"date_debut\": \"2024-12-01\",\n  \"date_fin\": \"2024-12-15\",\n  \"tarif_journalier\": 7000,\n  \"responsable_id\": 2\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/operations",
+              "host": ["{{base_url}}"],
+              "path": ["operations"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "💸 Primes",
+      "item": [
+        {
+          "name": "List Primes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/primes?statut_prime=en_attente",
+              "host": ["{{base_url}}"],
+              "path": ["primes"],
+              "query": [
+                {
+                  "key": "statut_prime",
+                  "value": "en_attente"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Payer en Lot",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sortie_ids\": [1, 2, 3, 4, 5],\n  \"date_paiement\": \"2024-12-15\",\n  \"observations\": \"Paiement semaine 48\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/primes/payer-en-lot",
+              "host": ["{{base_url}}"],
+              "path": ["primes", "payer-en-lot"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🔧 Système",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": ["{{base_url}}"],
+              "path": ["health"]
+            }
+          }
+        },
+        {
+          "name": "CORS Test",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/cors-test",
+              "host": ["{{base_url}}"],
+              "path": ["cors-test"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
