@@ -6,6 +6,7 @@
 - [Configuration](#configuration)
 - [Architecture](#architecture)
 - [Modules](#modules)
+- [📚 Documentation API](#-documentation-api)
 - [API Endpoints](#api-endpoints)
 - [Base de données](#base-de-données)
 - [Authentification](#authentification)
@@ -177,6 +178,40 @@ routes/
 - Notifications en temps réel
 - Emails automatiques
 - Alertes système
+
+---
+
+## 📚 Documentation API
+
+### 📖 Documentation Complète Disponible
+
+La documentation API complète est disponible en **3 formats** :
+
+1. **📝 Markdown** - Documentation complète détaillée
+   - Fichier: `backend/API_DOCUMENTATION.md`
+   - Guide d'utilisation: `backend/README_API.md`
+
+2. **🌐 HTML** - Interface web interactive
+   - URL: `http://localhost:8000/api-docs.html`
+   - Navigation visuelle par modules
+   - Codes couleur pour méthodes HTTP
+
+3. **📮 Postman Collection** - Tests prêts à l'emploi
+   - Fichier: `backend/postman_collection.json`
+   - Importez dans Postman pour tester tous les endpoints
+
+### 🚀 Démarrage Rapide
+
+```bash
+# Accéder à la documentation web
+php artisan serve
+# Ouvrir: http://localhost:8000/api-docs.html
+
+# Ou lire la documentation Markdown
+cat API_DOCUMENTATION.md
+```
+
+**Pour plus de détails, consultez:** `backend/README_API.md`
 
 ---
 
