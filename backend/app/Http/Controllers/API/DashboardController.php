@@ -135,8 +135,8 @@ class DashboardController extends Controller
                 ],
                 'vehicules' => [
                     'total' => DB::table('vehicules')->count(),
-                    'disponibles' => DB::table('vehicules')->where('statut', 'disponible')->count(),
-                    'en_mission' => DB::table('vehicules')->where('statut', 'en_mission')->count(),
+                    'disponibles' => DB::table('vehicules')->where('statut', 'disponible')->where('actif', true)->count(),
+                    'en_mission' => DB::table('vehicules')->where('statut', 'en_mission')->where('actif', true)->count(),
                     'maintenance' => DB::table('vehicules')->where('statut', 'maintenance')->count(),
                 ],
                 'armateurs' => [
@@ -250,6 +250,7 @@ class DashboardController extends Controller
 
         // Véhicules nécessitant une révision
         $vehiculesRevision = DB::table('vehicules')
+            ->whereNotNull('prochaine_revision')
             ->where('prochaine_revision', '<=', now()->addDays(7))
             ->where('statut', '!=', 'maintenance')
             ->count();

@@ -25,8 +25,9 @@ class VehiculeManagementService
                 throw new VehiculeNotAvailableException("Le véhicule {$vehicule->numero_parc} n'est pas actif");
             }
 
-            // Note: On ne vérifie plus le statut car la colonne n'existe pas encore
-            // TODO: Ajouter une colonne statut à la table vehicules si nécessaire
+            if ($vehicule->statut !== 'disponible') {
+                throw new VehiculeNotAvailableException("Le véhicule {$vehicule->numero_parc} n'est pas disponible (statut: {$vehicule->statut})");
+            }
         }
     }
 
@@ -40,9 +41,8 @@ class VehiculeManagementService
         $vehicule = Vehicule::find($vehiculeId);
         
         if ($vehicule) {
-            // Note: On ne met pas à jour le statut car la colonne n'existe pas encore
-            // TODO: Ajouter une colonne statut à la table vehicules si nécessaire
-            \Log::info("Véhicule {$vehicule->numero_parc} - Statut demandé: {$statut} (non mis à jour - colonne manquante)");
+            $vehicule->update(['statut' => $statut]);
+            \Log::info("Véhicule {$vehicule->numero_parc} - Statut mis à jour: {$statut}");
         }
     }
 

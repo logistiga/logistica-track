@@ -33,14 +33,15 @@ class Operation extends Model
     ];
 
     protected $casts = [
-        'date_debut' => 'date',
-        'date_fin' => 'date',
+        'date_debut' => 'datetime',
+        'date_fin' => 'datetime',
         'date_debut_execution' => 'datetime',
         'date_fin_execution' => 'datetime',
         'vehicules_assignes' => 'array',
         'tarif_journalier' => 'decimal:2',
         'cout_estime' => 'decimal:2',
-        'cout_reel' => 'decimal:2'
+        'cout_reel' => 'decimal:2',
+        'duree' => 'integer'
     ];
 
     // Relations
