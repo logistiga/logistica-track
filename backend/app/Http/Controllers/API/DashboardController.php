@@ -19,21 +19,20 @@ class DashboardController extends Controller
     public function index(Request $request): JsonResponse
     {
         try {
-            $cacheKey = 'dashboard_main_' . (\Illuminate\Support\Facades\Auth::check() ? \Illuminate\Support\Facades\Auth::id() : 'guest');
-            
-            $dashboardData = Cache::remember($cacheKey, CACHE_MEDIUM, function () {
-                return [
-                    'stats' => $this->getMainStats(),
-                    'recent_activities' => $this->getRecentActivities(),
-                    'alerts' => $this->getAlerts(),
-                    'charts' => $this->getChartsData(),
-                ];
-            });
+            // Désactiver temporairement le cache pour déboguer
+            $dashboardData = [
+                'stats' => $this->getMainStats(),
+                'recent_activities' => $this->getRecentActivities(),
+                'alerts' => $this->getAlerts(),
+                'charts' => $this->getChartsData(),
+            ];
 
             return $this->successResponse($dashboardData, 'Données du tableau de bord récupérées');
 
         } catch (\Exception $e) {
-            return $this->errorResponse('Erreur lors de la récupération du tableau de bord', 500);
+            \Log::error('Dashboard index error: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
+            return $this->errorResponse('Erreur: ' . $e->getMessage(), 500);
         }
     }
 
