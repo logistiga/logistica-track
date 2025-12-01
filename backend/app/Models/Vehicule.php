@@ -14,10 +14,17 @@ class Vehicule extends Model
         'immatriculation',
         'type',
         'actif',
+        'statut',
+        'prochaine_revision',
+        'derniere_revision',
+        'kilometrage',
     ];
 
     protected $casts = [
         'actif' => 'boolean',
+        'prochaine_revision' => 'date',
+        'derniere_revision' => 'date',
+        'kilometrage' => 'integer',
     ];
 
     // Relations

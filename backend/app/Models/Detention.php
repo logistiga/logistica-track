@@ -17,12 +17,15 @@ class Detention extends Model
         'jours_detention',
         'jours_client',
         'jours_logistiga',
+        'jours_bat',
+        'jours_realises',
         'cout_par_jour',
         'cout_total',
         'responsabilite',
         'motif_detention',
         'statut',
         'observations',
+        'numero_facture',
     ];
 
     protected $casts = [
