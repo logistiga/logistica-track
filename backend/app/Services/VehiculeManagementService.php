@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Vehicule;
 use App\Exceptions\VehiculeNotAvailableException;
+use Illuminate\Support\Facades\Schema;
 
 class VehiculeManagementService
 {
@@ -25,7 +26,8 @@ class VehiculeManagementService
                 throw new VehiculeNotAvailableException("Le véhicule {$vehicule->numero_parc} n'est pas actif");
             }
 
-            if ($vehicule->statut !== 'disponible') {
+            // Vérifier le statut seulement si la colonne existe
+            if (Schema::hasColumn('vehicules', 'statut') && $vehicule->statut !== 'disponible') {
                 throw new VehiculeNotAvailableException("Le véhicule {$vehicule->numero_parc} n'est pas disponible (statut: {$vehicule->statut})");
             }
         }
@@ -40,9 +42,11 @@ class VehiculeManagementService
 
         $vehicule = Vehicule::find($vehiculeId);
         
-        if ($vehicule) {
+        if ($vehicule && Schema::hasColumn('vehicules', 'statut')) {
             $vehicule->update(['statut' => $statut]);
             \Log::info("Véhicule {$vehicule->numero_parc} - Statut mis à jour: {$statut}");
+        } elseif ($vehicule) {
+            \Log::info("Véhicule {$vehicule->numero_parc} - Statut non mis à jour (colonne 'statut' manquante, exécutez les migrations)");
         }
     }
 
