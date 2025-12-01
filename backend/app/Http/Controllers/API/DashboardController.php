@@ -135,9 +135,9 @@ class DashboardController extends Controller
                 ],
                 'vehicules' => [
                     'total' => DB::table('vehicules')->count(),
-                    'disponibles' => DB::table('vehicules')->where('statut', 'disponible')->where('actif', true)->count(),
-                    'en_mission' => DB::table('vehicules')->where('statut', 'en_mission')->where('actif', true)->count(),
-                    'maintenance' => DB::table('vehicules')->where('statut', 'maintenance')->count(),
+                    'disponibles' => DB::table('vehicules')->where('actif', true)->count(),
+                    'en_mission' => 0, // Nécessite migration pour la colonne statut
+                    'maintenance' => DB::table('vehicules')->where('actif', false)->count(),
                 ],
                 'armateurs' => [
                     'total' => DB::table('armateurs')->count(),
@@ -248,12 +248,8 @@ class DashboardController extends Controller
     {
         $alerts = [];
 
-        // Véhicules nécessitant une révision
-        $vehiculesRevision = DB::table('vehicules')
-            ->whereNotNull('prochaine_revision')
-            ->where('prochaine_revision', '<=', now()->addDays(7))
-            ->where('statut', '!=', 'maintenance')
-            ->count();
+        // Véhicules nécessitant une révision (nécessite migration)
+        $vehiculesRevision = 0;
 
         if ($vehiculesRevision > 0) {
             $alerts[] = [
