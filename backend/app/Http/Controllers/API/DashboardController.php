@@ -96,14 +96,19 @@ class DashboardController extends Controller
             // Stats opérations avec détails par type
             $operationsLocation = DB::table('operations')->where('type_operation', 'location')->count();
             $operationsTransport = DB::table('operations')->where('type_operation', 'transport')->count();
+            
+            // Pour locations: utiliser tarif_journalier * duree si disponible, sinon cout_reel
             $revenueLocation = DB::table('operations')
                 ->where('type_operation', 'location')
                 ->whereIn('statut', ['terminee', 'confirmee'])
-                ->sum('montant');
+                ->selectRaw('SUM(COALESCE(tarif_journalier * duree, cout_reel, 0)) as total')
+                ->value('total') ?? 0;
+                
+            // Pour transports: utiliser cout_reel
             $revenueTransport = DB::table('operations')
                 ->where('type_operation', 'transport')
                 ->whereIn('statut', ['terminee', 'confirmee'])
-                ->sum('montant');
+                ->sum('cout_reel') ?? 0;
 
             // Stats détentions
             $detentionsActives = DB::table('detentions')
@@ -111,7 +116,7 @@ class DashboardController extends Controller
                 ->count();
             $montantDetentions = DB::table('detentions')
                 ->where('statut', 'active')
-                ->sum('cout_total');
+                ->sum('cout_total') ?? 0;
 
             // Stats facturations avec correction de la requête
             $facturesEnAttente = DB::table('facturations')
@@ -119,7 +124,7 @@ class DashboardController extends Controller
                 ->count();
             $montantFacturesEnAttente = DB::table('facturations')
                 ->whereIn('statut', ['brouillon', 'envoyee'])
-                ->sum('montant_total');
+                ->sum('montant_total') ?? 0;
 
             return [
                 'sorties' => [
