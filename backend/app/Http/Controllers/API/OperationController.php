@@ -589,7 +589,7 @@ class OperationController extends Controller
                     'o.id',
                     'o.numero_operation as numeroOperation',
                     'o.type_operation as typeOperation',
-                    'o.date_prevue as dateExecution',
+                    'o.date_debut as dateExecution',
                     DB::raw("'' as camion"),
                     DB::raw("'' as remorque"),
                     DB::raw("COALESCE(u.name, 'N/A') as client"),
@@ -606,6 +606,7 @@ class OperationController extends Controller
             return $this->successResponse($archives, 'Archives récupérées avec succès');
         } catch (\Exception $e) {
             \Log::error('Erreur archives opérations: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
             return $this->errorResponse('Erreur lors de la récupération des archives', 500);
         }
     }
@@ -645,7 +646,7 @@ class OperationController extends Controller
                     'o.id',
                     'o.numero_operation as numeroOperation',
                     'o.type_operation as typeOperation',
-                    'o.date_prevue as dateExecution',
+                    'o.date_debut as dateExecution',
                     DB::raw("'' as camion"),
                     DB::raw("'' as remorque"),
                     DB::raw("COALESCE(u.name, 'N/A') as client"),
@@ -662,6 +663,7 @@ class OperationController extends Controller
             return $this->successResponse($archives, 'Recherche effectuée avec succès');
         } catch (\Exception $e) {
             \Log::error('Erreur recherche archives opérations: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
             return $this->errorResponse('Erreur lors de la recherche', 500);
         }
     }
@@ -687,7 +689,11 @@ class OperationController extends Controller
 
             return $this->successResponse($stats);
         } catch (\Exception $e) {
+            \Log::error('Erreur statistiques archives opérations: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
             return $this->errorResponse('Erreur lors de la récupération des statistiques', 500);
         }
+    }
+}
     }
 }
