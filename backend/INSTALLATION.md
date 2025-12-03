@@ -1,6 +1,6 @@
 # Guide d'installation Laravel 11
 
-## 🚀 Installation rapide
+## 🚀 Installation rapide (Développement)
 
 ### 1. Créer le projet
 
@@ -72,6 +72,112 @@ php artisan serve
 ```
 
 Votre API sera accessible sur `http://localhost:8000`
+
+---
+
+## 🌐 Déploiement en Production
+
+### Configuration: suivitc.logistiga.com
+
+#### Étape 1: Préparer le Backend
+
+```bash
+cd backend
+
+# Copier le fichier de production
+cp .env.production .env
+
+# Générer la clé d'application (IMPORTANT!)
+php artisan key:generate
+
+# Installer les dépendances
+composer install --optimize-autoloader --no-dev
+
+# Permissions
+chmod -R 775 storage bootstrap/cache
+```
+
+#### Étape 2: Base de données
+
+```bash
+# Exécuter les migrations
+php artisan migrate --force
+
+# Créer un utilisateur admin
+php artisan db:seed --class=UserSeeder
+
+# Optimiser
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+```
+
+#### Étape 3: Build du Frontend
+
+```bash
+# Dans le dossier racine
+npm install
+npm run build
+```
+
+#### Étape 4: Structure sur le serveur
+
+```
+/home/logihmyf/public_html/suivitc.logistiga.com/
+├── index.html              (du dossier dist/)
+├── assets/                 (du dossier dist/)
+├── backend/
+│   ├── app/
+│   ├── bootstrap/
+│   ├── config/
+│   ├── database/
+│   ├── public/             (Point d'entrée Laravel)
+│   │   └── index.php
+│   ├── resources/
+│   ├── routes/
+│   ├── storage/
+│   └── vendor/
+```
+
+#### Étape 5: Configuration .htaccess (racine)
+
+Créez `.htaccess` à la racine:
+
+```apache
+RewriteEngine On
+
+# Rediriger /backend vers Laravel
+RewriteRule ^backend/(.*)$ backend/public/$1 [L]
+
+# SPA Frontend - toutes les autres routes
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_URI} !^/backend
+RewriteRule ^ index.html [L]
+```
+
+### Vérification
+
+```bash
+# Tester l'API
+curl https://suivitc.logistiga.com/backend/api/system/health
+
+# Voir les logs
+tail -f backend/storage/logs/laravel.log
+```
+
+### Dépannage
+
+```bash
+# Erreur 500
+php artisan optimize:clear
+chmod -R 775 storage bootstrap/cache
+
+# Problèmes CORS
+# Vérifier backend/config/cors.php
+```
+
+---
 
 ## 📁 Structure recommandée
 
