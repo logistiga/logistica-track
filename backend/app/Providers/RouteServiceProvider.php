@@ -28,9 +28,12 @@ class RouteServiceProvider extends ServiceProvider
             return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
         });
 
-        $this->routes(function () {
+        // Detect if running in subdirectory (production) or root (local)
+        $apiPrefix = env('API_PREFIX_PATH', 'api');
+
+        $this->routes(function () use ($apiPrefix) {
             Route::middleware('api')
-                ->prefix('api')
+                ->prefix($apiPrefix)
                 ->group(base_path('routes/api.php'));
 
             Route::middleware('web')
