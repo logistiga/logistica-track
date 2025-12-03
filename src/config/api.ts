@@ -1,10 +1,10 @@
-// Configuration de l'URL de l'API - Backend exposé via ngrok
+// Configuration de l'URL de l'API - Backend production
 export const getApiBaseUrl = () => {
-  // URL ngrok pour accéder au backend local depuis lovableproject.com
-  const url = 'https://unextradited-monocotyledonous-sena.ngrok-free.dev/api';
+  // URL production backend
+  const url = 'https://suivitc.logistiga.com/backend/api';
   
   console.log('🔗 API Base URL configured as:', url);
-  console.log('🌍 Environment: ngrok tunnel');
+  console.log('🌍 Environment: production');
   return url;
 };
 
