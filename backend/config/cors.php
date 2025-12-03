@@ -19,12 +19,20 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => explode(',', env('CORS_ALLOWED_ORIGINS', 'http://localhost:3000,http://127.0.0.1:3000')),
+    'allowed_origins' => array_merge(
+        explode(',', env('CORS_ALLOWED_ORIGINS', 'http://localhost:3000,http://127.0.0.1:3000')),
+        [
+            'https://suivitc.logistiga.com',
+            'https://logistiga.com',
+        ]
+    ),
 
     'allowed_origins_patterns' => [
         '/^https:\/\/.*\.lovableproject\.com$/',
         '/^https:\/\/.*\.lovable\.app$/',
         '/^https:\/\/.*--.*\.lovable\.app$/',
+        '/^https:\/\/.*\.logistiga\.com$/',
+        '/^https:\/\/.*\.ngrok-free\.dev$/',
     ],
 
     'allowed_headers' => ['*'],
