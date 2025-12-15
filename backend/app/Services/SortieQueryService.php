@@ -16,7 +16,7 @@ class SortieQueryService
         $this->applyFilters($query, $filters);
 
         // Pagination
-        $perPage = $filters['per_page'] ?? 15;
+        $perPage = $filters['per_page'] ?? 100;
         
         $paginatedResult = $query->orderBy('date_sortie', 'desc')->paginate($perPage);
         
