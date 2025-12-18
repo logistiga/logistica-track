@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -8,7 +8,9 @@ import { SortieTable } from "@/components/sortie-conteneur/SortieTable";
 import { SortieForm } from "@/components/sortie-conteneur/SortieForm";
 import { ReturnDialog } from "@/components/sortie-conteneur/ReturnDialog";
 import { ExportDialog } from "@/components/sortie-conteneur/ExportDialog";
+import { SortieSearchBar } from "@/components/sortie-conteneur/SortieSearchBar";
 import { useSortieConteneur } from "@/hooks/useSortieConteneur";
+import { SortieConteneur } from "@/types/sortie-conteneur";
 
 export default function SortieConteneurPage() {
   const {
@@ -35,9 +37,29 @@ export default function SortieConteneurPage() {
   } = useSortieConteneur();
 
   const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const sortiesEnCours = getSortiesEnCours();
-  const historique = getHistorique();
+  // Fonction de recherche optimisée avec useMemo
+  const filterSorties = useCallback((items: SortieConteneur[], query: string) => {
+    if (!query.trim()) return items;
+    const lowerQuery = query.toLowerCase().trim();
+    return items.filter(sortie => 
+      sortie.numeroConteneur?.toLowerCase().includes(lowerQuery) ||
+      sortie.numeroBL?.toLowerCase().includes(lowerQuery) ||
+      sortie.nomClient?.toLowerCase().includes(lowerQuery) ||
+      sortie.codeArmateur?.toLowerCase().includes(lowerQuery) ||
+      sortie.camion?.toLowerCase().includes(lowerQuery) ||
+      sortie.remorque?.toLowerCase().includes(lowerQuery) ||
+      sortie.nomTransitaire?.toLowerCase().includes(lowerQuery)
+    );
+  }, []);
+
+  const sortiesEnCours = useMemo(() => getSortiesEnCours(), [getSortiesEnCours]);
+  const historique = useMemo(() => getHistorique(), [getHistorique]);
+
+  // Appliquer la recherche aux listes
+  const filteredEnCours = useMemo(() => filterSorties(sortiesEnCours, searchQuery), [sortiesEnCours, searchQuery, filterSorties]);
+  const filteredHistorique = useMemo(() => filterSorties(historique, searchQuery), [historique, searchQuery, filterSorties]);
 
   if (loading) {
     return (
@@ -52,24 +74,27 @@ export default function SortieConteneurPage() {
   return (
     <div className="container mx-auto py-6 space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center">
         <div>
           <h1 className="text-3xl font-bold">Sorties de Conteneurs</h1>
           <p className="text-muted-foreground">
             Gestion des sorties de conteneurs du port
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            onClick={() => setIsExportDialogOpen(true)}
-          >
-            Exporter
-          </Button>
-          <Button onClick={() => setIsAddDialogOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Nouvelle Sortie
-          </Button>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <SortieSearchBar onSearch={setSearchQuery} />
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setIsExportDialogOpen(true)}
+            >
+              Exporter
+            </Button>
+            <Button onClick={() => setIsAddDialogOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Nouvelle Sortie
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -104,16 +129,16 @@ export default function SortieConteneurPage() {
       <Tabs defaultValue="en-cours" className="space-y-4">
         <TabsList>
           <TabsTrigger value="en-cours">
-            Sorties en cours ({sortiesEnCours.length})
+            Sorties en cours ({filteredEnCours.length}{searchQuery && ` / ${sortiesEnCours.length}`})
           </TabsTrigger>
           <TabsTrigger value="historique">
-            Historique ({historique.length})
+            Historique ({filteredHistorique.length}{searchQuery && ` / ${historique.length}`})
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="en-cours" className="space-y-4">
           <SortieTable
-            sorties={sortiesEnCours}
+            sorties={filteredEnCours}
             onEdit={handleEdit}
             onDelete={handleDelete}
             onReturn={handleReturnClick}
@@ -123,7 +148,7 @@ export default function SortieConteneurPage() {
 
         <TabsContent value="historique" className="space-y-4">
           <SortieTable
-            sorties={historique}
+            sorties={filteredHistorique}
             onEdit={handleEdit}
             onDelete={handleDelete}
             onReturn={handleReturnClick}
