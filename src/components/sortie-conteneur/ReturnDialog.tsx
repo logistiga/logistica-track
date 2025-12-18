@@ -32,6 +32,8 @@ export const ReturnDialog = ({
   // Filtrer uniquement les véhicules disponibles (statut = disponible)
   const camionsDisponibles = camions.filter((camion) => camion.actif && camion.statut === "disponible");
   const remorquesDisponibles = remorques.filter((remorque) => remorque.actif && remorque.statut === "disponible");
+
+  return (
     <Dialog open={open} onOpenChange={onCancel}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
