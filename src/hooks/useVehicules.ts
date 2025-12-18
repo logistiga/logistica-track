@@ -117,9 +117,10 @@ export function useVehicules() {
   }, []);
 
   // Méthodes utilitaires pour compatibilité avec l'existant
+  // Si statut est null/undefined, on considère le véhicule comme disponible
   const getCamionOptions = () => {
     return camions
-      .filter((c) => c.actif && c.statut === 'disponible')
+      .filter((c) => c.actif && (!c.statut || c.statut === 'disponible'))
       .map((c) => ({
         value: c.id.toString(),
         label: `${c.numero_parc} - ${c.immatriculation}`,
@@ -128,7 +129,7 @@ export function useVehicules() {
 
   const getRemorqueOptions = () => {
     return remorques
-      .filter((r) => r.actif && r.statut === 'disponible')
+      .filter((r) => r.actif && (!r.statut || r.statut === 'disponible'))
       .map((r) => ({
         value: r.id.toString(),
         label: `${r.numero_parc} - ${r.immatriculation}`,
