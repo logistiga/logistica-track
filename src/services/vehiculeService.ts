@@ -8,6 +8,7 @@ export interface Vehicule {
   type_label: string;
   libelle_complet: string;
   actif: boolean;
+  statut?: string | null;
   created_at: string;
   updated_at: string;
 }
