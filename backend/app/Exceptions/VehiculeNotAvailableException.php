@@ -8,12 +8,19 @@ class VehiculeNotAvailableException extends Exception
 {
     protected $vehicule;
 
-    public function __construct($vehicule, $message = null)
+    public function __construct($vehiculeOrMessage, $message = null)
     {
-        $this->vehicule = $vehicule;
+        // Si c'est une chaîne, c'est le message directement
+        if (is_string($vehiculeOrMessage)) {
+            parent::__construct($vehiculeOrMessage);
+            return;
+        }
+        
+        // Sinon c'est un objet véhicule
+        $this->vehicule = $vehiculeOrMessage;
         
         if (!$message) {
-            $message = "Le véhicule {$vehicule->numero_parc} n'est pas disponible";
+            $message = "Le véhicule {$vehiculeOrMessage->numero_parc} n'est pas disponible";
         }
         
         parent::__construct($message);
