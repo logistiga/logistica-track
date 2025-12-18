@@ -118,17 +118,21 @@ export function useVehicules() {
 
   // Méthodes utilitaires pour compatibilité avec l'existant
   const getCamionOptions = () => {
-    return camions.filter(c => c.actif).map(c => ({
-      value: c.id.toString(),
-      label: `${c.numero_parc} - ${c.immatriculation}`,
-    }));
+    return camions
+      .filter((c) => c.actif && c.statut === 'disponible')
+      .map((c) => ({
+        value: c.id.toString(),
+        label: `${c.numero_parc} - ${c.immatriculation}`,
+      }));
   };
 
   const getRemorqueOptions = () => {
-    return remorques.filter(r => r.actif).map(r => ({
-      value: r.id.toString(),
-      label: `${r.numero_parc} - ${r.immatriculation}`,
-    }));
+    return remorques
+      .filter((r) => r.actif && r.statut === 'disponible')
+      .map((r) => ({
+        value: r.id.toString(),
+        label: `${r.numero_parc} - ${r.immatriculation}`,
+      }));
   };
 
   const getVehiculeDisplay = (id: number): string => {

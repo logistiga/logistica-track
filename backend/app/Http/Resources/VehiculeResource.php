@@ -20,6 +20,7 @@ class VehiculeResource extends JsonResource
             'type_label' => $this->getTypeLabelAttribute(),
             'libelle_complet' => $this->getLibelleCompletAttribute(),
             'actif' => $this->actif ?? true,
+            'statut' => $this->statut ?? null,
             'created_at' => $this->created_at->format('Y-m-d H:i:s'),
             'updated_at' => $this->updated_at->format('Y-m-d H:i:s'),
         ];
