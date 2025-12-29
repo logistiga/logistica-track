@@ -1,8 +1,10 @@
 // Utilitaire pour formater les montants en Franc CFA (Gabon)
-export function formatCurrency(amount: number): string {
+export function formatCurrency(amount: number | undefined | null): string {
+  // Sécuriser le montant : si undefined, null ou NaN, retourner 0
+  const safeAmount = typeof amount === 'number' && !isNaN(amount) ? amount : 0;
   // Conversion du montant en entier (suppression des décimales)
-  const roundedAmount = Math.round(amount);
-  
+  const roundedAmount = Math.round(safeAmount);
+
   // Formatage avec des espaces comme séparateurs de milliers
   return new Intl.NumberFormat('fr-FR').format(roundedAmount) + ' FCFA';
 }

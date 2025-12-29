@@ -58,19 +58,22 @@ class PrimeController extends Controller
 
             // Mapper les données pour le format attendu par le frontend
             $primes = $sorties->map(function ($sortie) {
-                // Le numéro de parc vient du camion
-                $numeroParc = $sortie->camion?->numero_parc ?? 'N/A';
-                
+                // Le numéro de parc vient du camion (même valeur que la page Sortie Conteneur)
+                $numeroParc = $sortie->camion?->numero_parc ?? null;
+
+                // Sécuriser le montant prime
+                $montantPrime = (float) ($sortie->prime_chauffeur ?? 0);
+
                 return [
                     'id' => $sortie->id,
                     'sortie_id' => $sortie->id,
                     'numero_tc' => $sortie->numero_conteneur,
                     'numero_parc' => $numeroParc,
-                    'date_sortie' => $sortie->date_sortie,
-                    'date_retour' => $sortie->date_retour,
-                    'prime_chauffeur' => (float) $sortie->prime_chauffeur,
-                    'montant_prime' => (float) $sortie->prime_chauffeur,
-                    'montant_prime_formatte' => number_format($sortie->prime_chauffeur, 0, ',', ' ') . ' FCFA',
+                    'date_sortie' => $sortie->date_sortie?->format('Y-m-d'),
+                    'date_retour' => $sortie->date_retour?->format('Y-m-d'),
+                    'prime_chauffeur' => $montantPrime,
+                    'montant_prime' => $montantPrime,
+                    'montant_prime_formatte' => number_format($montantPrime, 0, ',', ' ') . ' FCFA',
                     'statut' => $sortie->date_retour ? 'retourne' : 'en_cours',
                     'statut_label' => $sortie->date_retour ? 'Retourné' : 'En cours',
                     'statut_prime' => $sortie->statut_prime ?? 'en_attente',
