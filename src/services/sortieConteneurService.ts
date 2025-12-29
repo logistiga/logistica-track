@@ -95,7 +95,9 @@ class SortieConteneurService {
   async getSorties(): Promise<SortieConteneur[]> {
     try {
       const response = await apiService.get('/sorties');
-      return response.data;
+      // Le backend Laravel renvoie les données dans response.data.data (format paginé)
+      const data = response.data?.data || response.data || [];
+      return Array.isArray(data) ? data : [];
     } catch (error) {
       // Fallback to localStorage
       const stored = this.getStoredSorties();
