@@ -169,3 +169,23 @@ export const useInvoice = (id: number) => {
     enabled: !!id,
   });
 };
+
+// === CONTENEURS ===
+export const useSendContainers = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: {
+      client_name: string;
+      vessel_name?: string;
+      shipping_line: string;
+      containers: Array<{
+        booking_number: string;
+        container_number: string;
+      }>;
+    }) => logistiqueApi.sendContainers(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["logistique", "ordres-travail"] });
+      queryClient.invalidateQueries({ queryKey: ["logistique", "stats"] });
+    },
+  });
+};

@@ -162,6 +162,22 @@ class LogistiqueApiService {
   async getInvoice(id: number): Promise<ApiResponse<Invoice>> {
     return this.request(`/invoices/${id}`);
   }
+
+  // === CONTENEURS ===
+  async sendContainers(data: {
+    client_name: string;
+    vessel_name?: string;
+    shipping_line: string;
+    containers: Array<{
+      booking_number: string;
+      container_number: string;
+    }>;
+  }): Promise<ApiResponse<{ ordres_travail_ids: number[] }>> {
+    return this.request("/containers", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
 }
 
 export const createLogistiqueApi = (apiKey: string) => new LogistiqueApiService(apiKey);

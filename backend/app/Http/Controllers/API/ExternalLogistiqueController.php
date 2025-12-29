@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Models\SortieConteneur;
 use App\Services\ExternalLogistiqueApiService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -192,5 +193,65 @@ class ExternalLogistiqueController extends Controller
     {
         $result = $this->apiService->getInvoice($id);
         return response()->json($result, $result['success'] ?? false ? 200 : 404);
+    }
+
+    // === CONTENEURS ===
+
+    public function sendContainers(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'client_name' => 'required|string|max:255',
+            'vessel_name' => 'nullable|string|max:255',
+            'shipping_line' => 'required|string|max:50',
+            'containers' => 'required|array|min:1',
+            'containers.*.booking_number' => 'required|string|max:100',
+            'containers.*.container_number' => 'required|string|max:20',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation échouée',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $result = $this->apiService->sendContainers($validator->validated());
+        return response()->json($result, $result['success'] ?? false ? 201 : 400);
+    }
+
+    public function sendContainersBatch(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'sortie_ids' => 'required|array|min:1',
+            'sortie_ids.*' => 'integer|exists:sortie_conteneurs,id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation échouée',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $sorties = SortieConteneur::with('armateur')
+            ->whereIn('id', $request->sortie_ids)
+            ->get()
+            ->map(fn($s) => [
+                'numero_conteneur' => $s->numero_conteneur,
+                'numero_bl' => $s->numero_bl,
+                'nom_client' => $s->nom_client,
+                'code_armateur' => $s->armateur?->nom ?? $s->code_armateur,
+            ])
+            ->toArray();
+
+        $result = $this->apiService->sendContainersFromSorties($sorties);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Conteneurs envoyés avec succès',
+            'data' => $result,
+        ]);
     }
 }

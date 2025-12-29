@@ -41,4 +41,10 @@ Route::prefix('external-logistique')->name('external-logistique.')->group(functi
         Route::get('/', [ExternalLogistiqueController::class, 'getInvoices'])->name('index');
         Route::get('/{id}', [ExternalLogistiqueController::class, 'getInvoice'])->name('show');
     });
+    
+    // Conteneurs
+    Route::prefix('containers')->name('containers.')->group(function () {
+        Route::post('/', [ExternalLogistiqueController::class, 'sendContainers'])->name('send');
+        Route::post('/batch', [ExternalLogistiqueController::class, 'sendContainersBatch'])->name('batch');
+    });
 });

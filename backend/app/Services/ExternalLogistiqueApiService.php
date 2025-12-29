@@ -153,4 +153,44 @@ class ExternalLogistiqueApiService
     {
         return $this->request('get', "/invoices/{$id}");
     }
+
+    // === CONTENEURS ===
+
+    /**
+     * Envoie des conteneurs à l'API externe
+     * Les conteneurs avec le même booking_number seront groupés en un seul ordre de travail
+     */
+    public function sendContainers(array $data): array
+    {
+        Cache::forget('external_api_stats');
+        return $this->request('post', '/containers', $data);
+    }
+
+    /**
+     * Prépare et envoie les conteneurs depuis les sorties de conteneurs
+     */
+    public function sendContainersFromSorties(array $sorties): array
+    {
+        $grouped = collect($sorties)->groupBy('numero_bl');
+        
+        $results = [];
+        
+        foreach ($grouped as $bookingNumber => $containers) {
+            $firstContainer = $containers->first();
+            
+            $payload = [
+                'client_name' => $firstContainer['nom_client'],
+                'vessel_name' => $firstContainer['vessel_name'] ?? null,
+                'shipping_line' => $firstContainer['code_armateur'],
+                'containers' => $containers->map(fn($c) => [
+                    'booking_number' => $c['numero_bl'],
+                    'container_number' => $c['numero_conteneur'],
+                ])->values()->toArray(),
+            ];
+            
+            $results[$bookingNumber] = $this->sendContainers($payload);
+        }
+        
+        return $results;
+    }
 }
