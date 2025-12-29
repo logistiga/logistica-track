@@ -94,22 +94,14 @@ class SortieConteneurService {
   }
   async getSorties(): Promise<SortieConteneur[]> {
     try {
-      console.log('📡 Service: Fetching sorties from API...');
       const response = await apiService.get('/sorties');
-      console.log('📥 Service: API response received with', response.data.length, 'sorties');
-      console.log('📊 Service: Sorties statuses:', response.data.map((s: SortieConteneur) => ({ id: s.id, statut: s.statut })));
       return response.data;
     } catch (error) {
-      console.error('❌ Service: API call failed, trying localStorage fallback:', error);
-      
       // Fallback to localStorage
       const stored = this.getStoredSorties();
-      console.log('📊 Service: localStorage fallback data:', stored.map(s => ({ id: s.id, statut: s.statut })));
-      
       if (stored.length === 0) {
-        console.warn('⚠️ Service: No data in localStorage either');
+        console.warn('No data available from API or localStorage');
       }
-      
       return stored;
     }
   }
@@ -139,17 +131,9 @@ class SortieConteneurService {
   }
 
   async confirmerRetour(id: number, retourData: RetourData): Promise<SortieConteneur> {
-    console.log('🔄 Service: Confirming return for sortie ID:', id);
-    console.log('📤 Service: Return data received:', retourData);
-    
     try {
-      // Try API first
-      console.log('📡 Service: Attempting API call for return confirmation...');
       const response = await apiService.post(`/sorties/${id}/return`, retourData);
-      console.log('📥 Service: API response received:', response.data);
-      console.log('📈 Service: API returned status:', response.data.statut);
       
-      // Ensure the response has the correct status
       const updatedSortie = {
         ...response.data,
         statut: 'retourne_port' as const,
@@ -157,9 +141,7 @@ class SortieConteneurService {
         heure_retour: retourData.heure_retour || "12:00"
       };
       
-      console.log('✅ Service: Return confirmed via API with status:', updatedSortie.statut);
-      
-      // Update localStorage with the corrected data
+      // Update localStorage
       const sorties = this.getStoredSorties();
       const updatedSorties = sorties.map(s => s.id === id ? updatedSortie : s);
       this.saveSorties(updatedSorties);
@@ -167,37 +149,22 @@ class SortieConteneurService {
       return updatedSortie;
       
     } catch (apiError: any) {
-      console.error('❌ Service: API call failed, using localStorage fallback:', {
-        message: apiError.message,
-        status: apiError.response?.status,
-        data: apiError.response?.data
-      });
-      
       // Fallback to localStorage
       let sorties = this.getStoredSorties();
-      console.log('📊 Service: Current localStorage sorties:', sorties.map(s => ({ id: s.id, statut: s.statut })));
       
-      // If localStorage is empty, try to get fresh data from API
       if (sorties.length === 0) {
         try {
           const response = await apiService.get('/sorties');
           sorties = response.data;
-          console.log('📥 Service: Retrieved fresh data from API for localStorage update');
         } catch (getError) {
-          console.error('❌ Service: Could not retrieve data from API:', getError);
           throw new Error('Impossible de récupérer les données pour la mise à jour');
         }
       }
       
-      // Update the sortie with return data
       const sortieIndex = sorties.findIndex((s: SortieConteneur) => s.id === id);
       if (sortieIndex === -1) {
-        console.error('❌ Service: Sortie not found in data:', id);
         throw new Error('Sortie non trouvée');
       }
-      
-      console.log('📊 Service: Found sortie at index:', sortieIndex);
-      console.log('📈 Service: Current sortie status:', sorties[sortieIndex].statut);
       
       const updatedSortie = {
         ...sorties[sortieIndex],
@@ -207,14 +174,8 @@ class SortieConteneurService {
         updated_at: new Date().toISOString()
       };
       
-      console.log('🔄 Service: Updated sortie object:', updatedSortie);
-      console.log('📈 Service: New status:', updatedSortie.statut);
-      
       sorties[sortieIndex] = updatedSortie;
-      
-      // Save to localStorage
       this.saveSorties(sorties);
-      console.log('💾 Service: Saved updated data to localStorage');
       
       return updatedSortie;
     }

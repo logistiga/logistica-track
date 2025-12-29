@@ -6,34 +6,16 @@ import { useToast } from "@/hooks/use-toast";
 import { validateFormData, getEmptyFormData } from "@/utils/sortieUtils";
 import { useNotifications } from "@/hooks/useNotifications";
 
-// Fonction pour convertir l'API response vers le type local
+// Fonction optimisée pour convertir l'API response vers le type local
 const convertApiToLocal = (apiSortie: APISortieConteneur): SortieConteneur => {
-  console.log('🔄 Converting API sortie:', { 
-    id: apiSortie.id, 
-    statut: apiSortie.statut, 
-    date_retour: apiSortie.date_retour 
-  });
-  
   // Déterminer le statut basé sur la date de retour ET le statut explicite
   let mappedStatus: "en_cours" | "a_la_base" | "livre_client" | "retourne_port";
   
-  // Si le statut est explicitement 'retourne_port' OU qu'il y a une date de retour
   if (apiSortie.statut === 'retourne_port' || apiSortie.date_retour) {
     mappedStatus = "retourne_port";
-    console.log('📅 Setting status to retourne_port due to:', {
-      explicitStatus: apiSortie.statut === 'retourne_port',
-      hasReturnDate: !!apiSortie.date_retour
-    });
   } else {
-    // Sinon, mapper directement le statut de l'API
     mappedStatus = apiSortie.statut as "en_cours" | "a_la_base" | "livre_client" | "retourne_port";
   }
-  
-  console.log('📈 Final status mapping:', { 
-    original: apiSortie.statut, 
-    mapped: mappedStatus,
-    hasReturnDate: !!apiSortie.date_retour
-  });
   
   return {
     id: apiSortie.id.toString(),
@@ -81,17 +63,11 @@ export function useSortieConteneur() {
   const loadSorties = useCallback(async () => {
     try {
       setLoading(true);
-      console.log('🔄 Loading sorties...');
       const data = await sortieConteneurService.getSorties();
-      console.log('📥 Raw API data received:', data.map(s => ({ id: s.id, statut: s.statut })));
-      
       const convertedData = data.map(convertApiToLocal);
-      console.log('🔄 Converted data:', convertedData.map(s => ({ id: s.id, statut: s.statut })));
-      
       setSorties(convertedData);
-      console.log('✅ Sorties loaded successfully');
     } catch (error) {
-      console.error('❌ Error loading sorties:', error);
+      console.error('Error loading sorties:', error);
       toast({
         title: "Erreur",
         description: "Erreur lors du chargement des sorties",
@@ -262,10 +238,6 @@ export function useSortieConteneur() {
   const handleConfirmReturn = useCallback(async () => {
     if (!selectedSortie || !returnData.dateRetour) return;
 
-    console.log('🔄 Starting return confirmation for sortie:', selectedSortie.id);
-    console.log('📊 Current return data:', returnData);
-    console.log('📈 Sortie status before return:', selectedSortie.statut);
-
     try {
       const retourData = {
         date_retour: returnData.dateRetour,
@@ -274,17 +246,10 @@ export function useSortieConteneur() {
         remorque_retour_id: returnData.remorqueRetour ? parseInt(returnData.remorqueRetour) : undefined
       };
 
-      console.log('📤 Sending return data to service:', retourData);
-      const updated = await sortieConteneurService.confirmerRetour(parseInt(selectedSortie.id), retourData);
-      console.log('📥 Received updated sortie from service:', updated);
-      console.log('📈 Service returned status:', updated.statut);
+      await sortieConteneurService.confirmerRetour(parseInt(selectedSortie.id), retourData);
       
-      // Clear localStorage to force fresh data fetch
-      console.log('🧹 Clearing localStorage for fresh sync...');
+      // Clear localStorage and reload data
       localStorage.removeItem('sorties_conteneurs');
-      
-      // Reload all data to ensure complete synchronization
-      console.log('🔄 Reloading all data for synchronization...');
       await loadSorties();
       
       toast({
@@ -292,17 +257,13 @@ export function useSortieConteneur() {
         description: "Le retour au port a été enregistré."
       });
       
-      // Notification push
       notifications.notifySortieReturned(selectedSortie.numeroConteneur);
 
-      // Reset form
       setIsReturnDialogOpen(false);
       setSelectedSortie(null);
       setReturnData({ dateRetour: "", camionRetour: "", remorqueRetour: "", responsabilite: "" });
-      
-      console.log('✅ Return confirmation completed successfully');
     } catch (error) {
-      console.error('❌ Error during return confirmation:', error);
+      console.error('Error during return confirmation:', error);
       toast({
         title: "Erreur",
         description: "Erreur lors de la confirmation du retour",
@@ -318,25 +279,13 @@ export function useSortieConteneur() {
   }, []);
 
   const getSortiesEnCours = useCallback(() => {
-    const filtered = sorties.filter(s => {
-      // Exclude containers that are returned (either by status OR by having a return date)
+    return sorties.filter(s => {
       const isReturned = s.statut === "retourne_port" || !!s.dateRetour;
-      console.log('🔍 Filtering sortie:', { 
-        id: s.id, 
-        statut: s.statut, 
-        dateRetour: s.dateRetour,
-        isReturned,
-        includeInEnCours: !isReturned
-      });
       return !isReturned;
     });
-    console.log('📊 Sorties en cours final result:', filtered.length, 'out of', sorties.length);
-    console.log('📋 En cours IDs:', filtered.map(s => s.id));
-    return filtered;
   }, [sorties]);
 
   const getHistorique = useCallback(() => {
-    console.log('📚 Historique includes all sorties:', sorties.map(s => ({ id: s.id, statut: s.statut })));
     return sorties;
   }, [sorties]);
 
