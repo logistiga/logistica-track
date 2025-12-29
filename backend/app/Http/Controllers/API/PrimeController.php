@@ -195,6 +195,7 @@ class PrimeController extends Controller
 
     /**
      * Payer plusieurs primes en lot (par semaine)
+     * Validation: toutes les primes doivent avoir le même numéro de parc (immatriculation)
      */
     public function payerEnLot(Request $request): JsonResponse
     {
@@ -217,6 +218,20 @@ class PrimeController extends Controller
                 ], 404);
             }
 
+            // Vérifier que toutes les primes ont le même numéro de parc (immatriculation)
+            $immatriculations = $sorties->map(function ($sortie) {
+                return $sortie->camion?->immatriculation ?? 'N/A';
+            })->unique();
+
+            if ($immatriculations->count() > 1) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Toutes les primes sélectionnées doivent avoir le même numéro de parc. Immatriculations trouvées: ' . $immatriculations->implode(', '),
+                    'immatriculations' => $immatriculations->values(),
+                ], 422);
+            }
+
+            $immatriculationUnique = $immatriculations->first();
             $now = Carbon::now();
             $numeroSemaine = $now->format('Y') . '-S' . $now->weekOfYear;
             $montantTotal = 0;
@@ -224,14 +239,13 @@ class PrimeController extends Controller
             DB::beginTransaction();
 
             foreach ($sorties as $sortie) {
-                $immatriculation = $sortie->camion?->immatriculation ?? 'N/A';
                 $chauffeur = $sortie->camion?->libelle_complet ?? 'N/A';
                 
                 // Créer l'archive
                 PrimeArchive::create([
                     'sortie_id' => $sortie->id,
                     'numero_conteneur' => $sortie->numero_conteneur,
-                    'camion' => $immatriculation,
+                    'camion' => $immatriculationUnique,
                     'chauffeur' => $chauffeur,
                     'date_sortie' => $sortie->date_sortie,
                     'date_retour' => $sortie->date_retour,
@@ -261,6 +275,7 @@ class PrimeController extends Controller
                     'montant_total' => $montantTotal,
                     'montant_total_formatte' => number_format($montantTotal, 0, ',', ' ') . ' FCFA',
                     'numero_semaine' => $numeroSemaine,
+                    'immatriculation' => $immatriculationUnique,
                 ],
             ]);
         } catch (\Exception $e) {
