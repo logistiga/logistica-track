@@ -21,10 +21,7 @@ export default function PrimesChauffeur() {
     if (sortieIds.length === 0) {
       return;
     }
-    
-    if (confirm(`Confirmer le paiement de ${sortieIds.length} prime(s) sélectionnée(s) ?`)) {
-      await payerEnLot(sortieIds);
-    }
+    await payerEnLot(sortieIds);
   };
 
   const handleSubmitEdit = async (primeId: number, montant: number, observations: string) => {
