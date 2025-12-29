@@ -25,8 +25,7 @@ export function PrimeTable({ primes, onEdit, onPaySelected }: PrimeTableProps) {
 
   const filteredPrimes = primes.filter((prime) =>
     prime.numero_tc.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (prime.immatriculation && prime.immatriculation.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (prime.chauffeur && prime.chauffeur.toLowerCase().includes(searchTerm.toLowerCase()))
+    (prime.numero_parc && prime.numero_parc.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   // Vérifier si tous les primes sélectionnées ont le même numéro de parc
@@ -38,8 +37,8 @@ export function PrimeTable({ primes, onEdit, onPaySelected }: PrimeTableProps) {
     const selectedData = getSelectedPrimesData();
     if (selectedData.length <= 1) return true;
     
-    const firstParc = selectedData[0].immatriculation;
-    return selectedData.every(p => p.immatriculation === firstParc);
+    const firstParc = selectedData[0].numero_parc;
+    return selectedData.every(p => p.numero_parc === firstParc);
   };
 
   const togglePrime = (primeId: number) => {
@@ -144,8 +143,7 @@ export function PrimeTable({ primes, onEdit, onPaySelected }: PrimeTableProps) {
                     />
                   </TableHead>
                   <TableHead>N° Conteneur</TableHead>
-                  <TableHead>Immatriculation</TableHead>
-                  <TableHead>Chauffeur</TableHead>
+                  <TableHead>N° Parc</TableHead>
                   <TableHead>Date Sortie</TableHead>
                   <TableHead>Date Retour</TableHead>
                   <TableHead>Montant</TableHead>
@@ -156,7 +154,7 @@ export function PrimeTable({ primes, onEdit, onPaySelected }: PrimeTableProps) {
               <TableBody>
                 {filteredPrimes.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={9} className="text-center text-muted-foreground">
+                    <TableCell colSpan={8} className="text-center text-muted-foreground">
                       Aucune prime trouvée
                     </TableCell>
                   </TableRow>
@@ -164,8 +162,8 @@ export function PrimeTable({ primes, onEdit, onPaySelected }: PrimeTableProps) {
                   filteredPrimes.map((prime) => {
                     const isSelected = selectedPrimes.includes(prime.id);
                     const selectedData = getSelectedPrimesData();
-                    const firstSelectedParc = selectedData.length > 0 ? selectedData[0].immatriculation : null;
-                    const wouldBreakParc = firstSelectedParc && prime.immatriculation !== firstSelectedParc && !isSelected;
+                    const firstSelectedParc = selectedData.length > 0 ? selectedData[0].numero_parc : null;
+                    const wouldBreakParc = firstSelectedParc && prime.numero_parc !== firstSelectedParc && !isSelected;
                     
                     return (
                       <TableRow 
@@ -181,9 +179,8 @@ export function PrimeTable({ primes, onEdit, onPaySelected }: PrimeTableProps) {
                         </TableCell>
                         <TableCell className="font-medium">{prime.numero_tc}</TableCell>
                         <TableCell>
-                          <Badge variant="secondary">{prime.immatriculation || 'N/A'}</Badge>
+                          <Badge variant="secondary">{prime.numero_parc || 'N/A'}</Badge>
                         </TableCell>
-                        <TableCell>{prime.chauffeur || 'N/A'}</TableCell>
                         <TableCell>{new Date(prime.date_sortie).toLocaleDateString('fr-FR')}</TableCell>
                         <TableCell>
                           {prime.date_retour 
