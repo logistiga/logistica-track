@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { SortieConteneur } from "@/types/sortie-conteneur";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -36,10 +36,12 @@ export function SortieTable({
   const currentItems = sorties.slice(indexOfFirstItem, indexOfLastItem);
   const totalPages = Math.ceil(sorties.length / itemsPerPage);
 
-  // Réinitialiser à la page 1 si le nombre de sorties change
-  if (currentPage > totalPages && totalPages > 0) {
-    setCurrentPage(1);
-  }
+  // Réinitialiser à la page 1 si le nombre de sorties change (évite setState dans le render)
+  useEffect(() => {
+    if (totalPages > 0 && currentPage > totalPages) {
+      setCurrentPage(1);
+    }
+  }, [currentPage, totalPages]);
 
   if (sorties.length === 0) {
     return (
