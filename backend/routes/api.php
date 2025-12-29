@@ -46,6 +46,7 @@ Route::middleware('auth:sanctum')->group(function () {
     require __DIR__.'/modules/archives.php';
     require __DIR__.'/modules/base.php';
     require __DIR__.'/modules/primes.php';
+    require __DIR__.'/modules/external-logistique.php';
 });
 
 // Routes de fallback pour API non trouvée
