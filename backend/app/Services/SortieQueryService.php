@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\SortieConteneur;
+use Illuminate\Support\Facades\Schema;
 
 class SortieQueryService
 {
@@ -12,7 +13,10 @@ class SortieQueryService
     public function getAllSorties(array $filters = [])
     {
         $query = SortieConteneur::with(['armateur', 'camion', 'remorque'])
-            ->whereNull('archived_at');
+            ->when(
+                Schema::hasColumn((new SortieConteneur())->getTable(), 'archived_at'),
+                fn ($q) => $q->whereNull('archived_at')
+            );
 
         $this->applyFilters($query, $filters);
 
@@ -45,7 +49,10 @@ class SortieQueryService
     {
         $query = SortieConteneur::with(['armateur', 'camion', 'remorque'])
             ->where('statut', 'en_cours')
-            ->whereNull('archived_at');
+            ->when(
+                Schema::hasColumn((new SortieConteneur())->getTable(), 'archived_at'),
+                fn ($q) => $q->whereNull('archived_at')
+            );
 
         $this->applyBasicFilters($query, $filters);
 
@@ -59,7 +66,10 @@ class SortieQueryService
     {
         $query = SortieConteneur::with(['armateur', 'camion', 'remorque', 'camionRetour', 'remorqueRetour'])
             ->where('statut', 'retourne_port')
-            ->whereNull('archived_at');
+            ->when(
+                Schema::hasColumn((new SortieConteneur())->getTable(), 'archived_at'),
+                fn ($q) => $q->whereNull('archived_at')
+            );
 
         $this->applyBasicFilters($query, $filters);
 

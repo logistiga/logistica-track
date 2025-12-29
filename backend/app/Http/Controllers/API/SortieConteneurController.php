@@ -51,9 +51,15 @@ class SortieConteneurController extends Controller
                 'Sorties récupérées avec succès'
             );
 
-        } catch (\Exception $e) {
-            \Log::error('Error in index:', ['message' => $e->getMessage()]);
-            return $this->errorResponse('Erreur lors de la récupération des sorties', 500);
+        } catch (\Throwable $e) {
+            \Log::error('Error in index:', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+            return $this->errorResponse('Erreur lors de la récupération des sorties', 500, [
+                'debug' => $e->getMessage(),
+            ]);
         }
     }
 
