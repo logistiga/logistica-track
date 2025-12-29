@@ -11,12 +11,22 @@ class SortieQueryService
      */
     public function getAllSorties(array $filters = [])
     {
-        $query = SortieConteneur::with(['armateur', 'camion', 'remorque']);
+        $query = SortieConteneur::select([
+                'id', 'numero_conteneur', 'numero_bl', 'code_armateur', 
+                'camion_id', 'remorque_id', 'nom_client', 'adresse_client',
+                'destination', 'type_destination', 'date_sortie', 'date_retour',
+                'statut', 'prime_chauffeur', 'jours_bad', 'date_fin_franchise',
+                'nom_transitaire', 'numero_ordre', 'pv_sortie', 'pv_rentree_port',
+                'archived_at', 'created_at', 'updated_at'
+            ])
+            ->with(['armateur:id,code,nom,type_conteneur,jours_gratuits,prix_par_jour', 
+                    'camion:id,numero_parc,immatriculation,libelle_complet', 
+                    'remorque:id,numero_parc,immatriculation,libelle_complet']);
 
         $this->applyFilters($query, $filters);
 
-        // Pagination
-        $perPage = $filters['per_page'] ?? 100;
+        // Pagination réduite pour performance
+        $perPage = $filters['per_page'] ?? 30;
         
         $paginatedResult = $query->orderBy('date_sortie', 'desc')->paginate($perPage);
         
