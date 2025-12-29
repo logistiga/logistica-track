@@ -117,7 +117,7 @@ export function SortieTable({
                   <TableHead>Statut</TableHead>
                   <TableHead>Statut Détention</TableHead>
                   <TableHead>Prime Chauffeur</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead className="sticky right-0 z-20 bg-background border-l whitespace-nowrap">Actions</TableHead>
                 </TableRow>
               </TableHeader>
           <TableBody>
@@ -155,7 +155,7 @@ export function SortieTable({
                     maximumFractionDigits: 0,
                   }).format(sortie.primeChauffeur)}
                 </TableCell>
-                <TableCell>
+                <TableCell className="sticky right-0 z-20 bg-background border-l whitespace-nowrap">
                   <div className="flex items-center gap-2">
                     {onView && (
                       <Button
