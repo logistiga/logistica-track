@@ -3,8 +3,15 @@ export interface SortieConteneur {
   numeroConteneur: string;
   numeroBL: string;
   codeArmateur: string;
+
+  // Affichage (ex: numéro de parc)
   camion: string;
   remorque: string;
+
+  // IDs véhicules (pour édition / sauvegarde)
+  camionId?: string;
+  remorqueId?: string;
+
   primeChauffeur: number;
   nomClient: string;
   destination: "base" | "client";
