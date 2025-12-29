@@ -119,7 +119,7 @@ export function useVehicules() {
       .filter((c) => c.actif && (!c.statut || c.statut === 'disponible'))
       .map((c) => ({
         value: c.id.toString(),
-        label: `${c.numero_parc}`,
+        label: `${c.numero_parc} - ${c.immatriculation}`,
       }));
   };
 
@@ -128,7 +128,7 @@ export function useVehicules() {
       .filter((r) => r.actif && (!r.statut || r.statut === 'disponible'))
       .map((r) => ({
         value: r.id.toString(),
-        label: `${r.numero_parc}`,
+        label: `${r.numero_parc} - ${r.immatriculation}`,
       }));
   };
 
