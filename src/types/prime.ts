@@ -10,6 +10,8 @@ export interface PrimeChauffeur {
   statut_prime: 'en_attente' | 'paye';
   statut_prime_label: string;
   observations?: string;
+  nom_client?: string;
+  destination?: string;
 }
 
 export interface PrimeArchive {

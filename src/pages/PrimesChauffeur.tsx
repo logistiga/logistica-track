@@ -3,6 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PrimeStats } from "@/components/primes/PrimeStats";
 import { PrimeTable } from "@/components/primes/PrimeTable";
 import { PrimeArchiveTable } from "@/components/primes/PrimeArchiveTable";
+import { PrimePaymentTab } from "@/components/primes/PrimePaymentTab";
 import { PrimeDialog } from "@/components/primes/PrimeDialog";
 import { usePrimes } from "@/hooks/usePrimes";
 import type { PrimeChauffeur } from "@/types/prime";
@@ -45,6 +46,7 @@ export default function PrimesChauffeur() {
       <Tabs defaultValue="en-cours" className="space-y-6">
         <TabsList>
           <TabsTrigger value="en-cours">Primes en attente</TabsTrigger>
+          <TabsTrigger value="paiement">Gestion Paiement</TabsTrigger>
           <TabsTrigger value="archives">Archives</TabsTrigger>
         </TabsList>
 
@@ -52,6 +54,13 @@ export default function PrimesChauffeur() {
           <PrimeTable
             primes={primes}
             onEdit={handleEdit}
+            onPaySelected={handlePaySelected}
+          />
+        </TabsContent>
+
+        <TabsContent value="paiement" className="space-y-4">
+          <PrimePaymentTab
+            primes={primes}
             onPaySelected={handlePaySelected}
           />
         </TabsContent>
