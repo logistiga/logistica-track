@@ -30,8 +30,8 @@ export function PrimePaymentDialog({
 }: PrimePaymentDialogProps) {
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Grouper par numéro de parc (immatriculation)
-  const parcNumber = selectedPrimes.length > 0 ? selectedPrimes[0].immatriculation : null;
+  // Grouper par numéro de parc
+  const parcNumber = selectedPrimes.length > 0 ? selectedPrimes[0].numero_parc : null;
   
   const totalAmount = selectedPrimes.reduce((sum, p) => sum + (p.prime_chauffeur || 0), 0);
   const containerCount = selectedPrimes.length;

@@ -1,6 +1,7 @@
 export interface PrimeChauffeur {
   id: number;
   numero_tc: string;
+  numero_parc?: string;
   immatriculation?: string;
   chauffeur?: string;
   date_sortie: string;

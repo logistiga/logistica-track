@@ -58,20 +58,17 @@ class PrimeController extends Controller
 
             // Mapper les données pour le format attendu par le frontend
             $primes = $sorties->map(function ($sortie) {
-                // L'immatriculation vient du camion
-                $immatriculation = $sortie->camion?->immatriculation ?? 'N/A';
-                
-                // Le chauffeur n'est pas encore dans la base - utiliser le libellé du camion temporairement
-                $chauffeur = $sortie->camion?->libelle_complet ?? 'N/A';
+                // Le numéro de parc vient du camion
+                $numeroParc = $sortie->camion?->numero_parc ?? 'N/A';
                 
                 return [
                     'id' => $sortie->id,
                     'sortie_id' => $sortie->id,
                     'numero_tc' => $sortie->numero_conteneur,
-                    'immatriculation' => $immatriculation,
-                    'chauffeur' => $chauffeur,
+                    'numero_parc' => $numeroParc,
                     'date_sortie' => $sortie->date_sortie,
                     'date_retour' => $sortie->date_retour,
+                    'prime_chauffeur' => (float) $sortie->prime_chauffeur,
                     'montant_prime' => (float) $sortie->prime_chauffeur,
                     'montant_prime_formatte' => number_format($sortie->prime_chauffeur, 0, ',', ' ') . ' FCFA',
                     'statut' => $sortie->date_retour ? 'retourne' : 'en_cours',

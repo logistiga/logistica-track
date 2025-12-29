@@ -16,7 +16,7 @@ interface PrimePaymentTabProps {
 }
 
 interface VehicleGroup {
-  immatriculation: string;
+  numeroParc: string;
   primes: PrimeChauffeur[];
   totalMontant: number;
   nombreConteneurs: number;
@@ -28,38 +28,38 @@ export function PrimePaymentTab({ primes, onPaySelected }: PrimePaymentTabProps)
   const [selectedPrimes, setSelectedPrimes] = useState<number[]>([]);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
 
-  // Grouper les primes par véhicule (immatriculation)
+  // Grouper les primes par véhicule (numero_parc)
   const vehicleGroups = useMemo(() => {
     const groups: Record<string, VehicleGroup> = {};
     
     primes.forEach((prime) => {
-      const immat = prime.immatriculation || 'N/A';
-      if (!groups[immat]) {
-        groups[immat] = {
-          immatriculation: immat,
+      const parc = prime.numero_parc || 'N/A';
+      if (!groups[parc]) {
+        groups[parc] = {
+          numeroParc: parc,
           primes: [],
           totalMontant: 0,
           nombreConteneurs: 0
         };
       }
-      groups[immat].primes.push(prime);
-      groups[immat].totalMontant += prime.prime_chauffeur || 0;
-      groups[immat].nombreConteneurs += 1;
+      groups[parc].primes.push(prime);
+      groups[parc].totalMontant += prime.prime_chauffeur || 0;
+      groups[parc].nombreConteneurs += 1;
     });
 
     return Object.values(groups).filter(group => 
-      group.immatriculation.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      group.numeroParc.toLowerCase().includes(searchTerm.toLowerCase()) ||
       group.primes.some(p => p.numero_tc.toLowerCase().includes(searchTerm.toLowerCase()))
     );
   }, [primes, searchTerm]);
 
-  const handleSelectVehicle = (immat: string) => {
-    if (selectedVehicle === immat) {
+  const handleSelectVehicle = (parc: string) => {
+    if (selectedVehicle === parc) {
       setSelectedVehicle(null);
       setSelectedPrimes([]);
     } else {
-      setSelectedVehicle(immat);
-      const group = vehicleGroups.find(g => g.immatriculation === immat);
+      setSelectedVehicle(parc);
+      const group = vehicleGroups.find(g => g.numeroParc === parc);
       if (group) {
         setSelectedPrimes(group.primes.map(p => p.id));
       }
@@ -87,7 +87,7 @@ export function PrimePaymentTab({ primes, onPaySelected }: PrimePaymentTabProps)
   };
 
   const selectedGroup = selectedVehicle 
-    ? vehicleGroups.find(g => g.immatriculation === selectedVehicle)
+    ? vehicleGroups.find(g => g.numeroParc === selectedVehicle)
     : null;
 
   return (
@@ -115,17 +115,17 @@ export function PrimePaymentTab({ primes, onPaySelected }: PrimePaymentTabProps)
           ) : (
             vehicleGroups.map((group) => (
               <div
-                key={group.immatriculation}
-                onClick={() => handleSelectVehicle(group.immatriculation)}
+                key={group.numeroParc}
+                onClick={() => handleSelectVehicle(group.numeroParc)}
                 className={`p-4 rounded-lg border cursor-pointer transition-colors ${
-                  selectedVehicle === group.immatriculation 
+                  selectedVehicle === group.numeroParc 
                     ? "bg-primary/10 border-primary" 
                     : "hover:bg-muted/50"
                 }`}
               >
                 <div className="flex justify-between items-start">
                   <div>
-                    <Badge variant="secondary" className="mb-2">{group.immatriculation}</Badge>
+                    <Badge variant="secondary" className="mb-2">{group.numeroParc}</Badge>
                     <p className="text-sm text-muted-foreground">
                       {group.nombreConteneurs} conteneur(s)
                     </p>
@@ -146,7 +146,7 @@ export function PrimePaymentTab({ primes, onPaySelected }: PrimePaymentTabProps)
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <CardTitle>
               {selectedGroup 
-                ? `Primes - ${selectedGroup.immatriculation}`
+                ? `Primes - ${selectedGroup.numeroParc}`
                 : "Sélectionnez un véhicule"
               }
             </CardTitle>
