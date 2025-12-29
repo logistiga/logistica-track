@@ -11,14 +11,10 @@ export function useVehicules() {
     try {
       setLoading(true);
       const vehicules = await vehiculeService.getVehicules();
-      console.log('Véhicules reçus:', vehicules);
-      
+
       const camionsFiltered = vehicules.filter(v => v.type === 'camion');
       const remorquesFiltered = vehicules.filter(v => v.type === 'remorque');
-      
-      console.log('Camions filtrés:', camionsFiltered);
-      console.log('Remorques filtrées:', remorquesFiltered);
-      
+
       setCamions(camionsFiltered);
       setRemorques(remorquesFiltered);
     } catch (error) {
@@ -123,7 +119,7 @@ export function useVehicules() {
       .filter((c) => c.actif && (!c.statut || c.statut === 'disponible'))
       .map((c) => ({
         value: c.id.toString(),
-        label: `${c.numero_parc} - ${c.immatriculation}`,
+        label: `${c.numero_parc}`,
       }));
   };
 
@@ -132,14 +128,14 @@ export function useVehicules() {
       .filter((r) => r.actif && (!r.statut || r.statut === 'disponible'))
       .map((r) => ({
         value: r.id.toString(),
-        label: `${r.numero_parc} - ${r.immatriculation}`,
+        label: `${r.numero_parc}`,
       }));
   };
 
   const getVehiculeDisplay = (id: number): string => {
     const allVehicules = [...camions, ...remorques];
     const vehicule = allVehicules.find(v => v.id === id);
-    return vehicule ? `${vehicule.numero_parc} - ${vehicule.immatriculation}` : '';
+    return vehicule ? `${vehicule.numero_parc}` : '';
   };
 
   return {

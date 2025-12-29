@@ -10,20 +10,31 @@ import { useNotifications } from "@/hooks/useNotifications";
 const convertApiToLocal = (apiSortie: APISortieConteneur): SortieConteneur => {
   // Déterminer le statut basé sur la date de retour ET le statut explicite
   let mappedStatus: "en_cours" | "a_la_base" | "livre_client" | "retourne_port";
-  
-  if (apiSortie.statut === 'retourne_port' || apiSortie.date_retour) {
+
+  if (apiSortie.statut === "retourne_port" || apiSortie.date_retour) {
     mappedStatus = "retourne_port";
   } else {
     mappedStatus = apiSortie.statut as "en_cours" | "a_la_base" | "livre_client" | "retourne_port";
   }
-  
+
+  const camionId = (apiSortie.camion_id ?? apiSortie.vehicule_camion_id)?.toString();
+  const remorqueId = (apiSortie.remorque_id ?? apiSortie.vehicule_remorque_id)?.toString();
+
+  // Afficher le N° Parc (même valeur que dans Matériel)
+  const camionNumeroParc = apiSortie.camion?.numero_parc ?? apiSortie.vehicule_camion?.numero_parc;
+  const remorqueNumeroParc = apiSortie.remorque?.numero_parc ?? apiSortie.vehicule_remorque?.numero_parc;
+
   return {
     id: apiSortie.id.toString(),
     numeroConteneur: apiSortie.numero_conteneur,
     numeroBL: apiSortie.numero_bl,
     codeArmateur: apiSortie.armateur?.code || apiSortie.armateur_id.toString(),
-    camion: apiSortie.camion?.libelle_complet || apiSortie.vehicule_camion?.numero_parc || apiSortie.camion_id?.toString() || "",
-    remorque: apiSortie.remorque?.libelle_complet || apiSortie.vehicule_remorque?.numero_parc || apiSortie.remorque_id?.toString() || "",
+
+    camion: camionNumeroParc || "",
+    remorque: remorqueNumeroParc || "",
+    camionId,
+    remorqueId,
+
     primeChauffeur: apiSortie.prime_chauffeur || 0,
     nomClient: apiSortie.nom_client,
     destination: apiSortie.destination as "base" | "client",
@@ -34,7 +45,7 @@ const convertApiToLocal = (apiSortie: APISortieConteneur): SortieConteneur => {
     nomTransitaire: apiSortie.nom_transitaire,
     dateSortie: apiSortie.date_sortie,
     dateRetour: apiSortie.date_retour,
-    statut: mappedStatus
+    statut: mappedStatus,
   };
 };
 
@@ -173,8 +184,8 @@ export function useSortieConteneur() {
       numeroConteneur: sortie.numeroConteneur,
       numeroBL: sortie.numeroBL,
       codeArmateur: sortie.codeArmateur,
-      camion: sortie.camion,
-      remorque: sortie.remorque,
+      camion: sortie.camionId || "",
+      remorque: sortie.remorqueId || "",
       primeChauffeur: sortie.primeChauffeur?.toString() || "",
       nomClient: sortie.nomClient,
       destination: sortie.destination,
@@ -183,7 +194,7 @@ export function useSortieConteneur() {
       joursBAD: sortie.joursBAD?.toString() || "",
       dateFinFranchise: sortie.dateFinFranchise || "",
       nomTransitaire: sortie.nomTransitaire || "",
-      dateSortie: sortie.dateSortie
+      dateSortie: sortie.dateSortie,
     });
     setIsAddDialogOpen(true);
   }, []);
