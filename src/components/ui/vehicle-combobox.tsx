@@ -1,9 +1,5 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Check, ChevronsUpDown } from "lucide-react";
@@ -25,6 +21,12 @@ export function VehicleCombobox({
   emptyText 
 }: VehicleComboboxProps) {
   const [open, setOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Filtrer les options basé sur le label (pas le value)
+  const filteredOptions = options.filter((option) =>
+    option.label.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -41,21 +43,30 @@ export function VehicleCombobox({
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-full p-0 bg-background border border-border shadow-lg" style={{ zIndex: 50 }}>
-        <Command className="bg-background">
-          <CommandInput placeholder={`Rechercher ${placeholder.toLowerCase()}...`} />
-          <CommandList>
+      <PopoverContent 
+        className="w-[var(--radix-popover-trigger-width)] p-0 bg-background border border-border shadow-lg" 
+        style={{ zIndex: 9999 }}
+        align="start"
+      >
+        <Command className="bg-background" shouldFilter={false}>
+          <CommandInput 
+            placeholder={`Rechercher ${placeholder.toLowerCase()}...`}
+            value={searchQuery}
+            onValueChange={setSearchQuery}
+          />
+          <CommandList className="max-h-[300px] overflow-y-auto">
             <CommandEmpty>{emptyText}</CommandEmpty>
             <CommandGroup>
-              {options.map((option) => (
+              {filteredOptions.map((option) => (
                 <CommandItem
                   key={option.value}
                   value={option.value}
-                  onSelect={(currentValue) => {
-                    onValueChange(currentValue === value ? "" : currentValue);
+                  onSelect={() => {
+                    onValueChange(option.value === value ? "" : option.value);
                     setOpen(false);
+                    setSearchQuery("");
                   }}
-                  className="hover:bg-accent"
+                  className="hover:bg-accent cursor-pointer"
                 >
                   <Check
                     className={cn(
