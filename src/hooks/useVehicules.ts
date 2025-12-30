@@ -113,23 +113,19 @@ export function useVehicules() {
   }, []);
 
   // Méthodes utilitaires pour compatibilité avec l'existant
-  // Si statut est null/undefined, on considère le véhicule comme disponible
+  // Afficher tous les véhicules (sans filtrer par statut / actif)
   const getCamionOptions = () => {
-    return camions
-      .filter((c) => c.actif && (!c.statut || c.statut === 'disponible'))
-      .map((c) => ({
-        value: c.id.toString(),
-        label: `${c.numero_parc} - ${c.immatriculation}`,
-      }));
+    return camions.map((c) => ({
+      value: c.id.toString(),
+      label: `${c.numero_parc} - ${c.immatriculation}`,
+    }));
   };
 
   const getRemorqueOptions = () => {
-    return remorques
-      .filter((r) => r.actif && (!r.statut || r.statut === 'disponible'))
-      .map((r) => ({
-        value: r.id.toString(),
-        label: `${r.numero_parc} - ${r.immatriculation}`,
-      }));
+    return remorques.map((r) => ({
+      value: r.id.toString(),
+      label: `${r.numero_parc} - ${r.immatriculation}`,
+    }));
   };
 
   const getVehiculeDisplay = (id: number): string => {

@@ -11,7 +11,7 @@ class VehiculeService
      */
     public function getAllVehicules(array $filters = [])
     {
-        $query = Vehicule::where('actif', true);
+        $query = Vehicule::query();
 
         // Filtres
         if (isset($filters['type'])) {
