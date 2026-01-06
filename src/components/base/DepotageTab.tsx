@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,12 +8,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Package, Plus, Pencil, Trash2, CheckCircle } from "lucide-react";
 import { DepotageForm } from "./DepotageForm";
 import { DepotageStats } from "./DepotageStats";
+import { StatusBadge } from "./shared/StatusBadge";
 import { depotageService, Depotage } from "@/services/depotageService";
 import { useToast } from "@/components/ui/use-toast";
+import { transformVehiculesToParc, VehiculeTransform, formatDateFr } from "@/utils/baseUtils";
 
 interface DepotageTabProps {
-  camions: Array<{id: string, numeroParc: string, immatriculation: string, statut: string}>;
-  remorques: Array<{id: string, numeroParc: string, immatriculation: string, statut: string}>;
+  camions: VehiculeTransform[];
+  remorques: VehiculeTransform[];
 }
 
 export function DepotageTab({ camions, remorques }: DepotageTabProps) {
@@ -24,11 +26,11 @@ export function DepotageTab({ camions, remorques }: DepotageTabProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const { toast } = useToast();
 
-  useEffect(() => {
-    loadDepotages();
-  }, []);
+  // Mémoriser les transformations de véhicules
+  const camionsParc = useMemo(() => transformVehiculesToParc(camions), [camions]);
+  const remorquesParc = useMemo(() => transformVehiculesToParc(remorques), [remorques]);
 
-  const loadDepotages = async () => {
+  const loadDepotages = useCallback(async () => {
     try {
       setLoading(true);
       const response = await depotageService.getDepotages();
@@ -43,34 +45,22 @@ export function DepotageTab({ camions, remorques }: DepotageTabProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
 
-  // Transform vehicle data for forms
-  const camionsParc = camions.map(c => ({ id: c.id, numeroParc: c.numeroParc }));
-  const remorquesParc = remorques.map(r => ({ id: r.id, numeroParc: r.numeroParc }));
+  useEffect(() => {
+    loadDepotages();
+  }, [loadDepotages]);
 
-  const filteredDepotages = depotages.filter(depotage =>
-    depotage.nom_client.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    depotage.numero_conteneur.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredDepotages = useMemo(() => 
+    depotages.filter(depotage =>
+      depotage.nom_client.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      depotage.numero_conteneur.toLowerCase().includes(searchTerm.toLowerCase())
+    ),
+  [depotages, searchTerm]);
 
-  const getStatusBadge = (statut: string) => {
-    switch (statut) {
-      case 'en_cours':
-        return <Badge variant="default">En cours</Badge>;
-      case 'termine':
-        return <Badge variant="secondary">Terminé</Badge>;
-      case 'annule':
-        return <Badge variant="destructive">Annulé</Badge>;
-      default:
-        return <Badge variant="outline">{statut}</Badge>;
-    }
-  };
-
-  const handleAddDepotage = async (formData: any) => {
+  const handleAddDepotage = useCallback(async (formData: any) => {
     try {
-      // Map form data to service interface
-      const depotageData = {
+      await depotageService.createDepotage({
         nom_client: formData.nomClient,
         numero_conteneur: formData.numeroConteneur,
         provenance: formData.provenance,
@@ -81,57 +71,34 @@ export function DepotageTab({ camions, remorques }: DepotageTabProps) {
         type_marchandise: formData.typeMarchandise,
         prix_depotage: formData.prixDepotage,
         observations: formData.observations,
-      };
-      
-      await depotageService.createDepotage(depotageData);
+      });
       setShowDialog(false);
       loadDepotages();
-      toast({
-        title: "Succès",
-        description: "Dépotage créé avec succès",
-      });
+      toast({ title: "Succès", description: "Dépotage créé avec succès" });
     } catch (error) {
-      toast({
-        title: "Erreur",
-        description: "Impossible de créer le dépotage",
-        variant: "destructive",
-      });
+      toast({ title: "Erreur", description: "Impossible de créer le dépotage", variant: "destructive" });
     }
-  };
+  }, [loadDepotages, toast]);
 
-  const handleTerminerDepotage = async (depotage: Depotage) => {
+  const handleTerminerDepotage = useCallback(async (depotage: Depotage) => {
     try {
       await depotageService.terminerDepotage(depotage.id);
       loadDepotages();
-      toast({
-        title: "Succès",
-        description: `Dépotage du conteneur ${depotage.numero_conteneur} terminé`,
-      });
+      toast({ title: "Succès", description: `Dépotage du conteneur ${depotage.numero_conteneur} terminé` });
     } catch (error) {
-      toast({
-        title: "Erreur",
-        description: "Impossible de terminer le dépotage",
-        variant: "destructive",
-      });
+      toast({ title: "Erreur", description: "Impossible de terminer le dépotage", variant: "destructive" });
     }
-  };
+  }, [loadDepotages, toast]);
 
-  const handleDeleteDepotage = async (depotage: Depotage) => {
+  const handleDeleteDepotage = useCallback(async (depotage: Depotage) => {
     try {
       await depotageService.deleteDepotage(depotage.id);
       loadDepotages();
-      toast({
-        title: "Succès",
-        description: "Dépotage supprimé avec succès",
-      });
+      toast({ title: "Succès", description: "Dépotage supprimé avec succès" });
     } catch (error) {
-      toast({
-        title: "Erreur",
-        description: "Impossible de supprimer le dépotage",
-        variant: "destructive",
-      });
+      toast({ title: "Erreur", description: "Impossible de supprimer le dépotage", variant: "destructive" });
     }
-  };
+  }, [loadDepotages, toast]);
 
   if (loading) {
     return <div className="text-center py-8">Chargement des dépotages...</div>;
@@ -139,10 +106,8 @@ export function DepotageTab({ camions, remorques }: DepotageTabProps) {
 
   return (
     <div className="space-y-6">
-      {/* Stats */}
       <DepotageStats />
       
-      {/* Search and Add */}
       <div className="flex items-center justify-between">
         <Input
           placeholder="Rechercher par client ou conteneur..."
@@ -156,7 +121,6 @@ export function DepotageTab({ camions, remorques }: DepotageTabProps) {
         </Button>
       </div>
 
-      {/* Depotage Table */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
@@ -184,7 +148,7 @@ export function DepotageTab({ camions, remorques }: DepotageTabProps) {
                 <TableRow key={depotage.id}>
                   <TableCell className="font-medium">{depotage.nom_client}</TableCell>
                   <TableCell>{depotage.numero_conteneur}</TableCell>
-                  <TableCell>{new Date(depotage.date_depotage).toLocaleDateString()}</TableCell>
+                  <TableCell>{formatDateFr(depotage.date_depotage)}</TableCell>
                   <TableCell>{depotage.type_marchandise}</TableCell>
                   <TableCell>
                     <div className="text-sm">
@@ -193,7 +157,9 @@ export function DepotageTab({ camions, remorques }: DepotageTabProps) {
                     </div>
                   </TableCell>
                   <TableCell>{depotage.prix_depotage_formate || `${depotage.prix_depotage?.toLocaleString()} FCFA`}</TableCell>
-                  <TableCell>{getStatusBadge(depotage.statut)}</TableCell>
+                  <TableCell>
+                    <StatusBadge statut={depotage.statut} type="depotage" />
+                  </TableCell>
                   <TableCell>
                     <div className="flex space-x-1">
                       {depotage.statut === 'en_cours' && (
@@ -233,7 +199,6 @@ export function DepotageTab({ camions, remorques }: DepotageTabProps) {
         </CardContent>
       </Card>
 
-      {/* Add/Edit Dialog */}
       <Dialog open={showDialog} onOpenChange={(open) => {
         setShowDialog(open);
         if (!open) setSelectedDepotage(null);
