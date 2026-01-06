@@ -1,23 +1,21 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { armateurService, type Armateur, type CreateArmateurData } from '@/services/armateurService';
 import { toast } from '@/hooks/use-toast';
+import { getArmateurSelectOptions, getArmateurLabel } from '@/utils/armateurUtils';
 
 export function useArmateurs() {
   const [armateurs, setArmateurs] = useState<Armateur[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchArmateurs = async () => {
+  const fetchArmateurs = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      console.log('🔄 Chargement des armateurs...');
       const data = await armateurService.getArmateurs();
-      console.log('✅ Armateurs chargés:', data);
       setArmateurs(data);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erreur lors du chargement des armateurs';
-      console.error('❌ Erreur chargement armateurs:', err);
       setError(errorMessage);
       toast({
         title: "Erreur",
@@ -27,93 +25,77 @@ export function useArmateurs() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const createArmateur = async (data: CreateArmateurData): Promise<boolean> => {
-    try {
-      const newArmateur = await armateurService.createArmateur(data);
-      setArmateurs(prev => [...prev, newArmateur]);
-      toast({
-        title: "Succès",
-        description: "Armateur créé avec succès",
-      });
-      return true;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erreur lors de la création';
-      toast({
-        title: "Erreur",
-        description: errorMessage,
-        variant: "destructive",
-      });
-      return false;
-    }
-  };
-
-  const updateArmateur = async (id: number, data: Partial<CreateArmateurData>): Promise<boolean> => {
-    try {
-      const updatedArmateur = await armateurService.updateArmateur(id, data);
-      setArmateurs(prev => prev.map(a => a.id === id ? updatedArmateur : a));
-      toast({
-        title: "Succès",
-        description: "Armateur modifié avec succès",
-      });
-      return true;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erreur lors de la modification';
-      toast({
-        title: "Erreur",
-        description: errorMessage,
-        variant: "destructive",
-      });
-      return false;
-    }
-  };
-
-  const deleteArmateur = async (id: number): Promise<boolean> => {
-    try {
-      await armateurService.deleteArmateur(id);
-      setArmateurs(prev => prev.filter(a => a.id !== id));
-      toast({
-        title: "Succès",
-        description: "Armateur supprimé avec succès",
-      });
-      return true;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erreur lors de la suppression';
-      toast({
-        title: "Erreur",
-        description: errorMessage,
-        variant: "destructive",
-      });
-      return false;
-    }
-  };
-
-  // Méthodes utilitaires pour compatibilité avec l'existant
-  const getArmateurByCode = (code: string): Armateur | undefined => {
-    return armateurs.find(a => a.code === code);
-  };
-
-  const getArmateurById = (id: number): Armateur | undefined => {
-    return armateurs.find(a => a.id === id);
-  };
-
-  const getArmateurOptions = () => {
-    console.log('📋 Armateurs disponibles pour options:', armateurs);
-    return armateurs.map(a => ({
-      value: a.code,
-      label: `${a.code} - ${a.nom}`,
-    }));
-  };
-
-  const getArmateurDisplay = (id: number): string => {
-    const armateur = getArmateurById(id);
-    return armateur ? `${armateur.code} - ${armateur.nom}` : '';
-  };
+  }, []);
 
   useEffect(() => {
     fetchArmateurs();
+  }, [fetchArmateurs]);
+
+  const createArmateur = useCallback(async (data: CreateArmateurData): Promise<boolean> => {
+    try {
+      const newArmateur = await armateurService.createArmateur(data);
+      setArmateurs(prev => [...prev, newArmateur]);
+      toast({ title: "Succès", description: "Armateur créé avec succès" });
+      return true;
+    } catch (err) {
+      toast({
+        title: "Erreur",
+        description: err instanceof Error ? err.message : 'Erreur lors de la création',
+        variant: "destructive",
+      });
+      return false;
+    }
   }, []);
+
+  const updateArmateur = useCallback(async (id: number, data: Partial<CreateArmateurData>): Promise<boolean> => {
+    try {
+      const updatedArmateur = await armateurService.updateArmateur(id, data);
+      setArmateurs(prev => prev.map(a => a.id === id ? updatedArmateur : a));
+      toast({ title: "Succès", description: "Armateur modifié avec succès" });
+      return true;
+    } catch (err) {
+      toast({
+        title: "Erreur",
+        description: err instanceof Error ? err.message : 'Erreur lors de la modification',
+        variant: "destructive",
+      });
+      return false;
+    }
+  }, []);
+
+  const deleteArmateur = useCallback(async (id: number): Promise<boolean> => {
+    try {
+      await armateurService.deleteArmateur(id);
+      setArmateurs(prev => prev.filter(a => a.id !== id));
+      toast({ title: "Succès", description: "Armateur supprimé avec succès" });
+      return true;
+    } catch (err) {
+      toast({
+        title: "Erreur",
+        description: err instanceof Error ? err.message : 'Erreur lors de la suppression',
+        variant: "destructive",
+      });
+      return false;
+    }
+  }, []);
+
+  // Méthodes utilitaires - memoized
+  const getArmateurByCode = useCallback((code: string): Armateur | undefined => {
+    return armateurs.find(a => a.code === code);
+  }, [armateurs]);
+
+  const getArmateurById = useCallback((id: number): Armateur | undefined => {
+    return armateurs.find(a => a.id === id);
+  }, [armateurs]);
+
+  const getArmateurOptions = useCallback(() => {
+    return getArmateurSelectOptions(armateurs);
+  }, [armateurs]);
+
+  const getArmateurDisplay = useCallback((id: number): string => {
+    const armateur = armateurs.find(a => a.id === id);
+    return armateur ? getArmateurLabel(armateur) : '';
+  }, [armateurs]);
 
   return {
     armateurs,

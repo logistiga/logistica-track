@@ -4,32 +4,23 @@ namespace App\Services;
 
 use App\Models\Armateur;
 use App\Models\Detention;
-use Illuminate\Support\Facades\DB;
 
 class ArmateurService
 {
-    /**
-     * Récupérer tous les armateurs actifs avec filtres
-     */
-    public function getAllArmateurs(array $filters = [])
+    protected ArmateurQueryService $queryService;
+
+    public function __construct(ArmateurQueryService $queryService)
     {
-        $query = Armateur::where('actif', true);
+        $this->queryService = $queryService;
+    }
 
-        if (isset($filters['type_conteneur'])) {
-            $query->where('type_conteneur', $filters['type_conteneur']);
-        }
-
-        if (isset($filters['search'])) {
-            $search = $filters['search'];
-            $query->where(function ($q) use ($search) {
-                $q->where('code', 'like', "%{$search}%")
-                  ->orWhere('nom', 'like', "%{$search}%")
-                  ->orWhere('type_conteneur', 'like', "%{$search}%");
-            });
-        }
-
+    /**
+     * Récupérer tous les armateurs avec filtres (paginé)
+     */
+    public function getAllArmateurs(array $filters = []): array
+    {
         $perPage = $filters['per_page'] ?? 15;
-        $result = $query->orderBy('nom')->paginate($perPage);
+        $result = $this->queryService->getPaginated($filters, $perPage);
         
         return [
             'data' => $result->items(),
@@ -49,26 +40,17 @@ class ArmateurService
     }
 
     /**
-     * Obtenir les armateurs actifs pour les sélections
+     * Obtenir les armateurs pour les sélections
      */
-    public function getArmateursPourSelection()
+    public function getArmateursPourSelection(): array
     {
-        return Armateur::where('actif', true)
-            ->select('id', 'code', 'nom', 'type_conteneur')
-            ->orderBy('nom')
-            ->get()
-            ->map(function ($armateur) {
-                return [
-                    'value' => $armateur->code,
-                    'label' => "{$armateur->code} - {$armateur->nom} ({$armateur->type_conteneur})"
-                ];
-            });
+        return $this->queryService->getOptions();
     }
 
     /**
      * Créer un nouvel armateur
      */
-    public function createArmateur(array $data)
+    public function createArmateur(array $data): Armateur
     {
         return Armateur::create($data);
     }
@@ -76,7 +58,7 @@ class ArmateurService
     /**
      * Mettre à jour un armateur
      */
-    public function updateArmateur(Armateur $armateur, array $data)
+    public function updateArmateur(Armateur $armateur, array $data): Armateur
     {
         $armateur->update($data);
         return $armateur->fresh();
@@ -85,7 +67,7 @@ class ArmateurService
     /**
      * Supprimer un armateur
      */
-    public function deleteArmateur(Armateur $armateur)
+    public function deleteArmateur(Armateur $armateur): bool
     {
         return $armateur->delete();
     }
@@ -93,41 +75,32 @@ class ArmateurService
     /**
      * Statistiques de détention pour un armateur
      */
-    public function getDetentionStats(Armateur $armateur)
+    public function getDetentionStats(Armateur $armateur): array
     {
-        $baseQuery = function () use ($armateur) {
-            return Detention::whereHas('sortieConteneur', function ($query) use ($armateur) {
-                $query->where('code_armateur', $armateur->code);
-            });
-        };
-
-        $totalDetentions = $baseQuery()->count();
-        $detentionActive = $baseQuery()->where('statut', 'active')->count();
-        $totalMontant = $baseQuery()->sum('cout_total') ?? 0;
-        $moyenneJours = $baseQuery()->avg('jours_detention') ?? 0;
-        $derniereDetention = $baseQuery()->latest('created_at')->first()?->created_at;
+        $baseQuery = fn() => Detention::whereHas('sortieConteneur', fn($q) => 
+            $q->where('code_armateur', $armateur->code)
+        );
 
         return [
-            'total_detentions' => $totalDetentions,
-            'detention_active' => $detentionActive,
-            'total_montant' => round($totalMontant, 2),
-            'moyenne_jours' => round($moyenneJours, 1),
-            'derniere_detention' => $derniereDetention?->format('Y-m-d H:i:s'),
+            'total_detentions' => $baseQuery()->count(),
+            'detention_active' => $baseQuery()->where('statut', 'active')->count(),
+            'total_montant' => round($baseQuery()->sum('cout_total') ?? 0, 2),
+            'moyenne_jours' => round($baseQuery()->avg('jours_detention') ?? 0, 1),
+            'derniere_detention' => $baseQuery()->latest('created_at')->first()?->created_at?->format('Y-m-d H:i:s'),
         ];
     }
 
     /**
      * Statistiques générales d'un armateur
      */
-    public function getArmateurStats(Armateur $armateur)
+    public function getArmateurStats(Armateur $armateur): array
     {
         $totalSorties = $armateur->sorties()->count();
-        $sortiesActives = $armateur->sorties()->whereNull('date_retour')->count();
         $sortiesTerminees = $armateur->sorties()->whereNotNull('date_retour')->count();
 
         return [
             'total_sorties' => $totalSorties,
-            'sorties_actives' => $sortiesActives,
+            'sorties_actives' => $armateur->sorties()->whereNull('date_retour')->count(),
             'sorties_terminees' => $sortiesTerminees,
             'taux_retour' => $totalSorties > 0 ? round(($sortiesTerminees / $totalSorties) * 100, 1) : 0,
         ];

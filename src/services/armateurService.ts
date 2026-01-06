@@ -30,13 +30,19 @@ export interface CreateArmateurData {
 }
 
 class ArmateurService {
-  async getArmateurs(): Promise<Armateur[]> {
-    const response = await apiService.get('/armateurs');
+  async getArmateurs(filters?: Record<string, string>): Promise<Armateur[]> {
+    const params = filters ? `?${new URLSearchParams(filters).toString()}` : '';
+    const response = await apiService.get(`/armateurs${params}`);
     return response.data;
   }
 
   async getArmateur(id: number): Promise<Armateur> {
     const response = await apiService.get(`/armateurs/${id}`);
+    return response.data;
+  }
+
+  async getArmateurByCode(code: string): Promise<Armateur> {
+    const response = await apiService.get(`/armateurs/code/${code}`);
     return response.data;
   }
 
@@ -52,6 +58,11 @@ class ArmateurService {
 
   async deleteArmateur(id: number): Promise<void> {
     await apiService.delete(`/armateurs/${id}`);
+  }
+
+  async searchArmateurs(query: string): Promise<Armateur[]> {
+    const response = await apiService.get(`/armateurs?search=${encodeURIComponent(query)}`);
+    return response.data;
   }
 }
 
