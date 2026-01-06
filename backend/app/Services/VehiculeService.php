@@ -92,12 +92,3 @@ class VehiculeService
         return $this->queryService->getRemorquesOptions();
     }
 }
-
-    /**
-     * Options pour sélection (remorques)
-     */
-    public function getRemorquesPourSelection(): array
-    {
-        return $this->queryService->getRemorquesOptions();
-    }
-}
