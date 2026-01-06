@@ -34,7 +34,7 @@ class VehiculeController extends Controller
             $vehicules = $this->vehiculeService->getVehiculesList($request->all());
 
             return $this->successResponse(
-                VehiculeResource::collection($vehicules),
+                VehiculeResource::collection($vehicules)->resolve(),
                 'Véhicules récupérés avec succès'
             );
 
