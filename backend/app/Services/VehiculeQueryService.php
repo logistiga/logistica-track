@@ -64,28 +64,34 @@ class VehiculeQueryService
     }
 
     /**
-     * Options pour sélection (camions)
+     * Options pour sélection (camions) - sans scopes, direct et sûr
      */
     public function getCamionsOptions(): array
     {
-        return Vehicule::camions()
-            ->actifs()
+        return Vehicule::where('type', 'camion')
+            ->where('actif', true)
             ->orderBy('numero_parc')
             ->get()
-            ->map(fn($v) => ['value' => $v->id, 'label' => $v->libelle_complet])
+            ->map(fn($v) => [
+                'value' => $v->id, 
+                'label' => $v->numero_parc . ' - ' . $v->immatriculation
+            ])
             ->toArray();
     }
 
     /**
-     * Options pour sélection (remorques)
+     * Options pour sélection (remorques) - sans scopes, direct et sûr
      */
     public function getRemorquesOptions(): array
     {
-        return Vehicule::remorques()
-            ->actifs()
+        return Vehicule::where('type', 'remorque')
+            ->where('actif', true)
             ->orderBy('numero_parc')
             ->get()
-            ->map(fn($v) => ['value' => $v->id, 'label' => $v->libelle_complet])
+            ->map(fn($v) => [
+                'value' => $v->id, 
+                'label' => $v->numero_parc . ' - ' . $v->immatriculation
+            ])
             ->toArray();
     }
 }
