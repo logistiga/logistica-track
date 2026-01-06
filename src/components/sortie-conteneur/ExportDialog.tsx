@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -38,12 +38,11 @@ const statutOptions = [
   { value: "livre_client", label: "Livré au client" },
 ];
 
-export const ExportDialog = ({ sorties }: ExportDialogProps) => {
+export const ExportDialog = ({ sorties, open, onOpenChange }: ExportDialogProps) => {
   const { toast } = useToast();
   const { getArmateurDisplay, getArmateurOptions } = useArmateurs();
   const { getVehiculeDisplay, getCamionOptions } = useVehicules();
   
-  const [isOpen, setIsOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [filters, setFilters] = useState<ExportFilters>({
     dateDebut: "",
@@ -155,7 +154,7 @@ export const ExportDialog = ({ sorties }: ExportDialogProps) => {
       });
     } finally {
       setIsExporting(false);
-      setIsOpen(false);
+      onOpenChange(false);
     }
   };
 
@@ -226,18 +225,12 @@ export const ExportDialog = ({ sorties }: ExportDialogProps) => {
       });
     } finally {
       setIsExporting(false);
-      setIsOpen(false);
+      onOpenChange(false);
     }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" className="gap-2">
-          <Download className="w-4 h-4" />
-          Exporter
-        </Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -351,7 +344,7 @@ export const ExportDialog = ({ sorties }: ExportDialogProps) => {
 
           {/* Actions */}
           <div className="flex justify-end gap-3">
-            <Button variant="outline" onClick={() => setIsOpen(false)}>
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
               Annuler
             </Button>
             <Button 

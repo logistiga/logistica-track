@@ -7,7 +7,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Truck, ArrowLeft } from "lucide-react";
 import { SortieConteneur, ReturnData } from "@/types/sortie-conteneur";
 import { useVehicules } from "@/hooks/useVehicules";
-import { ResponsabiliteSelector } from "@/components/detention/ResponsabiliteSelector";
 
 interface ReturnDialogProps {
   open: boolean;
