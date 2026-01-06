@@ -1,22 +1,16 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { vehiculeService, type Vehicule, type CreateVehiculeData } from '@/services/vehiculeService';
 import { toast } from '@/hooks/use-toast';
 
 export function useVehicules() {
-  const [camions, setCamions] = useState<Vehicule[]>([]);
-  const [remorques, setRemorques] = useState<Vehicule[]>([]);
+  const [vehicules, setVehicules] = useState<Vehicule[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchVehicules = async () => {
+  const fetchVehicules = useCallback(async () => {
     try {
       setLoading(true);
-      const vehicules = await vehiculeService.getVehicules();
-
-      const camionsFiltered = vehicules.filter(v => v.type === 'camion');
-      const remorquesFiltered = vehicules.filter(v => v.type === 'remorque');
-
-      setCamions(camionsFiltered);
-      setRemorques(remorquesFiltered);
+      const data = await vehiculeService.getVehicules();
+      setVehicules(data);
     } catch (error) {
       console.error('Erreur lors du chargement des véhicules:', error);
       toast({
@@ -27,18 +21,20 @@ export function useVehicules() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const createVehicule = async (data: CreateVehiculeData): Promise<boolean> => {
+  useEffect(() => {
+    fetchVehicules();
+  }, [fetchVehicules]);
+
+  // Filtrage par type - memoized
+  const camions = useMemo(() => vehicules.filter(v => v.type === 'camion'), [vehicules]);
+  const remorques = useMemo(() => vehicules.filter(v => v.type === 'remorque'), [vehicules]);
+
+  const createVehicule = useCallback(async (data: CreateVehiculeData): Promise<boolean> => {
     try {
       const newVehicule = await vehiculeService.createVehicule(data);
-      
-      if (data.type === "camion") {
-        setCamions(prev => [...prev, newVehicule]);
-      } else {
-        setRemorques(prev => [...prev, newVehicule]);
-      }
-
+      setVehicules(prev => [...prev, newVehicule]);
       toast({
         title: "Succès",
         description: `${data.type === "camion" ? "Camion" : "Remorque"} ajouté(e) avec succès`,
@@ -52,18 +48,12 @@ export function useVehicules() {
       });
       return false;
     }
-  };
+  }, []);
 
-  const deleteVehicule = async (id: number, type: 'camion' | 'remorque'): Promise<boolean> => {
+  const deleteVehicule = useCallback(async (id: number, type: 'camion' | 'remorque'): Promise<boolean> => {
     try {
       await vehiculeService.deleteVehicule(id);
-      
-      if (type === "camion") {
-        setCamions(prev => prev.filter(c => c.id !== id));
-      } else {
-        setRemorques(prev => prev.filter(r => r.id !== id));
-      }
-      
+      setVehicules(prev => prev.filter(v => v.id !== id));
       toast({
         title: "Supprimé",
         description: `${type === "camion" ? "Camion" : "Remorque"} supprimé(e) avec succès`,
@@ -77,22 +67,12 @@ export function useVehicules() {
       });
       return false;
     }
-  };
+  }, []);
 
-  const updateVehicule = async (id: number, data: CreateVehiculeData): Promise<boolean> => {
+  const updateVehicule = useCallback(async (id: number, data: CreateVehiculeData): Promise<boolean> => {
     try {
       const updatedVehicule = await vehiculeService.updateVehicule(id, data);
-      
-      if (data.type === "camion") {
-        setCamions(prev => prev.map(c => c.id === id ? updatedVehicule : c));
-        // Remove from remorques if type changed
-        setRemorques(prev => prev.filter(r => r.id !== id));
-      } else {
-        setRemorques(prev => prev.map(r => r.id === id ? updatedVehicule : r));
-        // Remove from camions if type changed
-        setCamions(prev => prev.filter(c => c.id !== id));
-      }
-
+      setVehicules(prev => prev.map(v => v.id === id ? updatedVehicule : v));
       toast({
         title: "Succès",
         description: `${data.type === "camion" ? "Camion" : "Remorque"} modifié(e) avec succès`,
@@ -106,35 +86,30 @@ export function useVehicules() {
       });
       return false;
     }
-  };
-
-  useEffect(() => {
-    fetchVehicules();
   }, []);
 
-  // Méthodes utilitaires pour compatibilité avec l'existant
-  // Afficher tous les véhicules (sans filtrer par statut / actif)
-  const getCamionOptions = () => {
-    return camions.map((c) => ({
+  // Options pour les selects - memoized
+  const getCamionOptions = useCallback(() => {
+    return camions.map(c => ({
       value: c.id.toString(),
-      label: `${c.numero_parc} - ${c.immatriculation}`,
+      label: c.libelle_complet,
     }));
-  };
+  }, [camions]);
 
-  const getRemorqueOptions = () => {
-    return remorques.map((r) => ({
+  const getRemorqueOptions = useCallback(() => {
+    return remorques.map(r => ({
       value: r.id.toString(),
-      label: `${r.numero_parc} - ${r.immatriculation}`,
+      label: r.libelle_complet,
     }));
-  };
+  }, [remorques]);
 
-  const getVehiculeDisplay = (id: number): string => {
-    const allVehicules = [...camions, ...remorques];
-    const vehicule = allVehicules.find(v => v.id === id);
-    return vehicule ? `${vehicule.numero_parc}` : '';
-  };
+  const getVehiculeDisplay = useCallback((id: number): string => {
+    const vehicule = vehicules.find(v => v.id === id);
+    return vehicule?.numero_parc ?? '';
+  }, [vehicules]);
 
   return {
+    vehicules,
     camions,
     remorques,
     loading,

@@ -43,8 +43,8 @@ export function useOperations() {
   const loadVehicules = async () => {
     try {
       const [camionsData, remorquesData] = await Promise.all([
-        vehiculeService.getVehiculesActifs('camion'),
-        vehiculeService.getVehiculesActifs('remorque')
+        vehiculeService.getVehicules({ type: 'camion', actif: 'true' }),
+        vehiculeService.getVehicules({ type: 'remorque', actif: 'true' })
       ]);
       setRawCamions(camionsData);
       setRawRemorques(remorquesData);

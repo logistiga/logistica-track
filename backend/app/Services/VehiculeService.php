@@ -3,52 +3,82 @@
 namespace App\Services;
 
 use App\Models\Vehicule;
+use Illuminate\Database\Eloquent\Collection;
 
 class VehiculeService
 {
+    protected VehiculeQueryService $queryService;
+
+    public function __construct(VehiculeQueryService $queryService)
+    {
+        $this->queryService = $queryService;
+    }
+
     /**
      * Récupérer tous les véhicules avec filtres
      */
-    public function getAllVehicules(array $filters = [])
+    public function getAllVehicules(array $filters = []): array
     {
-        $query = Vehicule::query();
-
-        // Filtres
-        if (isset($filters['type'])) {
-            $query->where('type', $filters['type']);
-        }
-
-        if (isset($filters['search'])) {
-            $search = $filters['search'];
-            $query->where(function ($q) use ($search) {
-                $q->where('numero_parc', 'like', "%{$search}%")
-                  ->orWhere('immatriculation', 'like', "%{$search}%");
-            });
-        }
-
-        $result = $query->orderBy('numero_parc')->get();
+        $result = $this->queryService->getAll($filters);
         
         return [
             'data' => $result,
-            'meta' => [
-                'total' => $result->count(),
-            ],
+            'meta' => ['total' => $result->count()],
         ];
     }
 
     /**
      * Récupérer les camions
      */
-    public function getCamions(array $filters = [])
+    public function getCamions(array $filters = []): Collection
     {
-        $filters['type'] = 'camion';
-        return $this->getAllVehicules($filters);
+        return $this->queryService->getByType('camion', $filters);
+    }
+
+    /**
+     * Récupérer les remorques
+     */
+    public function getRemorques(array $filters = []): Collection
+    {
+        return $this->queryService->getByType('remorque', $filters);
+    }
+
+    /**
+     * Véhicules disponibles
+     */
+    public function getVehiculesDisponibles(?string $type = null): Collection
+    {
+        return $this->queryService->getDisponibles($type);
+    }
+
+    /**
+     * Véhicules en mission
+     */
+    public function getVehiculesEnMission(array $filters = []): Collection
+    {
+        return $this->queryService->getEnMission($filters);
+    }
+
+    /**
+     * Véhicules en maintenance
+     */
+    public function getVehiculesEnMaintenance(array $filters = []): Collection
+    {
+        return $this->queryService->getEnMaintenance($filters);
+    }
+
+    /**
+     * Recherche de véhicules
+     */
+    public function searchVehicules(string $query, array $filters = []): Collection
+    {
+        return $this->queryService->search($query, $filters);
     }
 
     /**
      * Créer un nouveau véhicule
      */
-    public function createVehicule(array $data)
+    public function createVehicule(array $data): Vehicule
     {
         return Vehicule::create($data);
     }
@@ -56,7 +86,7 @@ class VehiculeService
     /**
      * Mettre à jour un véhicule
      */
-    public function updateVehicule(Vehicule $vehicule, array $data)
+    public function updateVehicule(Vehicule $vehicule, array $data): Vehicule
     {
         $vehicule->update($data);
         return $vehicule;
@@ -65,53 +95,24 @@ class VehiculeService
     /**
      * Supprimer un véhicule
      */
-    public function deleteVehicule(Vehicule $vehicule)
+    public function deleteVehicule(Vehicule $vehicule): void
     {
         $vehicule->delete();
     }
 
     /**
-     * Récupérer les remorques
+     * Options pour sélection (camions)
      */
-    public function getRemorques(array $filters = [])
+    public function getCamionsPourSelection(): array
     {
-        $filters['type'] = 'remorque';
-        return $this->getAllVehicules($filters);
+        return $this->queryService->getCamionsOptions();
     }
 
     /**
-     * Obtenir les camions disponibles pour les sélections
+     * Options pour sélection (remorques)
      */
-    public function getCamionsPourSelection()
+    public function getRemorquesPourSelection(): array
     {
-        return Vehicule::camions()
-            ->actifs()
-            ->select('id', 'numero_parc', 'immatriculation')
-            ->orderBy('numero_parc')
-            ->get()
-            ->map(function ($camion) {
-                return [
-                    'value' => $camion->id,
-                    'label' => $camion->libelle_complet
-                ];
-            });
-    }
-
-    /**
-     * Obtenir les remorques disponibles pour les sélections
-     */
-    public function getRemorquesPourSelection()
-    {
-        return Vehicule::remorques()
-            ->actifs()
-            ->select('id', 'numero_parc', 'immatriculation')
-            ->orderBy('numero_parc')
-            ->get()
-            ->map(function ($remorque) {
-                return [
-                    'value' => $remorque->id,
-                    'label' => $remorque->libelle_complet
-                ];
-            });
+        return $this->queryService->getRemorquesOptions();
     }
 }

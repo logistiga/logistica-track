@@ -17,13 +17,15 @@ class VehiculeResource extends JsonResource
             'numero_parc' => $this->numero_parc,
             'immatriculation' => $this->immatriculation,
             'type' => $this->type,
-            'type_label' => $this->getTypeLabelAttribute(),
-            'libelle_complet' => $this->getLibelleCompletAttribute(),
+            'type_label' => $this->type_label,
+            'libelle_complet' => $this->libelle_complet,
             'actif' => $this->actif ?? true,
-            'statut' => $this->statut ?? null,
+            'statut' => $this->statut ?? 'disponible',
+            'prochaine_revision' => $this->prochaine_revision?->format('Y-m-d'),
+            'derniere_revision' => $this->derniere_revision?->format('Y-m-d'),
+            'kilometrage' => $this->kilometrage ?? 0,
             'created_at' => $this->created_at->format('Y-m-d H:i:s'),
             'updated_at' => $this->updated_at->format('Y-m-d H:i:s'),
         ];
     }
-
 }
