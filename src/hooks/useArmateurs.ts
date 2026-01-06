@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { armateurService, type Armateur, type CreateArmateurData } from '@/services/armateurService';
 import { toast } from '@/hooks/use-toast';
 import { getArmateurSelectOptions, getArmateurLabel } from '@/utils/armateurUtils';
