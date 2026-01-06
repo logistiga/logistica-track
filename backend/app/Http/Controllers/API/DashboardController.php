@@ -8,6 +8,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class DashboardController extends Controller
 {
@@ -19,7 +20,6 @@ class DashboardController extends Controller
     public function index(Request $request): JsonResponse
     {
         try {
-            // Désactiver temporairement le cache pour déboguer
             $dashboardData = [
                 'stats' => $this->getMainStats(),
                 'recent_activities' => $this->getRecentActivities(),
@@ -28,11 +28,16 @@ class DashboardController extends Controller
             ];
 
             return $this->successResponse($dashboardData, 'Données du tableau de bord récupérées');
-
-        } catch (\Exception $e) {
-            \Log::error('Dashboard index error: ' . $e->getMessage());
+        } catch (\Throwable $e) {
+            \Log::error('Dashboard index error: ' . $e->getMessage(), [
+                'exception' => get_class($e),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
             \Log::error('Stack trace: ' . $e->getTraceAsString());
-            return $this->errorResponse('Erreur: ' . $e->getMessage(), 500);
+
+            $message = config('app.debug') ? ('Erreur: ' . $e->getMessage()) : 'Erreur interne du serveur';
+            return $this->errorResponse($message, 500);
         }
     }
 
@@ -44,14 +49,19 @@ class DashboardController extends Controller
         try {
             $period = $request->input('period', 'month'); // day, week, month, year
             $cacheKey = "dashboard_stats_{$period}";
-            
+
             $stats = Cache::remember($cacheKey, CACHE_MEDIUM, function () use ($period) {
                 return $this->getStatsByPeriod($period);
             });
 
             return $this->successResponse($stats, 'Statistiques récupérées');
+        } catch (\Throwable $e) {
+            \Log::error('Dashboard stats error: ' . $e->getMessage(), [
+                'exception' => get_class($e),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
 
-        } catch (\Exception $e) {
             return $this->errorResponse('Erreur lors de la récupération des statistiques', 500);
         }
     }
@@ -66,8 +76,13 @@ class DashboardController extends Controller
             $activities = $this->getRecentActivities($limit);
 
             return $this->successResponse($activities, 'Activités récentes récupérées');
+        } catch (\Throwable $e) {
+            \Log::error('Dashboard recentActivity error: ' . $e->getMessage(), [
+                'exception' => get_class($e),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
 
-        } catch (\Exception $e) {
             return $this->errorResponse('Erreur lors de la récupération des activités', 500);
         }
     }
@@ -81,8 +96,13 @@ class DashboardController extends Controller
             $alerts = $this->getAlerts();
 
             return $this->successResponse($alerts, 'Alertes récupérées');
+        } catch (\Throwable $e) {
+            \Log::error('Dashboard alerts error: ' . $e->getMessage(), [
+                'exception' => get_class($e),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
 
-        } catch (\Exception $e) {
             return $this->errorResponse('Erreur lors de la récupération des alertes', 500);
         }
     }
@@ -93,79 +113,177 @@ class DashboardController extends Controller
     private function getMainStats(): array
     {
         try {
-            // Stats opérations avec détails par type
-            $operationsLocation = DB::table('operations')->where('type_operation', 'location')->count();
-            $operationsTransport = DB::table('operations')->where('type_operation', 'transport')->count();
-            
-            // Pour locations: utiliser tarif_journalier * duree si disponible, sinon cout_reel
-            $revenueLocation = DB::table('operations')
-                ->where('type_operation', 'location')
-                ->whereIn('statut', ['terminee', 'confirmee'])
-                ->selectRaw('SUM(COALESCE(tarif_journalier * duree, cout_reel, 0)) as total')
-                ->value('total') ?? 0;
-                
-            // Pour transports: utiliser cout_reel
-            $revenueTransport = DB::table('operations')
-                ->where('type_operation', 'transport')
-                ->whereIn('statut', ['terminee', 'confirmee'])
-                ->sum('cout_reel') ?? 0;
-
-            // Stats détentions
-            $detentionsActives = DB::table('detentions')
-                ->where('statut', 'active')
-                ->count();
-            $montantDetentions = DB::table('detentions')
-                ->where('statut', 'active')
-                ->sum('cout_total') ?? 0;
-
-            // Stats facturations avec correction de la requête
-            $facturesEnAttente = DB::table('facturations')
-                ->whereIn('statut', ['brouillon', 'envoyee'])
-                ->count();
-            $montantFacturesEnAttente = DB::table('facturations')
-                ->whereIn('statut', ['brouillon', 'envoyee'])
-                ->sum('montant_total') ?? 0;
-
-            return [
+            $stats = [
                 'sorties' => [
-                    'total' => DB::table('sortie_conteneurs')->count(),
-                    'en_cours' => DB::table('sortie_conteneurs')->where('statut', 'en_cours')->count(),
-                    'retournees' => DB::table('sortie_conteneurs')->where('statut', 'retourne_port')->count(),
-                    'aujourd_hui' => DB::table('sortie_conteneurs')->whereDate('date_sortie', today())->count(),
+                    'total' => 0,
+                    'en_cours' => 0,
+                    'retournees' => 0,
+                    'aujourd_hui' => 0,
                 ],
                 'vehicules' => [
-                    'total' => DB::table('vehicules')->count(),
-                    'disponibles' => DB::table('vehicules')->where('actif', true)->count(),
-                    'en_mission' => 0, // Nécessite migration pour la colonne statut
-                    'maintenance' => DB::table('vehicules')->where('actif', false)->count(),
+                    'total' => 0,
+                    'disponibles' => 0,
+                    'en_mission' => 0,
+                    'maintenance' => 0,
                 ],
                 'armateurs' => [
-                    'total' => DB::table('armateurs')->count(),
-                    'actifs' => DB::table('armateurs')->where('actif', true)->count(),
+                    'total' => 0,
+                    'actifs' => 0,
                 ],
                 'operations' => [
-                    'total' => DB::table('operations')->count(),
-                    'planifiees' => DB::table('operations')->where('statut', 'planifiee')->count(),
-                    'en_cours' => DB::table('operations')->where('statut', 'en_cours')->count(),
-                    'terminees' => DB::table('operations')->where('statut', 'terminee')->count(),
-                    'confirmees' => DB::table('operations')->where('statut', 'confirmee')->count(),
-                    'location' => $operationsLocation,
-                    'transport' => $operationsTransport,
-                    'revenue_total' => $revenueLocation + $revenueTransport,
-                    'revenue_location' => $revenueLocation,
-                    'revenue_transport' => $revenueTransport,
+                    'total' => 0,
+                    'planifiees' => 0,
+                    'en_cours' => 0,
+                    'terminees' => 0,
+                    'confirmees' => 0,
+                    'location' => 0,
+                    'transport' => 0,
+                    'revenue_total' => 0,
+                    'revenue_location' => 0,
+                    'revenue_transport' => 0,
                 ],
                 'detentions' => [
-                    'actives' => $detentionsActives,
-                    'montant_total' => $montantDetentions,
+                    'actives' => 0,
+                    'montant_total' => 0,
                 ],
                 'facturations' => [
-                    'en_attente' => $facturesEnAttente,
-                    'montant_en_attente' => $montantFacturesEnAttente,
+                    'en_attente' => 0,
+                    'montant_en_attente' => 0,
                 ],
             ];
-        } catch (\Exception $e) {
-            \Log::error('Dashboard getMainStats error: ' . $e->getMessage());
+
+            // Sorties conteneurs
+            if (Schema::hasTable('sortie_conteneurs')) {
+                $statutCol = $this->firstExistingColumn('sortie_conteneurs', ['statut', 'status']);
+
+                $stats['sorties']['total'] = DB::table('sortie_conteneurs')->count();
+
+                if ($statutCol) {
+                    $stats['sorties']['en_cours'] = DB::table('sortie_conteneurs')->where($statutCol, 'en_cours')->count();
+                    $stats['sorties']['retournees'] = DB::table('sortie_conteneurs')->where($statutCol, 'retourne_port')->count();
+                }
+
+                if (Schema::hasColumn('sortie_conteneurs', 'date_sortie')) {
+                    $stats['sorties']['aujourd_hui'] = DB::table('sortie_conteneurs')->whereDate('date_sortie', today())->count();
+                }
+            }
+
+            // Véhicules
+            if (Schema::hasTable('vehicules')) {
+                $stats['vehicules']['total'] = DB::table('vehicules')->count();
+
+                if (Schema::hasColumn('vehicules', 'actif')) {
+                    $stats['vehicules']['disponibles'] = DB::table('vehicules')->where('actif', true)->count();
+                    $stats['vehicules']['maintenance'] = DB::table('vehicules')->where('actif', false)->count();
+                } else {
+                    // Fallback si l'ancien schéma utilise une colonne "statut"
+                    $vehiculeStatutCol = $this->firstExistingColumn('vehicules', ['statut', 'status']);
+                    if ($vehiculeStatutCol) {
+                        $stats['vehicules']['disponibles'] = DB::table('vehicules')->where($vehiculeStatutCol, 'disponible')->count();
+                        $stats['vehicules']['en_mission'] = DB::table('vehicules')->where($vehiculeStatutCol, 'en_mission')->count();
+                        $stats['vehicules']['maintenance'] = DB::table('vehicules')->where($vehiculeStatutCol, 'maintenance')->count();
+                    }
+                }
+            }
+
+            // Armateurs
+            if (Schema::hasTable('armateurs')) {
+                $stats['armateurs']['total'] = DB::table('armateurs')->count();
+
+                $armateurActifCol = $this->firstExistingColumn('armateurs', ['actif', 'active', 'is_active']);
+                if ($armateurActifCol) {
+                    $stats['armateurs']['actifs'] = DB::table('armateurs')->where($armateurActifCol, true)->count();
+                }
+            }
+
+            // Opérations
+            if (Schema::hasTable('operations')) {
+                $statusCol = $this->firstExistingColumn('operations', ['statut', 'status']);
+                $typeCol = $this->firstExistingColumn('operations', ['type_operation', 'type']);
+
+                $stats['operations']['total'] = DB::table('operations')->count();
+
+                if ($typeCol) {
+                    $stats['operations']['location'] = DB::table('operations')->where($typeCol, 'location')->count();
+                    $stats['operations']['transport'] = DB::table('operations')->where($typeCol, 'transport')->count();
+                }
+
+                if ($statusCol) {
+                    $stats['operations']['planifiees'] = DB::table('operations')->where($statusCol, 'planifiee')->count();
+                    $stats['operations']['en_cours'] = DB::table('operations')->where($statusCol, 'en_cours')->count();
+                    $stats['operations']['terminees'] = DB::table('operations')->where($statusCol, 'terminee')->count();
+                    $stats['operations']['confirmees'] = DB::table('operations')->where($statusCol, 'confirmee')->count();
+                }
+
+                // Revenus (évite les 500 si des colonnes n'existent pas encore sur le serveur)
+                $revenueLocation = 0;
+                $revenueTransport = 0;
+
+                if ($statusCol && $typeCol && Schema::hasColumn('operations', 'cout_reel')) {
+                    $statusesForRevenue = ['terminee', 'confirmee'];
+
+                    if (Schema::hasColumn('operations', 'tarif_journalier') && Schema::hasColumn('operations', 'duree')) {
+                        $revenueLocation = DB::table('operations')
+                            ->where($typeCol, 'location')
+                            ->whereIn($statusCol, $statusesForRevenue)
+                            ->selectRaw('SUM(COALESCE(tarif_journalier * duree, cout_reel, 0)) as total')
+                            ->value('total') ?? 0;
+                    } else {
+                        // Fallback: on utilise cout_reel si tarif_journalier/duree ne sont pas disponibles
+                        $revenueLocation = DB::table('operations')
+                            ->where($typeCol, 'location')
+                            ->whereIn($statusCol, $statusesForRevenue)
+                            ->sum('cout_reel') ?? 0;
+                    }
+
+                    $revenueTransport = DB::table('operations')
+                        ->where($typeCol, 'transport')
+                        ->whereIn($statusCol, $statusesForRevenue)
+                        ->sum('cout_reel') ?? 0;
+                }
+
+                $stats['operations']['revenue_location'] = $revenueLocation;
+                $stats['operations']['revenue_transport'] = $revenueTransport;
+                $stats['operations']['revenue_total'] = $revenueLocation + $revenueTransport;
+            }
+
+            // Détentions
+            if (Schema::hasTable('detentions')) {
+                $detentionStatutCol = $this->firstExistingColumn('detentions', ['statut', 'status']);
+
+                if ($detentionStatutCol) {
+                    $stats['detentions']['actives'] = DB::table('detentions')->where($detentionStatutCol, 'active')->count();
+
+                    if (Schema::hasColumn('detentions', 'cout_total')) {
+                        $stats['detentions']['montant_total'] = DB::table('detentions')
+                            ->where($detentionStatutCol, 'active')
+                            ->sum('cout_total') ?? 0;
+                    }
+                }
+            }
+
+            // Facturations
+            if (Schema::hasTable('facturations')) {
+                $facturationStatutCol = $this->firstExistingColumn('facturations', ['statut', 'status']);
+
+                if ($facturationStatutCol) {
+                    $pending = ['brouillon', 'envoyee'];
+                    $stats['facturations']['en_attente'] = DB::table('facturations')->whereIn($facturationStatutCol, $pending)->count();
+
+                    if (Schema::hasColumn('facturations', 'montant_total')) {
+                        $stats['facturations']['montant_en_attente'] = DB::table('facturations')->whereIn($facturationStatutCol, $pending)->sum('montant_total') ?? 0;
+                    }
+                }
+            }
+
+            return $stats;
+        } catch (\Throwable $e) {
+            \Log::error('Dashboard getMainStats error: ' . $e->getMessage(), [
+                'exception' => get_class($e),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+
             throw $e;
         }
     }
@@ -263,37 +381,49 @@ class DashboardController extends Controller
         }
 
         // Conteneurs en détention critique
-        $detentionsCritiques = DB::table('detentions')
-            ->where('statut', 'active')
-            ->where('jours_detention', '>', 10)
-            ->count();
+        if (Schema::hasTable('detentions')) {
+            $detentionStatutCol = $this->firstExistingColumn('detentions', ['statut', 'status']);
 
-        if ($detentionsCritiques > 0) {
-            $alerts[] = [
-                'id' => 'detentions_critiques',
-                'type' => 'error',
-                'title' => 'Détentions critiques',
-                'message' => "$detentionsCritiques conteneur(s) en détention depuis plus de 10 jours",
-                'action_url' => '/detentions?filter=critical',
-                'priority' => 'high',
-            ];
+            if ($detentionStatutCol && Schema::hasColumn('detentions', 'jours_detention')) {
+                $detentionsCritiques = DB::table('detentions')
+                    ->where($detentionStatutCol, 'active')
+                    ->where('jours_detention', '>', 10)
+                    ->count();
+
+                if ($detentionsCritiques > 0) {
+                    $alerts[] = [
+                        'id' => 'detentions_critiques',
+                        'type' => 'error',
+                        'title' => 'Détentions critiques',
+                        'message' => "$detentionsCritiques conteneur(s) en détention depuis plus de 10 jours",
+                        'action_url' => '/detentions?filter=critical',
+                        'priority' => 'high',
+                    ];
+                }
+            }
         }
 
         // Factures en retard
-        $facturesRetard = DB::table('facturations')
-            ->where('statut', 'envoyee')
-            ->where('date_echeance', '<', now())
-            ->count();
+        if (Schema::hasTable('facturations')) {
+            $facturationStatutCol = $this->firstExistingColumn('facturations', ['statut', 'status']);
 
-        if ($facturesRetard > 0) {
-            $alerts[] = [
-                'id' => 'factures_retard',
-                'type' => 'warning',
-                'title' => 'Factures en retard',
-                'message' => "$facturesRetard facture(s) dépassent la date d'échéance",
-                'action_url' => '/facturations?filter=overdue',
-                'priority' => 'medium',
-            ];
+            if ($facturationStatutCol && Schema::hasColumn('facturations', 'date_echeance')) {
+                $facturesRetard = DB::table('facturations')
+                    ->where($facturationStatutCol, 'envoyee')
+                    ->where('date_echeance', '<', now())
+                    ->count();
+
+                if ($facturesRetard > 0) {
+                    $alerts[] = [
+                        'id' => 'factures_retard',
+                        'type' => 'warning',
+                        'title' => 'Factures en retard',
+                        'message' => "$facturesRetard facture(s) dépassent la date d'échéance",
+                        'action_url' => '/facturations?filter=overdue',
+                        'priority' => 'medium',
+                    ];
+                }
+            }
         }
 
         return $alerts;
@@ -305,40 +435,66 @@ class DashboardController extends Controller
     private function getChartsData(): array
     {
         try {
-            // Données pour le graphique des sorties par mois
-            $sortiesParMois = DB::table('sortie_conteneurs')
-                ->select(
-                    DB::raw('MONTH(date_sortie) as mois'),
-                    DB::raw('COUNT(*) as total')
-                )
-                ->whereNotNull('date_sortie')
-                ->where('date_sortie', '>=', now()->subMonths(12))
-                ->groupBy(DB::raw('MONTH(date_sortie)'))
-                ->orderBy('mois')
-                ->get();
+            $sortiesParMois = [];
+            $repartitionStatuts = [];
+            $topArmateurs = [];
+            $operationsParType = [];
+
+            // Sorties par mois
+            if (Schema::hasTable('sortie_conteneurs') && Schema::hasColumn('sortie_conteneurs', 'date_sortie')) {
+                $sortiesParMois = DB::table('sortie_conteneurs')
+                    ->select(
+                        DB::raw('MONTH(date_sortie) as mois'),
+                        DB::raw('COUNT(*) as total')
+                    )
+                    ->whereNotNull('date_sortie')
+                    ->where('date_sortie', '>=', now()->subMonths(12))
+                    ->groupBy(DB::raw('MONTH(date_sortie)'))
+                    ->orderBy('mois')
+                    ->get();
+            }
 
             // Répartition par statut
-            $repartitionStatuts = DB::table('sortie_conteneurs')
-                ->select('statut', DB::raw('COUNT(*) as count'))
-                ->groupBy('statut')
-                ->get();
+            if (Schema::hasTable('sortie_conteneurs')) {
+                $statutCol = $this->firstExistingColumn('sortie_conteneurs', ['statut', 'status']);
+                if ($statutCol) {
+                    $repartitionStatuts = DB::table('sortie_conteneurs')
+                        ->select($statutCol . ' as statut', DB::raw('COUNT(*) as count'))
+                        ->groupBy($statutCol)
+                        ->get();
+                }
+            }
 
-            // Top armateurs - avec gestion des codes armateurs NULL
-            $topArmateurs = DB::table('sortie_conteneurs')
-                ->join('armateurs', 'sortie_conteneurs.code_armateur', '=', 'armateurs.code')
-                ->select('armateurs.nom', DB::raw('COUNT(*) as sorties'))
-                ->whereNotNull('sortie_conteneurs.date_sortie')
-                ->where('sortie_conteneurs.date_sortie', '>=', now()->subMonths(3))
-                ->groupBy('armateurs.nom', 'armateurs.code')
-                ->orderBy('sorties', 'desc')
-                ->limit(5)
-                ->get();
+            // Top armateurs
+            if (
+                Schema::hasTable('sortie_conteneurs') &&
+                Schema::hasTable('armateurs') &&
+                Schema::hasColumn('sortie_conteneurs', 'code_armateur') &&
+                Schema::hasColumn('armateurs', 'code') &&
+                Schema::hasColumn('armateurs', 'nom') &&
+                Schema::hasColumn('sortie_conteneurs', 'date_sortie')
+            ) {
+                $topArmateurs = DB::table('sortie_conteneurs')
+                    ->join('armateurs', 'sortie_conteneurs.code_armateur', '=', 'armateurs.code')
+                    ->select('armateurs.nom', DB::raw('COUNT(*) as sorties'))
+                    ->whereNotNull('sortie_conteneurs.date_sortie')
+                    ->where('sortie_conteneurs.date_sortie', '>=', now()->subMonths(3))
+                    ->groupBy('armateurs.nom', 'armateurs.code')
+                    ->orderBy('sorties', 'desc')
+                    ->limit(5)
+                    ->get();
+            }
 
             // Répartition des opérations par type
-            $operationsParType = DB::table('operations')
-                ->select('type_operation as type', DB::raw('COUNT(*) as count'))
-                ->groupBy('type_operation')
-                ->get();
+            if (Schema::hasTable('operations')) {
+                $typeCol = $this->firstExistingColumn('operations', ['type_operation', 'type']);
+                if ($typeCol) {
+                    $operationsParType = DB::table('operations')
+                        ->select($typeCol . ' as type', DB::raw('COUNT(*) as count'))
+                        ->groupBy($typeCol)
+                        ->get();
+                }
+            }
 
             return [
                 'sorties_par_mois' => $sortiesParMois,
@@ -346,9 +502,13 @@ class DashboardController extends Controller
                 'top_armateurs' => $topArmateurs,
                 'operations_par_type' => $operationsParType,
             ];
-        } catch (\Exception $e) {
-            \Log::error('Dashboard getChartsData error: ' . $e->getMessage());
-            // Retourner des données vides en cas d'erreur
+        } catch (\Throwable $e) {
+            \Log::error('Dashboard getChartsData error: ' . $e->getMessage(), [
+                'exception' => get_class($e),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+
             return [
                 'sorties_par_mois' => [],
                 'repartition_statuts' => [],
@@ -359,16 +519,30 @@ class DashboardController extends Controller
     }
 
     /**
+     * Trouver la première colonne existante (utile quand le serveur n'est pas à jour)
+     */
+    private function firstExistingColumn(string $table, array $candidates): ?string
+    {
+        foreach ($candidates as $column) {
+            if (Schema::hasColumn($table, $column)) {
+                return $column;
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Obtenir le début de la période
      */
     private function getPeriodStart(string $period): \Carbon\Carbon
     {
-        return match($period) {
+        return match ($period) {
             'day' => now()->subDays(30),
             'week' => now()->subWeeks(12),
             'month' => now()->subMonths(12),
             'year' => now()->subYears(5),
-            default => now()->subMonths(12)
+            default => now()->subMonths(12),
         };
     }
 }
