@@ -9,6 +9,7 @@ use App\Http\Resources\SortieConteneurResource;
 use App\Models\SortieConteneur;
 use App\Services\SortieConteneurService;
 use App\Services\SortieCacheService;
+use App\Services\SortieArchiveService;
 use App\Traits\ApiResponseTrait;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -21,13 +22,16 @@ class SortieConteneurController extends Controller
 
     protected SortieConteneurService $sortieService;
     protected SortieCacheService $cacheService;
+    protected SortieArchiveService $archiveService;
 
     public function __construct(
         SortieConteneurService $sortieService,
-        SortieCacheService $cacheService
+        SortieCacheService $cacheService,
+        SortieArchiveService $archiveService
     ) {
         $this->sortieService = $sortieService;
         $this->cacheService = $cacheService;
+        $this->archiveService = $archiveService;
     }
 
     /**
@@ -210,45 +214,11 @@ class SortieConteneurController extends Controller
     public function archiver(SortieConteneur $sortie): JsonResponse
     {
         try {
-            // Vérifier que la sortie est retournée au port
-            if ($sortie->statut !== 'retourne_port') {
-                return $this->errorResponse('Seules les sorties retournées au port peuvent être archivées', 400);
-            }
-
-            // Vérifier que les champs obligatoires sont remplis
-            if (!$sortie->pv_sortie || !$sortie->pv_rentree_port || !$sortie->numero_ordre) {
-                return $this->errorResponse('Les champs PV Sortie, PV Rentrée et N° Ordre sont obligatoires', 400);
-            }
-
             DB::beginTransaction();
 
-            // Récupérer le chauffeur (nom du camion/véhicule)
-            $camion = $sortie->camion;
-            $chauffeur = $camion ? $camion->libelle_complet : 'Non défini';
-
-            // Créer ou mettre à jour l'archive (éviter les doublons)
-            DB::table('prime_archives')->updateOrInsert(
-                ['sortie_id' => $sortie->id],
-                [
-                    'numero_conteneur' => $sortie->numero_conteneur,
-                    'chauffeur' => $chauffeur,
-                    'montant_prime' => $sortie->prime_chauffeur ?? 0,
-                    'date_sortie' => $sortie->date_sortie,
-                    'date_paiement' => now(),
-                    'numero_semaine' => date('W'),
-                    'nom_client' => $sortie->nom_client,
-                    'observations' => 'Archivé depuis Ordre - PV Sortie: ' . $sortie->pv_sortie . ', PV Rentrée: ' . $sortie->pv_rentree_port . ', N° Ordre: ' . $sortie->numero_ordre,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]
-            );
-
-            // Marquer la sortie comme archivée avec timestamp
-            $sortie->update(['archived_at' => now()]);
-
+            $this->archiveService->archiverSortie($sortie);
             $this->cacheService->invalidateAllCaches();
 
-            // Logger l'activité
             logActivity('sortie_archived', $sortie, 'Sortie archivée depuis Ordre');
 
             DB::commit();
@@ -260,11 +230,7 @@ class SortieConteneurController extends Controller
 
         } catch (\Exception $e) {
             DB::rollback();
-            \Log::error('❌ Error archiving sortie', [
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            return $this->errorResponse('Erreur lors de l\'archivage de la sortie: ' . $e->getMessage(), 500);
+            return $this->errorResponse($e->getMessage(), 400);
         }
     }
 
@@ -304,53 +270,11 @@ class SortieConteneurController extends Controller
     public function archives(Request $request): JsonResponse
     {
         try {
-            $archives = DB::table('prime_archives as pa')
-                ->join('sortie_conteneurs as sc', 'pa.sortie_id', '=', 'sc.id')
-                ->join('armateurs as a', 'sc.code_armateur', '=', 'a.code')
-                ->leftJoin('detentions as d', 'sc.id', '=', 'd.sortie_conteneur_id')
-                ->leftJoin('vehicules as vc', 'sc.camion_id', '=', 'vc.id')
-                ->leftJoin('vehicules as vr', 'sc.remorque_id', '=', 'vr.id')
-                ->select(
-                    'pa.id',
-                    'sc.numero_conteneur as numeroConteneur',
-                    'a.code as codeArmateur',
-                    'a.type_conteneur as typeConteneur',
-                    'pa.nom_client as nomClient',
-                    'sc.date_sortie as dateSortiePort',
-                    'sc.date_retour as dateRetourPort',
-                    'sc.destination as destinationInitiale',
-                    'a.jours_gratuits as joursBAT',
-                    DB::raw('DATEDIFF(sc.date_retour, sc.date_sortie) as joursRealises'),
-                    DB::raw('GREATEST(DATEDIFF(sc.date_retour, sc.date_sortie) - a.jours_gratuits, 0) as joursDepassement'),
-                    'd.responsabilite',
-                    DB::raw('COALESCE(d.jours_client, 0) as joursClient'),
-                    DB::raw('COALESCE(d.jours_logistiga, 0) as joursLogistiga'),
-                    DB::raw('COALESCE(d.cout_total, 0) as montantTotalDetention'),
-                    DB::raw("CASE WHEN d.id IS NOT NULL AND COALESCE(d.cout_total, 0) > 0 THEN 'paye' ELSE 'sans-frais' END as statutPaiement"),
-                    'pa.montant_prime as montantPrime',
-                    'vc.immatriculation as camion',
-                    'vr.immatriculation as remorque',
-                    'pa.chauffeur',
-                    'sc.numero_bl as numeroBL',
-                    'sc.nom_transitaire as nomTransitaire',
-                    'sc.numero_ordre as numeroOrdre',
-                    'sc.pv_sortie as pvSortie',
-                    'sc.pv_rentree_port as pvRentreePort',
-                    'pa.observations',
-                    'pa.date_paiement as dateArchivage'
-                )
-                ->orderBy('pa.date_paiement', 'desc')
-                ->get();
-
+            $archives = $this->archiveService->getAllArchives();
             return $this->successResponse($archives, 'Archives récupérées avec succès');
-
         } catch (\Exception $e) {
-            \Log::error('Erreur archives sorties: ' . $e->getMessage(), [
-                'trace' => $e->getTraceAsString(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine()
-            ]);
-            return $this->errorResponse('Erreur lors de la récupération des archives: ' . $e->getMessage(), 500);
+            \Log::error('Erreur archives sorties: ' . $e->getMessage());
+            return $this->errorResponse('Erreur lors de la récupération des archives', 500);
         }
     }
 
@@ -360,89 +284,11 @@ class SortieConteneurController extends Controller
     public function archivesSearch(Request $request): JsonResponse
     {
         try {
-            $query = DB::table('prime_archives as pa')
-                ->join('sortie_conteneurs as sc', 'pa.sortie_id', '=', 'sc.id')
-                ->join('armateurs as a', 'sc.code_armateur', '=', 'a.code')
-                ->leftJoin('detentions as d', 'sc.id', '=', 'd.sortie_conteneur_id')
-                ->leftJoin('vehicules as vc', 'sc.camion_id', '=', 'vc.id')
-                ->leftJoin('vehicules as vr', 'sc.remorque_id', '=', 'vr.id')
-                ->select(
-                    'pa.id',
-                    'sc.numero_conteneur as numeroConteneur',
-                    'a.code as codeArmateur',
-                    'a.type_conteneur as typeConteneur',
-                    'pa.nom_client as nomClient',
-                    'sc.date_sortie as dateSortiePort',
-                    'sc.date_retour as dateRetourPort',
-                    'sc.destination as destinationInitiale',
-                    'a.jours_gratuits as joursBAT',
-                    DB::raw('DATEDIFF(sc.date_retour, sc.date_sortie) as joursRealises'),
-                    DB::raw('GREATEST(DATEDIFF(sc.date_retour, sc.date_sortie) - a.jours_gratuits, 0) as joursDepassement'),
-                    'd.responsabilite',
-                    DB::raw('COALESCE(d.jours_client, 0) as joursClient'),
-                    DB::raw('COALESCE(d.jours_logistiga, 0) as joursLogistiga'),
-                    DB::raw('COALESCE(d.cout_total, 0) as montantTotalDetention'),
-                    DB::raw("CASE WHEN d.id IS NOT NULL AND COALESCE(d.cout_total, 0) > 0 THEN 'paye' ELSE 'sans-frais' END as statutPaiement"),
-                    'pa.montant_prime as montantPrime',
-                    'vc.immatriculation as camion',
-                    'vr.immatriculation as remorque',
-                    'pa.chauffeur',
-                    'sc.numero_bl as numeroBL',
-                    'sc.nom_transitaire as nomTransitaire',
-                    'sc.numero_ordre as numeroOrdre',
-                    'sc.pv_sortie as pvSortie',
-                    'sc.pv_rentree_port as pvRentreePort',
-                    'pa.observations',
-                    'pa.date_paiement as dateArchivage'
-                );
-
-            // Filtrer par dates
-            if ($request->has('dateDebut')) {
-                $query->where('pa.date_paiement', '>=', $request->dateDebut);
-            }
-
-            if ($request->has('dateFin')) {
-                $query->where('pa.date_paiement', '<=', $request->dateFin);
-            }
-
-            // Filtrer par armateur
-            if ($request->has('armateur') && $request->armateur !== '') {
-                $query->where('a.code', 'like', '%' . $request->armateur . '%');
-            }
-
-            // Filtrer par client
-            if ($request->has('client') && $request->client !== '') {
-                $query->where('pa.nom_client', 'like', '%' . $request->client . '%');
-            }
-
-            // Filtrer par numéro de conteneur
-            if ($request->has('numeroConteneur') && $request->numeroConteneur !== '') {
-                $query->where('sc.numero_conteneur', 'like', '%' . $request->numeroConteneur . '%');
-            }
-
-            // Filtrer par statut de paiement
-            if ($request->has('statutPaiement') && $request->statutPaiement !== '') {
-                if ($request->statutPaiement === 'paye') {
-                    $query->whereNotNull('d.id')->where('d.cout_total', '>', 0);
-                } elseif ($request->statutPaiement === 'sans-frais') {
-                    $query->where(function($q) {
-                        $q->whereNull('d.id')
-                          ->orWhere('d.cout_total', '=', 0);
-                    });
-                }
-            }
-
-            $archives = $query->orderBy('pa.date_paiement', 'desc')->get();
-
+            $archives = $this->archiveService->searchArchives($request->all());
             return $this->successResponse($archives, 'Recherche effectuée avec succès');
-
         } catch (\Exception $e) {
-            \Log::error('Erreur recherche archives: ' . $e->getMessage(), [
-                'trace' => $e->getTraceAsString(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine()
-            ]);
-            return $this->errorResponse('Erreur lors de la recherche: ' . $e->getMessage(), 500);
+            \Log::error('Erreur recherche archives: ' . $e->getMessage());
+            return $this->errorResponse('Erreur lors de la recherche', 500);
         }
     }
 
@@ -452,36 +298,125 @@ class SortieConteneurController extends Controller
     public function archivesStats(Request $request): JsonResponse
     {
         try {
-            $totalArchives = DB::table('prime_archives')->count();
-            
-            $avecDetention = DB::table('prime_archives as pa')
-                ->join('sortie_conteneurs as sc', 'pa.sortie_id', '=', 'sc.id')
-                ->join('detentions as d', 'sc.id', '=', 'd.sortie_id')
-                ->where('d.montant_total', '>', 0)
-                ->count();
-
-            $montantTotal = DB::table('prime_archives as pa')
-                ->join('sortie_conteneurs as sc', 'pa.sortie_id', '=', 'sc.id')
-                ->leftJoin('detentions as d', 'sc.id', '=', 'd.sortie_id')
-                ->sum('d.montant_total') ?? 0;
-
-            $stats = [
-                'total_archives' => $totalArchives,
-                'total_avec_detention' => $avecDetention,
-                'total_sans_frais' => $totalArchives - $avecDetention,
-                'montant_total_detention' => (float) $montantTotal,
-            ];
-
+            $stats = $this->archiveService->getArchivesStats($request->all());
             return $this->successResponse($stats, 'Statistiques récupérées avec succès');
-
         } catch (\Exception $e) {
-            \Log::error('Erreur stats archives: ' . $e->getMessage(), [
-                'trace' => $e->getTraceAsString(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine()
-            ]);
-            return $this->errorResponse('Erreur lors de la récupération des statistiques: ' . $e->getMessage(), 500);
+            \Log::error('Erreur stats archives: ' . $e->getMessage());
+            return $this->errorResponse('Erreur lors de la récupération des statistiques', 500);
         }
     }
 
+    /**
+     * Récupérer les sorties en cours
+     */
+    public function enCours(Request $request): JsonResponse
+    {
+        try {
+            $sorties = $this->sortieService->getSortiesEnCours($request->all());
+            return $this->successResponse(
+                SortieConteneurResource::collection($sorties),
+                'Sorties en cours récupérées'
+            );
+        } catch (\Exception $e) {
+            return $this->errorResponse('Erreur lors de la récupération des sorties en cours', 500);
+        }
+    }
+
+    /**
+     * Récupérer les sorties retournées
+     */
+    public function retournees(Request $request): JsonResponse
+    {
+        try {
+            $sorties = $this->sortieService->getSortiesRetournees($request->all());
+            return $this->successResponse(
+                SortieConteneurResource::collection($sorties),
+                'Sorties retournées récupérées'
+            );
+        } catch (\Exception $e) {
+            return $this->errorResponse('Erreur lors de la récupération des sorties retournées', 500);
+        }
+    }
+
+    /**
+     * Rechercher des sorties
+     */
+    public function search(Request $request): JsonResponse
+    {
+        try {
+            $query = $request->get('q', '');
+            $sorties = $this->sortieService->searchSorties($query, $request->all());
+            return $this->successResponse(
+                SortieConteneurResource::collection($sorties),
+                'Recherche effectuée'
+            );
+        } catch (\Exception $e) {
+            return $this->errorResponse('Erreur lors de la recherche', 500);
+        }
+    }
+
+    /**
+     * Statistiques des sorties
+     */
+    public function stats(Request $request): JsonResponse
+    {
+        try {
+            $stats = $this->sortieService->getStatistics($request->all());
+            return $this->successResponse($stats, 'Statistiques récupérées');
+        } catch (\Exception $e) {
+            return $this->errorResponse('Erreur lors de la récupération des statistiques', 500);
+        }
+    }
+
+    /**
+     * Exporter les sorties
+     */
+    public function export(Request $request): JsonResponse
+    {
+        try {
+            $sorties = $this->sortieService->getAllSorties($request->all());
+            return $this->successResponse($sorties, 'Export effectué');
+        } catch (\Exception $e) {
+            return $this->errorResponse('Erreur lors de l\'export', 500);
+        }
+    }
+
+    /**
+     * Récupérer les infos de détention d'une sortie
+     */
+    public function detention(SortieConteneur $sortie): JsonResponse
+    {
+        try {
+            $info = $this->sortieService->getDetentionInfo($sortie);
+            return $this->successResponse($info, 'Infos détention récupérées');
+        } catch (\Exception $e) {
+            return $this->errorResponse('Erreur lors de la récupération des infos détention', 500);
+        }
+    }
+
+    /**
+     * Récupérer les infos de facturation d'une sortie
+     */
+    public function facture(SortieConteneur $sortie): JsonResponse
+    {
+        try {
+            $info = $this->sortieService->getFacturationInfo($sortie);
+            return $this->successResponse($info, 'Infos facturation récupérées');
+        } catch (\Exception $e) {
+            return $this->errorResponse('Erreur lors de la récupération des infos facturation', 500);
+        }
+    }
+
+    /**
+     * Récupérer la timeline d'une sortie
+     */
+    public function timeline(SortieConteneur $sortie): JsonResponse
+    {
+        try {
+            $timeline = $this->sortieService->getTimeline($sortie);
+            return $this->successResponse($timeline, 'Timeline récupérée');
+        } catch (\Exception $e) {
+            return $this->errorResponse('Erreur lors de la récupération de la timeline', 500);
+        }
+    }
 }
