@@ -8,13 +8,14 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Package, Truck, CalendarDays, Building, CalendarIcon } from "lucide-react";
 import { SortieFormData } from "@/types/sortie-conteneur";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useArmateurs } from "@/hooks/useArmateurs";
 import { useVehicules } from "@/hooks/useVehicules";
-import { calculateDaysFromDate } from "@/utils/sortieUtils";
 import { VehicleCombobox } from "@/components/ui/vehicle-combobox";
 import { CostSummary } from "./CostSummary";
 import { DetentionSummary } from "./DetentionSummary";
+import { ArmateurConditions } from "./ArmateurConditions";
+import { DetentionAlert } from "./DetentionAlert";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -27,50 +28,57 @@ interface SortieFormProps {
 }
 
 export const SortieForm = ({ formData, setFormData, onSubmit, onCancel }: SortieFormProps) => {
-  const { armateurs, getArmateurByCode, getArmateurById, getArmateurOptions } = useArmateurs();
+  const { getArmateurByCode, getArmateurOptions } = useArmateurs();
   const { getCamionOptions, getRemorqueOptions } = useVehicules();
-  const [selectedArmateur, setSelectedArmateur] = useState<any>(null);
-  const [joursCalcules, setJoursCalcules] = useState<number>(0);
+  
   const [dateSortie, setDateSortie] = useState<Date | undefined>(
     formData.dateSortie ? new Date(formData.dateSortie) : new Date()
   );
 
-  // Calcul automatique des jours lors du changement de date
-  useEffect(() => {
-    if (formData.dateFinFranchise && dateSortie) {
-      const dateFinFranchise = new Date(formData.dateFinFranchise);
-      const dateSortieValue = new Date(dateSortie);
-      
-      // Calculer la différence en jours entre la date de sortie et la date de fin de franchise
-      const diffInTime = dateFinFranchise.getTime() - dateSortieValue.getTime();
-      const diffInDays = Math.ceil(diffInTime / (1000 * 3600 * 24));
-      
-      // Les jours gratuits correspondent à cette différence
-      const joursGratuits = Math.max(0, diffInDays);
-      setJoursCalcules(joursGratuits);
-      
-      // Mettre à jour le champ joursBAD avec les jours calculés
-      setFormData({ ...formData, joursBAD: joursGratuits.toString() });
-    }
+  // Armateur sélectionné
+  const selectedArmateur = useMemo(() => {
+    if (!formData.codeArmateur) return null;
+    return getArmateurByCode(formData.codeArmateur);
+  }, [formData.codeArmateur, getArmateurByCode]);
+
+  // Calcul des jours gratuits
+  const joursCalcules = useMemo(() => {
+    if (!formData.dateFinFranchise || !dateSortie) return 0;
+    
+    const dateFinFranchise = new Date(formData.dateFinFranchise);
+    const diffInTime = dateFinFranchise.getTime() - dateSortie.getTime();
+    return Math.max(0, Math.ceil(diffInTime / (1000 * 3600 * 24)));
   }, [formData.dateFinFranchise, dateSortie]);
+
+  // Synchroniser joursBAD avec joursCalcules
+  useEffect(() => {
+    if (joursCalcules > 0 && formData.joursBAD !== joursCalcules.toString()) {
+      setFormData({ ...formData, joursBAD: joursCalcules.toString() });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [joursCalcules]);
 
   // Synchroniser la date de sortie avec le formData
   useEffect(() => {
     if (dateSortie) {
       const dateString = format(dateSortie, "yyyy-MM-dd");
-      setFormData({ ...formData, dateSortie: dateString });
+      if (formData.dateSortie !== dateString) {
+        setFormData({ ...formData, dateSortie: dateString });
+      }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dateSortie]);
 
-  // Mise à jour des informations armateur
-  useEffect(() => {
-    if (formData.codeArmateur) {
-      const armateur = getArmateurByCode(formData.codeArmateur);
-      setSelectedArmateur(armateur);
-    } else {
-      setSelectedArmateur(null);
-    }
-  }, [formData.codeArmateur, formData.typeDestination, getArmateurByCode]);
+  // Validation de date de franchise
+  const isDateFinFranchiseInvalid = useMemo(() => {
+    if (!formData.dateFinFranchise || !formData.dateSortie) return false;
+    return new Date(formData.dateFinFranchise) <= new Date(formData.dateSortie);
+  }, [formData.dateFinFranchise, formData.dateSortie]);
+
+  const isDateFinFranchisePast = useMemo(() => {
+    if (!formData.dateFinFranchise) return false;
+    return new Date(formData.dateFinFranchise) <= new Date();
+  }, [formData.dateFinFranchise]);
 
   return (
     <form onSubmit={onSubmit} className="space-y-6">
@@ -82,7 +90,7 @@ export const SortieForm = ({ formData, setFormData, onSubmit, onCancel }: Sortie
             Informations sur le conteneur
           </CardTitle>
         </CardHeader>
-        <CardContent className="grid grid-cols-3 gap-4">
+        <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <Label htmlFor="numeroConteneur">Numéro de conteneur *</Label>
             <Input
@@ -105,7 +113,10 @@ export const SortieForm = ({ formData, setFormData, onSubmit, onCancel }: Sortie
           </div>
           <div>
             <Label htmlFor="codeArmateur">Armateur *</Label>
-            <Select value={formData.codeArmateur} onValueChange={(value) => setFormData({ ...formData, codeArmateur: value })}>
+            <Select 
+              value={formData.codeArmateur} 
+              onValueChange={(value) => setFormData({ ...formData, codeArmateur: value })}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Sélectionner un armateur" />
               </SelectTrigger>
@@ -130,7 +141,7 @@ export const SortieForm = ({ formData, setFormData, onSubmit, onCancel }: Sortie
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="camion">Camion</Label>
               <VehicleCombobox
@@ -153,7 +164,7 @@ export const SortieForm = ({ formData, setFormData, onSubmit, onCancel }: Sortie
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="nomClient">Nom du client *</Label>
               <Input
@@ -215,7 +226,10 @@ export const SortieForm = ({ formData, setFormData, onSubmit, onCancel }: Sortie
         <CardContent className="space-y-4">
           <div>
             <Label htmlFor="destination">Destination *</Label>
-            <Select value={formData.destination} onValueChange={(value) => setFormData({ ...formData, destination: value })}>
+            <Select 
+              value={formData.destination} 
+              onValueChange={(value) => setFormData({ ...formData, destination: value })}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Sélectionner une destination" />
               </SelectTrigger>
@@ -241,7 +255,10 @@ export const SortieForm = ({ formData, setFormData, onSubmit, onCancel }: Sortie
 
           <div>
             <Label htmlFor="typeDestination">Type de destination *</Label>
-            <Select value={formData.typeDestination} onValueChange={(value) => setFormData({ ...formData, typeDestination: value })}>
+            <Select 
+              value={formData.typeDestination} 
+              onValueChange={(value) => setFormData({ ...formData, typeDestination: value })}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Sélectionner un type" />
               </SelectTrigger>
@@ -252,9 +269,10 @@ export const SortieForm = ({ formData, setFormData, onSubmit, onCancel }: Sortie
             </Select>
           </div>
 
+          {/* Section BAD */}
           {formData.typeDestination === "bad" && (
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="joursBAD">Nombre de jours BAD</Label>
                   <Input
@@ -279,14 +297,12 @@ export const SortieForm = ({ formData, setFormData, onSubmit, onCancel }: Sortie
                       Durée calculée: {joursCalcules} jours hors port
                     </p>
                   )}
-                  {formData.dateFinFranchise && formData.dateSortie && 
-                   new Date(formData.dateFinFranchise) <= new Date(formData.dateSortie) && (
-                    <p className="text-sm text-red-600 mt-1">
+                  {isDateFinFranchiseInvalid && (
+                    <p className="text-sm text-destructive mt-1">
                       ⚠️ La date de fin de franchise doit être après la date de sortie
                     </p>
                   )}
-                  {formData.dateFinFranchise && 
-                   new Date(formData.dateFinFranchise) <= new Date() && (
+                  {isDateFinFranchisePast && !isDateFinFranchiseInvalid && (
                     <p className="text-sm text-orange-600 mt-1">
                       ⚠️ Attention: Date de fin de franchise dans le passé - calcul de détention automatique
                     </p>
@@ -294,220 +310,42 @@ export const SortieForm = ({ formData, setFormData, onSubmit, onCancel }: Sortie
                 </div>
               </div>
 
-              {/* Récapitulatif des conditions armateur pour BAD */}
-              {selectedArmateur && (
-                <div className="p-2 bg-muted rounded border space-y-2">
-                  <h4 className="text-sm font-medium">Conditions de détention - {selectedArmateur.code}</h4>
-                  
-                  <div className="grid grid-cols-3 gap-2">
-                    <div className="text-center p-2 bg-background rounded text-xs">
-                      <div className="text-lg font-bold text-primary">{selectedArmateur.jours_gratuits}</div>
-                      <div className="text-xs text-muted-foreground">Jours gratuits</div>
-                    </div>
-                    <div className="text-center p-2 bg-background rounded text-xs">
-                      <div className="text-lg font-bold text-destructive">{selectedArmateur.prix_par_jour.toLocaleString()}</div>
-                      <div className="text-xs text-muted-foreground">FCFA / jour</div>
-                    </div>
-                    <div className="text-center p-2 bg-background rounded text-xs">
-                      <div className="text-lg font-bold text-orange-600">
-                        {(() => {
-                          if (dateSortie && selectedArmateur.jours_gratuits) {
-                            // Utiliser la date de fin de franchise si fournie, sinon calculer automatiquement
-                            const dateLimite = formData.dateFinFranchise 
-                              ? new Date(formData.dateFinFranchise)
-                              : (() => {
-                                  const date = new Date(dateSortie);
-                                  date.setDate(date.getDate() + selectedArmateur.jours_gratuits);
-                                  return date;
-                                })();
-                            return format(dateLimite, "dd/MM", { locale: fr });
-                          }
-                          return "--";
-                        })()}
-                      </div>
-                      <div className="text-xs text-muted-foreground">Date limite retour</div>
-                    </div>
-                  </div>
-
-                  {dateSortie && selectedArmateur.jours_gratuits && (
-                    <div className="p-3 bg-orange-50 border border-orange-200 rounded">
-                      <div className="flex items-center gap-2 text-orange-700">
-                        <CalendarIcon className="w-4 h-4" />
-                        <span className="font-medium">
-                          Le conteneur doit être retourné au port avant le{" "}
-                          {(() => {
-                            // Utiliser la date de fin de franchise si fournie, sinon calculer automatiquement
-                            const dateLimite = formData.dateFinFranchise 
-                              ? new Date(formData.dateFinFranchise)
-                              : (() => {
-                                  const date = new Date(dateSortie);
-                                  date.setDate(date.getDate() + selectedArmateur.jours_gratuits);
-                                  return date;
-                                })();
-                            return format(dateLimite, "dd MMMM yyyy", { locale: fr });
-                          })()}
-                        </span>
-                      </div>
-                      
-                  {(() => {
-                        // Utiliser la date de fin de franchise si fournie, sinon calculer automatiquement
-                        const dateLimite = formData.dateFinFranchise 
-                          ? new Date(formData.dateFinFranchise)
-                          : (() => {
-                              const date = new Date(dateSortie);
-                              date.setDate(date.getDate() + selectedArmateur.jours_gratuits);
-                              return date;
-                            })();
-                        
-                        const today = new Date();
-                        today.setHours(0, 0, 0, 0); // Normaliser à minuit pour une comparaison de date exacte
-                        dateLimite.setHours(0, 0, 0, 0);
-                        
-                        const diffTime = dateLimite.getTime() - today.getTime();
-                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                        
-                        // Calculer les jours de détention pour les retards
-                        const detentionDays = Math.max(0, Math.abs(diffDays));
-                        
-                        if (diffDays < 0) {
-                          return (
-                            <div className="mt-2 p-2 bg-red-100 border border-red-300 rounded text-red-700 text-sm">
-                              ⚠️ <strong>RETARD:</strong> {Math.abs(diffDays)} jour(s) de retard
-                              <br />
-                              Coût détention: {(detentionDays * selectedArmateur.prix_par_jour).toLocaleString()} FCFA
-                              {formData.dateFinFranchise && (
-                                <div className="mt-1 text-xs">
-                                  📅 Basé sur la date de fin de franchise: {format(dateLimite, "dd/MM/yyyy", { locale: fr })}
-                                </div>
-                              )}
-                            </div>
-                          );
-                        } else if (diffDays === 0) {
-                          return (
-                            <div className="mt-2 p-2 bg-yellow-100 border border-yellow-300 rounded text-yellow-700 text-sm">
-                              🟡 <strong>ATTENTION:</strong> Dernier jour de franchise
-                              {formData.dateFinFranchise && (
-                                <div className="mt-1 text-xs">
-                                  📅 Date de fin personnalisée: {format(dateLimite, "dd/MM/yyyy", { locale: fr })}
-                                </div>
-                              )}
-                            </div>
-                          );
-                        } else if (diffDays <= 2) {
-                          return (
-                            <div className="mt-2 p-2 bg-yellow-100 border border-yellow-300 rounded text-yellow-700 text-sm">
-                              ⏰ <strong>URGENT:</strong> Plus que {diffDays} jour(s) avant détention
-                              {formData.dateFinFranchise && (
-                                <div className="mt-1 text-xs">
-                                  📅 Date de fin personnalisée: {format(dateLimite, "dd/MM/yyyy", { locale: fr })}
-                                </div>
-                              )}
-                            </div>
-                          );
-                        } else {
-                          return (
-                            <div className="mt-2 p-2 bg-green-100 border border-green-300 rounded text-green-700 text-sm">
-                              ✅ <strong>OK:</strong> Encore {diffDays} jour(s) de franchise
-                              {formData.dateFinFranchise && (
-                                <div className="mt-1 text-xs">
-                                  📅 Date de fin personnalisée: {format(dateLimite, "dd/MM/yyyy", { locale: fr })}
-                                </div>
-                              )}
-                            </div>
-                          );
-                        }
-                      })()}
-                    </div>
-                  )}
-                </div>
+              {/* Conditions armateur pour BAD */}
+              {selectedArmateur && dateSortie && (
+                <>
+                  <ArmateurConditions 
+                    armateur={selectedArmateur} 
+                    dateSortie={dateSortie}
+                    dateFinFranchise={formData.dateFinFranchise}
+                  />
+                  <DetentionAlert
+                    dateSortie={dateSortie}
+                    joursGratuits={selectedArmateur.jours_gratuits}
+                    prixParJour={selectedArmateur.prix_par_jour}
+                    dateFinFranchise={formData.dateFinFranchise}
+                  />
+                </>
               )}
             </div>
           )}
 
+          {/* Section Détention */}
           {formData.typeDestination === "detention" && (
             <div className="space-y-4">
-              <DetentionSummary armateurId={selectedArmateur?.id || null} />
+              <DetentionSummary armateurId={selectedArmateur?.id?.toString() || null} />
               
-              {selectedArmateur && (
-                <div className="p-2 bg-muted rounded border space-y-2">
-                  <h4 className="text-sm font-medium">Conditions de détention - {selectedArmateur.code}</h4>
-                  
-                  <div className="grid grid-cols-3 gap-2">
-                    <div className="text-center p-2 bg-background rounded text-xs">
-                      <div className="text-lg font-bold text-primary">{selectedArmateur.jours_gratuits}</div>
-                      <div className="text-xs text-muted-foreground">Jours gratuits</div>
-                    </div>
-                    <div className="text-center p-2 bg-background rounded text-xs">
-                      <div className="text-lg font-bold text-destructive">{selectedArmateur.prix_par_jour.toLocaleString()}</div>
-                      <div className="text-xs text-muted-foreground">FCFA / jour</div>
-                    </div>
-                    <div className="text-center p-2 bg-background rounded text-xs">
-                      <div className="text-lg font-bold text-orange-600">
-                        {(() => {
-                          if (dateSortie && selectedArmateur.jours_gratuits) {
-                            const dateLimite = new Date(dateSortie);
-                            dateLimite.setDate(dateLimite.getDate() + selectedArmateur.jours_gratuits);
-                            return format(dateLimite, "dd/MM", { locale: fr });
-                          }
-                          return "--";
-                        })()}
-                      </div>
-                      <div className="text-xs text-muted-foreground">Date limite retour</div>
-                    </div>
-                  </div>
-
-                  {dateSortie && selectedArmateur.jours_gratuits && (
-                    <div className="p-3 bg-orange-50 border border-orange-200 rounded">
-                      <div className="flex items-center gap-2 text-orange-700">
-                        <CalendarIcon className="w-4 h-4" />
-                        <span className="font-medium">
-                          Le conteneur doit être retourné au port avant le{" "}
-                          {(() => {
-                            const dateLimite = new Date(dateSortie);
-                            dateLimite.setDate(dateLimite.getDate() + selectedArmateur.jours_gratuits);
-                            return format(dateLimite, "dd MMMM yyyy", { locale: fr });
-                          })()}
-                        </span>
-                      </div>
-                      
-                      {(() => {
-                        const dateLimite = new Date(dateSortie);
-                        dateLimite.setDate(dateLimite.getDate() + selectedArmateur.jours_gratuits);
-                        const today = new Date();
-                        const diffTime = dateLimite.getTime() - today.getTime();
-                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                        
-                        if (diffDays < 0) {
-                          return (
-                            <div className="mt-2 p-2 bg-red-100 border border-red-300 rounded text-red-700 text-sm">
-                              ⚠️ <strong>RETARD:</strong> {Math.abs(diffDays)} jour(s) de retard
-                              <br />
-                              Coût détention: {(Math.abs(diffDays) * selectedArmateur.prix_par_jour).toLocaleString()} FCFA
-                            </div>
-                          );
-                        } else if (diffDays === 0) {
-                          return (
-                            <div className="mt-2 p-2 bg-yellow-100 border border-yellow-300 rounded text-yellow-700 text-sm">
-                              🟡 <strong>ATTENTION:</strong> Dernier jour de franchise
-                            </div>
-                          );
-                        } else if (diffDays <= 2) {
-                          return (
-                            <div className="mt-2 p-2 bg-yellow-100 border border-yellow-300 rounded text-yellow-700 text-sm">
-                              ⏰ <strong>URGENT:</strong> Plus que {diffDays} jour(s) avant détention
-                            </div>
-                          );
-                        } else {
-                          return (
-                            <div className="mt-2 p-2 bg-green-100 border border-green-300 rounded text-green-700 text-sm">
-                              ✅ <strong>OK:</strong> Encore {diffDays} jour(s) de franchise
-                            </div>
-                          );
-                        }
-                      })()}
-                    </div>
-                  )}
-                </div>
+              {selectedArmateur && dateSortie && (
+                <>
+                  <ArmateurConditions 
+                    armateur={selectedArmateur} 
+                    dateSortie={dateSortie}
+                  />
+                  <DetentionAlert
+                    dateSortie={dateSortie}
+                    joursGratuits={selectedArmateur.jours_gratuits}
+                    prixParJour={selectedArmateur.prix_par_jour}
+                  />
+                </>
               )}
             </div>
           )}
