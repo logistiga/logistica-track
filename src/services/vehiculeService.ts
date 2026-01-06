@@ -65,6 +65,16 @@ class VehiculeService {
     const response = await apiService.get('/vehicules/remorques');
     return response.data;
   }
+
+  async resetAllStatuts(): Promise<{ updated_count: number }> {
+    const response = await apiService.post('/vehicules/reset-statuts', {});
+    return response.data;
+  }
+
+  async updateStatut(id: number, statut: 'disponible' | 'en_mission' | 'maintenance'): Promise<Vehicule> {
+    const response = await apiService.put(`/vehicules/${id}/statut`, { statut });
+    return response.data;
+  }
 }
 
 export const vehiculeService = new VehiculeService();

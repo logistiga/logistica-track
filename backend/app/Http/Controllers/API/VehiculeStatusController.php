@@ -172,4 +172,61 @@ class VehiculeStatusController extends Controller
             return $this->errorResponse('Erreur lors de la libération du véhicule', 500);
         }
     }
+
+    /**
+     * Réinitialiser tous les véhicules à disponible (admin seulement)
+     */
+    public function resetAllStatuts(): JsonResponse
+    {
+        try {
+            $count = Vehicule::where('statut', '!=', 'disponible')
+                ->update(['statut' => 'disponible']);
+
+            // Invalider le cache
+            try {
+                Cache::tags(['vehicules'])->flush();
+            } catch (\Exception $e) {
+                // Tag-based cache might not be supported
+            }
+
+            return $this->successResponse(
+                ['updated_count' => $count],
+                "Statut de {$count} véhicule(s) réinitialisé(s) à disponible"
+            );
+
+        } catch (\Exception $e) {
+            return $this->errorResponse('Erreur lors de la réinitialisation des statuts', 500);
+        }
+    }
+
+    /**
+     * Mettre à jour le statut d'un véhicule spécifique
+     */
+    public function updateStatut(Request $request, Vehicule $vehicule): JsonResponse
+    {
+        try {
+            $request->validate([
+                'statut' => 'required|in:disponible,en_mission,maintenance',
+            ]);
+
+            $vehicule->update(['statut' => $request->statut]);
+
+            // Invalider le cache
+            try {
+                Cache::tags(['vehicules'])->flush();
+            } catch (\Exception $e) {
+                // Tag-based cache might not be supported
+            }
+
+            return $this->successResponse(
+                new VehiculeResource($vehicule),
+                'Statut du véhicule mis à jour'
+            );
+
+        } catch (ValidationException $e) {
+            return $this->errorResponse('Statut invalide', 422, $e->errors());
+        } catch (\Exception $e) {
+            return $this->errorResponse('Erreur lors de la mise à jour du statut', 500);
+        }
+    }
 }
