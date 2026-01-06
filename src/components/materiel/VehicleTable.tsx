@@ -2,7 +2,6 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Edit, Trash2 } from "lucide-react";
 import type { Vehicule } from "@/services/vehiculeService";
-import { getStatusLabel, getStatusColor } from "@/utils/vehiculeUtils";
 
 interface VehicleTableProps {
   vehicles: Vehicule[];
@@ -27,7 +26,7 @@ export function VehicleTable({ vehicles, onDelete, onEdit }: VehicleTableProps) 
             <TableHead>Numéro de Parc</TableHead>
             <TableHead>Immatriculation</TableHead>
             <TableHead>Type</TableHead>
-            <TableHead>Statut</TableHead>
+            <TableHead>Actif</TableHead>
             <TableHead className="w-24">Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -38,8 +37,8 @@ export function VehicleTable({ vehicles, onDelete, onEdit }: VehicleTableProps) 
               <TableCell>{vehicle.immatriculation}</TableCell>
               <TableCell className="capitalize">{vehicle.type}</TableCell>
               <TableCell>
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(vehicle.statut)}`}>
-                  {getStatusLabel(vehicle.statut)}
+                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${vehicle.actif ? 'bg-success/10 text-success' : 'bg-muted text-muted-foreground'}`}>
+                  {vehicle.actif ? 'Actif' : 'Inactif'}
                 </span>
               </TableCell>
               <TableCell>

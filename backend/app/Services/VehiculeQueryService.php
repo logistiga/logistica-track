@@ -22,10 +22,6 @@ class VehiculeQueryService
             $query->where('type', $filters['type']);
         }
 
-        if (isset($filters['statut'])) {
-            $query->where('statut', $filters['statut']);
-        }
-
         if (isset($filters['actif'])) {
             $query->where('actif', filter_var($filters['actif'], FILTER_VALIDATE_BOOLEAN));
         }
@@ -59,47 +55,6 @@ class VehiculeQueryService
     }
 
     /**
-     * Récupérer par statut
-     */
-    public function getByStatut(string $statut, array $filters = []): Collection
-    {
-        $filters['statut'] = $statut;
-        return $this->getAll($filters);
-    }
-
-    /**
-     * Véhicules disponibles
-     */
-    public function getDisponibles(?string $type = null): Collection
-    {
-        $filters = ['statut' => 'disponible', 'actif' => true];
-        
-        if ($type) {
-            $filters['type'] = $type;
-        }
-        
-        return $this->getAll($filters);
-    }
-
-    /**
-     * Véhicules en mission
-     */
-    public function getEnMission(array $filters = []): Collection
-    {
-        $filters['statut'] = 'en_mission';
-        return $this->getAll($filters);
-    }
-
-    /**
-     * Véhicules en maintenance
-     */
-    public function getEnMaintenance(array $filters = []): Collection
-    {
-        $filters['statut'] = 'maintenance';
-        return $this->getAll($filters);
-    }
-
-    /**
      * Recherche de véhicules
      */
     public function search(string $query, array $filters = []): Collection
@@ -120,6 +75,20 @@ class VehiculeQueryService
             ->map(fn($v) => ['value' => $v->id, 'label' => $v->libelle_complet])
             ->toArray();
     }
+
+    /**
+     * Options pour sélection (remorques)
+     */
+    public function getRemorquesOptions(): array
+    {
+        return Vehicule::remorques()
+            ->actifs()
+            ->orderBy('numero_parc')
+            ->get()
+            ->map(fn($v) => ['value' => $v->id, 'label' => $v->libelle_complet])
+            ->toArray();
+    }
+}
 
     /**
      * Options pour sélection (remorques)

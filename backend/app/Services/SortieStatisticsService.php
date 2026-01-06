@@ -34,8 +34,8 @@ class SortieStatisticsService
                 ->whereYear('date_retour', $currentYear)
                 ->whereMonth('date_retour', $currentMonth)
                 ->count(),
-            'vehicules_disponibles' => Vehicule::where('statut', 'disponible')->count(),
-            'vehicules_en_mission' => Vehicule::where('statut', 'en_mission')->count(),
+            'total_camions' => Vehicule::camions()->actifs()->count(),
+            'total_remorques' => Vehicule::remorques()->actifs()->count(),
             'moyenne_jours_hors_port' => $this->calculateAverageJoursHorsPort($filters),
             'total_prime_chauffeur' => (clone $query)->sum('prime_chauffeur'),
         ];

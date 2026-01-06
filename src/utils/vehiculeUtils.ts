@@ -16,32 +16,6 @@ export function filterVehicles(vehicles: Vehicule[], searchTerm: string): Vehicu
 }
 
 /**
- * Obtenir le label de statut d'un véhicule
- */
-export function getStatusLabel(statut: string | null | undefined): string {
-  const labels: Record<string, string> = {
-    disponible: 'Disponible',
-    en_mission: 'En mission',
-    maintenance: 'En maintenance',
-    hors_service: 'Hors service',
-  };
-  return labels[statut || 'disponible'] || 'Actif';
-}
-
-/**
- * Obtenir la couleur de statut d'un véhicule
- */
-export function getStatusColor(statut: string | null | undefined): string {
-  const colors: Record<string, string> = {
-    disponible: 'bg-success/10 text-success',
-    en_mission: 'bg-info/10 text-info',
-    maintenance: 'bg-warning/10 text-warning',
-    hors_service: 'bg-destructive/10 text-destructive',
-  };
-  return colors[statut || 'disponible'] || 'bg-success/10 text-success';
-}
-
-/**
  * Transformer un véhicule en option pour les selects
  */
 export function vehicleToOption(vehicle: Vehicule): { value: string; label: string } {
@@ -59,7 +33,7 @@ export function calculateVehicleStats(camions: Vehicule[], remorques: Vehicule[]
     totalCamions: camions.length,
     totalRemorques: remorques.length,
     totalVehicules: camions.length + remorques.length,
-    camionsDisponibles: camions.filter(c => c.statut === 'disponible' || !c.statut).length,
-    remorquesDisponibles: remorques.filter(r => r.statut === 'disponible' || !r.statut).length,
+    camionsActifs: camions.filter(c => c.actif).length,
+    remorquesActifs: remorques.filter(r => r.actif).length,
   };
 }

@@ -30,7 +30,6 @@ class VehiculeSearchController extends Controller
             $request->validate([
                 'query' => 'required|string|min:2',
                 'type' => 'sometimes|in:camion,remorque',
-                'statut' => 'sometimes|in:disponible,en_mission,maintenance',
             ]);
 
             $results = $this->vehiculeService->searchVehicules(

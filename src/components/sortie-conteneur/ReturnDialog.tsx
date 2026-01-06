@@ -28,9 +28,9 @@ export const ReturnDialog = ({
   // Récupérer les données des véhicules depuis la page Matériel
   const { camions, remorques, loading } = useVehicules();
   
-  // Filtrer uniquement les véhicules disponibles (statut = disponible ou null/undefined)
-  const camionsDisponibles = camions.filter((camion) => camion.actif && (!camion.statut || camion.statut === "disponible"));
-  const remorquesDisponibles = remorques.filter((remorque) => remorque.actif && (!remorque.statut || remorque.statut === "disponible"));
+  // Filtrer uniquement les véhicules actifs
+  const camionsDisponibles = camions.filter((camion) => camion.actif);
+  const remorquesDisponibles = remorques.filter((remorque) => remorque.actif);
 
   return (
     <Dialog open={open} onOpenChange={onCancel}>

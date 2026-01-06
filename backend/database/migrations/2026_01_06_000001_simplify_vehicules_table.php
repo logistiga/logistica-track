@@ -8,6 +8,20 @@ return new class extends Migration
 {
     public function up()
     {
+        // Supprimer les colonnes de gestion de véhicules si elles existent
+        Schema::table('vehicules', function (Blueprint $table) {
+            $columns = ['statut', 'prochaine_revision', 'derniere_revision', 'kilometrage'];
+            
+            foreach ($columns as $column) {
+                if (Schema::hasColumn('vehicules', $column)) {
+                    $table->dropColumn($column);
+                }
+            }
+        });
+    }
+
+    public function down()
+    {
         Schema::table('vehicules', function (Blueprint $table) {
             if (!Schema::hasColumn('vehicules', 'statut')) {
                 $table->enum('statut', ['disponible', 'en_mission', 'maintenance'])
@@ -26,13 +40,6 @@ return new class extends Migration
             if (!Schema::hasColumn('vehicules', 'kilometrage')) {
                 $table->integer('kilometrage')->default(0)->after('derniere_revision');
             }
-        });
-    }
-
-    public function down()
-    {
-        Schema::table('vehicules', function (Blueprint $table) {
-            $table->dropColumn(['statut', 'prochaine_revision', 'derniere_revision', 'kilometrage']);
         });
     }
 };

@@ -14,17 +14,10 @@ class Vehicule extends Model
         'immatriculation',
         'type',
         'actif',
-        'statut',
-        'prochaine_revision',
-        'derniere_revision',
-        'kilometrage',
     ];
 
     protected $casts = [
         'actif' => 'boolean',
-        'prochaine_revision' => 'date',
-        'derniere_revision' => 'date',
-        'kilometrage' => 'integer',
     ];
 
     // Relations
@@ -62,21 +55,6 @@ class Vehicule extends Model
     public function scopeRemorques($query)
     {
         return $query->where('type', 'remorque');
-    }
-
-    public function scopeDisponibles($query)
-    {
-        return $query->where('statut', 'disponible')->where('actif', true);
-    }
-
-    public function scopeEnMission($query)
-    {
-        return $query->where('statut', 'en_mission');
-    }
-
-    public function scopeEnMaintenance($query)
-    {
-        return $query->where('statut', 'maintenance');
     }
 
     // Accesseurs

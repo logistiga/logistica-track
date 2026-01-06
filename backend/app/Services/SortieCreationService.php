@@ -193,18 +193,14 @@ class SortieCreationService
     /**
      * Gérer les changements de véhicules lors de la mise à jour
      */
-    private function handleVehiculeChanges(SortieConteneur $sortie, array $data)
+    private function handleVehiculeChanges(SortieConteneur $sortie, array $data): void
     {
         if (isset($data['camion_id']) && $data['camion_id'] !== $sortie->camion_id) {
             $this->vehiculeService->checkVehiculeDisponibilite($data['camion_id']);
-            $this->vehiculeService->updateVehiculeStatut($sortie->camion_id, 'disponible');
-            $this->vehiculeService->updateVehiculeStatut($data['camion_id'], 'en_mission');
         }
 
         if (isset($data['remorque_id']) && $data['remorque_id'] !== $sortie->remorque_id) {
             $this->vehiculeService->checkVehiculeDisponibilite($data['remorque_id']);
-            $this->vehiculeService->updateVehiculeStatut($sortie->remorque_id, 'disponible');
-            $this->vehiculeService->updateVehiculeStatut($data['remorque_id'], 'en_mission');
         }
     }
 }
