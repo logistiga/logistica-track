@@ -1,5 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { RefreshCw, Clock, CheckCircle, XCircle } from "lucide-react";
+import { RefreshCw, Clock, CheckCircle } from "lucide-react";
 import { type DoubleRelevage } from "@/services/doubleRelevageService";
 
 interface DoubleRelevageStatsProps {

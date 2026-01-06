@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -8,10 +8,11 @@ import { DoubleRelevageStats } from "./DoubleRelevageStats";
 import { DoubleRelevageSearch } from "./double-relevage/DoubleRelevageSearch";
 import { DoubleRelevageTable } from "./double-relevage/DoubleRelevageTable";
 import { useDoubleRelevage } from "@/hooks/useDoubleRelevage";
+import { transformVehiculesToParc, VehiculeTransform } from "@/utils/baseUtils";
 
 interface DoubleRelevageTabProps {
-  camions: Array<{id: string, numeroParc: string, immatriculation: string, statut: string}>;
-  remorques: Array<{id: string, numeroParc: string, immatriculation: string, statut: string}>;
+  camions: VehiculeTransform[];
+  remorques: VehiculeTransform[];
 }
 
 export function DoubleRelevageTab({ camions, remorques }: DoubleRelevageTabProps) {
@@ -27,9 +28,9 @@ export function DoubleRelevageTab({ camions, remorques }: DoubleRelevageTabProps
     handleDeleteOperation
   } = useDoubleRelevage();
 
-  // Transform data for forms
-  const camionsParc = camions.map(c => ({ id: c.id, numeroParc: c.numeroParc }));
-  const remorquesParc = remorques.map(r => ({ id: r.id, numeroParc: r.numeroParc }));
+  // Mémoriser les transformations de véhicules
+  const camionsParc = useMemo(() => transformVehiculesToParc(camions), [camions]);
+  const remorquesParc = useMemo(() => transformVehiculesToParc(remorques), [remorques]);
 
   const onAddOperation = async (data: any) => {
     const success = await handleAddOperation(data);

@@ -1,21 +1,22 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Package, Plus, Search, Edit, Trash2, LogOut } from "lucide-react";
 import { StockageForm } from "./StockageForm";
 import { StockageStats } from "./StockageStats";
 import { SortieStockageDialog } from "./SortieStockageDialog";
+import { StatusBadge } from "./shared/StatusBadge";
 import { toast } from "@/hooks/use-toast";
 import { stockageService, Stockage } from "@/services/stockageService";
 import { formatCurrency } from "@/lib/currency";
+import { transformVehiculesToParc, VehiculeTransform } from "@/utils/baseUtils";
 
 interface StockageTabProps {
-  camions: Array<{id: string, numeroParc: string, immatriculation: string, statut: string}>;
-  remorques: Array<{id: string, numeroParc: string, immatriculation: string, statut: string}>;
+  camions: VehiculeTransform[];
+  remorques: VehiculeTransform[];
 }
 
 export function StockageTab({ camions, remorques }: StockageTabProps) {
@@ -28,17 +29,14 @@ export function StockageTab({ camions, remorques }: StockageTabProps) {
   const [editingStockage, setEditingStockage] = useState<Stockage | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
 
-  useEffect(() => {
-    loadStockages();
-  }, []);
+  // Mémoriser les transformations de véhicules
+  const camionsParc = useMemo(() => transformVehiculesToParc(camions), [camions]);
+  const remorquesParc = useMemo(() => transformVehiculesToParc(remorques), [remorques]);
 
-  const loadStockages = async () => {
+  const loadStockages = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await stockageService.getStockages({
-        statut: 'stocke'
-      });
-      console.log('🔍 Stockages récupérés:', response.data);
+      const response = await stockageService.getStockages({ statut: 'stocke' });
       setStockages(response.data);
     } catch (error) {
       console.error('Erreur lors du chargement des stockages:', error);
@@ -50,32 +48,23 @@ export function StockageTab({ camions, remorques }: StockageTabProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  // Transform data for forms
-  const camionsParc = camions.map(c => ({ id: c.id, numeroParc: c.numeroParc }));
-  const remorquesParc = remorques.map(r => ({ id: r.id, numeroParc: r.numeroParc }));
+  useEffect(() => {
+    loadStockages();
+  }, [loadStockages]);
 
-  const filteredStockages = stockages.filter(item =>
-    item.numero_conteneur.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.nom_client.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.provenance.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredStockages = useMemo(() => 
+    stockages.filter(item =>
+      item.numero_conteneur.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.nom_client.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.provenance.toLowerCase().includes(searchTerm.toLowerCase())
+    ), 
+  [stockages, searchTerm]);
 
-  const getStatusBadge = (statut: string) => {
-    switch (statut) {
-      case "stocke":
-        return <Badge className="bg-success text-success-foreground">Stocké</Badge>;
-      case "en_attente_sortie":
-        return <Badge className="bg-warning text-warning-foreground">En attente sortie</Badge>;
-      default:
-        return <Badge variant="secondary">{statut}</Badge>;
-    }
-  };
-
-  const handleAddStockage = async (data: any) => {
+  const handleAddStockage = useCallback(async (data: any) => {
     try {
-      const stockageData = {
+      await stockageService.createStockage({
         nom_client: data.nomClient,
         numero_conteneur: data.numeroConteneur,
         provenance: data.provenance,
@@ -86,63 +75,40 @@ export function StockageTab({ camions, remorques }: StockageTabProps) {
         jours_gratuits: data.joursGratuits,
         prix_par_jour: data.prixParJour,
         observations: data.observations,
-      };
-
-      await stockageService.createStockage(stockageData);
+      });
       setIsAddDialogOpen(false);
       loadStockages();
-      
-      toast({
-        title: "Succès",
-        description: "Conteneur ajouté au stockage avec succès"
-      });
+      toast({ title: "Succès", description: "Conteneur ajouté au stockage" });
     } catch (error) {
       console.error('Erreur lors de la création du stockage:', error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de créer le stockage",
-        variant: "destructive",
-      });
+      toast({ title: "Erreur", description: "Impossible de créer le stockage", variant: "destructive" });
     }
-  };
+  }, [loadStockages]);
 
-  const handleSortieStockage = async (data: any) => {
-    if (selectedStockage) {
-      try {
-        const result = await stockageService.sortieStockage(selectedStockage.id, {
-          date_sortie: data.dateSortie,
-          observations: data.observations,
-        });
-
-        setIsSortieDialogOpen(false);
-        setSelectedStockage(null);
-        loadStockages();
-        
-        toast({
-          title: "Sortie confirmée",
-          description: `Conteneur sorti - ${result.detention.jours} jours de détention (${result.detention.montant_formate})`
-        });
-      } catch (error) {
-        console.error('Erreur lors de la sortie du stockage:', error);
-        toast({
-          title: "Erreur",
-          description: "Impossible de confirmer la sortie",
-          variant: "destructive",
-        });
-      }
-    }
-  };
-
-  const handleEditStockage = (stockage: Stockage) => {
-    setEditingStockage(stockage);
-    setIsEditDialogOpen(true);
-  };
-
-  const handleUpdateStockage = async (data: any) => {
-    if (!editingStockage) return;
-
+  const handleSortieStockage = useCallback(async (data: any) => {
+    if (!selectedStockage) return;
     try {
-      const stockageData = {
+      const result = await stockageService.sortieStockage(selectedStockage.id, {
+        date_sortie: data.dateSortie,
+        observations: data.observations,
+      });
+      setIsSortieDialogOpen(false);
+      setSelectedStockage(null);
+      loadStockages();
+      toast({
+        title: "Sortie confirmée",
+        description: `Conteneur sorti - ${result.detention.jours} jours de détention (${result.detention.montant_formate})`
+      });
+    } catch (error) {
+      console.error('Erreur lors de la sortie:', error);
+      toast({ title: "Erreur", description: "Impossible de confirmer la sortie", variant: "destructive" });
+    }
+  }, [selectedStockage, loadStockages]);
+
+  const handleUpdateStockage = useCallback(async (data: any) => {
+    if (!editingStockage) return;
+    try {
+      await stockageService.updateStockage(editingStockage.id, {
         nom_client: data.nomClient,
         numero_conteneur: data.numeroConteneur,
         provenance: data.provenance,
@@ -153,44 +119,27 @@ export function StockageTab({ camions, remorques }: StockageTabProps) {
         jours_gratuits: data.joursGratuits,
         prix_par_jour: data.prixParJour,
         observations: data.observations,
-      };
-
-      await stockageService.updateStockage(editingStockage.id, stockageData);
+      });
       setIsEditDialogOpen(false);
       setEditingStockage(null);
       loadStockages();
-      
-      toast({
-        title: "Succès",
-        description: "Stockage mis à jour avec succès"
-      });
+      toast({ title: "Succès", description: "Stockage mis à jour" });
     } catch (error) {
-      console.error('Erreur lors de la mise à jour du stockage:', error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de mettre à jour le stockage",
-        variant: "destructive",
-      });
+      console.error('Erreur lors de la mise à jour:', error);
+      toast({ title: "Erreur", description: "Impossible de mettre à jour", variant: "destructive" });
     }
-  };
+  }, [editingStockage, loadStockages]);
 
-  const handleDeleteStockage = async (id: number) => {
+  const handleDeleteStockage = useCallback(async (id: number) => {
     try {
       await stockageService.deleteStockage(id);
       loadStockages();
-      toast({
-        title: "Supprimé",
-        description: "Conteneur supprimé du stockage"
-      });
+      toast({ title: "Supprimé", description: "Conteneur supprimé du stockage" });
     } catch (error) {
       console.error('Erreur lors de la suppression:', error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de supprimer le stockage",
-        variant: "destructive",
-      });
+      toast({ title: "Erreur", description: "Impossible de supprimer", variant: "destructive" });
     }
-  };
+  }, [loadStockages]);
 
   if (loading) {
     return <div className="text-center py-8">Chargement des stockages...</div>;
@@ -280,13 +229,18 @@ export function StockageTab({ camions, remorques }: StockageTabProps) {
                       {Math.floor(item.jours_detention)} jours payants
                     </div>
                   </TableCell>
-                  <TableCell>{getStatusBadge(item.statut)}</TableCell>
+                  <TableCell>
+                    <StatusBadge statut={item.statut} type="stockage" />
+                  </TableCell>
                   <TableCell>
                     <div className="flex space-x-1">
                       <Button 
                         variant="outline" 
                         size="sm"
-                        onClick={() => handleEditStockage(item)}
+                        onClick={() => {
+                          setEditingStockage(item);
+                          setIsEditDialogOpen(true);
+                        }}
                       >
                         <Edit className="w-3 h-3" />
                       </Button>
