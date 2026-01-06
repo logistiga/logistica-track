@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Truck, Loader2 } from "lucide-react";
@@ -9,7 +9,6 @@ import { VehicleStatsCards } from "@/components/materiel/VehicleStatsCards";
 import { VehicleTable } from "@/components/materiel/VehicleTable";
 import { VehicleDialog } from "@/components/materiel/VehicleDialog";
 import { filterVehicles } from "@/utils/vehiculeUtils";
-import { toast } from "@/hooks/use-toast";
 
 export default function Materiel() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -20,7 +19,6 @@ export default function Materiel() {
 
   const { camions, remorques, loading, createVehicule, deleteVehicule, updateVehicule } = useVehicules();
 
-  // Optimisation avec useMemo pour le filtrage
   const filteredCamions = useMemo(
     () => filterVehicles(camions, searchTerm),
     [camions, searchTerm]
@@ -31,17 +29,17 @@ export default function Materiel() {
     [remorques, searchTerm]
   );
 
-  const handleDeleteVehicle = async (id: number) => {
+  const handleDeleteVehicle = useCallback(async (id: number) => {
     const type = activeTab === "camions" ? "camion" : "remorque";
     await deleteVehicule(id, type as 'camion' | 'remorque');
-  };
+  }, [activeTab, deleteVehicule]);
 
-  const handleEditVehicle = (vehicle: Vehicule) => {
+  const handleEditVehicle = useCallback((vehicle: Vehicule) => {
     setEditingVehicle(vehicle);
     setIsEditDialogOpen(true);
-  };
+  }, []);
 
-  const handleUpdateVehicle = async (data: CreateVehiculeData) => {
+  const handleUpdateVehicle = useCallback(async (data: CreateVehiculeData) => {
     if (!editingVehicle) return false;
     
     const success = await updateVehicule(editingVehicle.id, data);
@@ -50,7 +48,12 @@ export default function Materiel() {
       setIsEditDialogOpen(false);
     }
     return success;
-  };
+  }, [editingVehicle, updateVehicule]);
+
+  const handleCloseEditDialog = useCallback(() => {
+    setIsEditDialogOpen(false);
+    setEditingVehicle(null);
+  }, []);
 
   if (loading) {
     return (
@@ -91,7 +94,6 @@ export default function Materiel() {
             <TabsContent value="camions" className="mt-6">
               <VehicleTable 
                 vehicles={filteredCamions}
-                searchTerm={searchTerm}
                 onDelete={handleDeleteVehicle}
                 onEdit={handleEditVehicle}
               />
@@ -99,7 +101,6 @@ export default function Materiel() {
             <TabsContent value="remorques" className="mt-6">
               <VehicleTable 
                 vehicles={filteredRemorques}
-                searchTerm={searchTerm}
                 onDelete={handleDeleteVehicle}
                 onEdit={handleEditVehicle}
               />
@@ -117,10 +118,7 @@ export default function Materiel() {
 
       <VehicleDialog
         isOpen={isEditDialogOpen}
-        onClose={() => {
-          setIsEditDialogOpen(false);
-          setEditingVehicle(null);
-        }}
+        onClose={handleCloseEditDialog}
         onSubmit={handleUpdateVehicle}
         activeTab={editingVehicle?.type === "camion" ? "camions" : "remorques"}
         editingVehicle={editingVehicle}
