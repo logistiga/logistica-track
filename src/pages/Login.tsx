@@ -65,7 +65,7 @@ export default function Login() {
         </div>
       </div>;
   }
-  return <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-secondary/5">
+  return <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="w-full max-w-md p-6">
         <Card className="shadow-xl border-0 bg-card/50 backdrop-blur-sm">
           <CardHeader className="text-center space-y-4">
