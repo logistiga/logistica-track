@@ -15,7 +15,7 @@ class VehiculeService
     }
 
     /**
-     * Récupérer tous les véhicules avec filtres
+     * Récupérer tous les véhicules avec filtres (retourne array pour meta)
      */
     public function getAllVehicules(array $filters = []): array
     {
@@ -25,6 +25,14 @@ class VehiculeService
             'data' => $result,
             'meta' => ['total' => $result->count()],
         ];
+    }
+
+    /**
+     * Récupérer la liste des véhicules directement (sans wrapping)
+     */
+    public function getVehiculesList(array $filters = []): Collection
+    {
+        return $this->queryService->getAll($filters);
     }
 
     /**
