@@ -66,14 +66,6 @@ class SortieConteneurService
                 'statut' => 'retourne_port',
             ]);
 
-            // Libérer les véhicules de sortie
-            $this->updateVehiculeStatut($sortie->camion_id, 'disponible');
-            $this->updateVehiculeStatut($sortie->remorque_id, 'disponible');
-
-            // Occuper les véhicules de retour
-            $this->updateVehiculeStatut($data['camion_retour_id'], 'en_mission');
-            $this->updateVehiculeStatut($data['remorque_retour_id'], 'en_mission');
-
             // Créer automatiquement la détention si dépassement (via le calculator centralisé)
             $this->detentionCalculator->creerDetentionSiNecessaire($sortie);
 
@@ -102,32 +94,28 @@ class SortieConteneurService
     }
 
     /**
-     * Vérifier la disponibilité des véhicules
+     * Vérifier que les véhicules existent et sont actifs
      */
-    private function checkVehiculeDisponibilite($camionId = null, $remorqueId = null)
+    private function checkVehiculeDisponibilite($camionId = null, $remorqueId = null): void
     {
-        if ($camionId && !Vehicule::find($camionId)) {
-            throw new \Exception("Camion introuvable (ID: {$camionId})");
+        if ($camionId) {
+            $camion = Vehicule::find($camionId);
+            if (!$camion) {
+                throw new \Exception("Camion introuvable (ID: {$camionId})");
+            }
+            if (!$camion->actif) {
+                throw new \Exception("Le camion {$camion->numero_parc} n'est pas actif");
+            }
         }
 
-        if ($remorqueId && !Vehicule::find($remorqueId)) {
-            throw new \Exception("Remorque introuvable (ID: {$remorqueId})");
-        }
-    }
-
-    /**
-     * Mettre à jour le statut d'un véhicule
-     */
-    private function updateVehiculeStatut($vehiculeId, $statut)
-    {
-        if (!$vehiculeId) {
-            return;
-        }
-
-        try {
-            Vehicule::where('id', $vehiculeId)->update(['statut' => $statut]);
-        } catch (\Exception $e) {
-            \Log::warning("Impossible de mettre à jour le statut du véhicule {$vehiculeId}: " . $e->getMessage());
+        if ($remorqueId) {
+            $remorque = Vehicule::find($remorqueId);
+            if (!$remorque) {
+                throw new \Exception("Remorque introuvable (ID: {$remorqueId})");
+            }
+            if (!$remorque->actif) {
+                throw new \Exception("La remorque {$remorque->numero_parc} n'est pas active");
+            }
         }
     }
 

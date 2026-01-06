@@ -44,30 +44,6 @@ class VehiculeService
     }
 
     /**
-     * Véhicules disponibles
-     */
-    public function getVehiculesDisponibles(?string $type = null): Collection
-    {
-        return $this->queryService->getDisponibles($type);
-    }
-
-    /**
-     * Véhicules en mission
-     */
-    public function getVehiculesEnMission(array $filters = []): Collection
-    {
-        return $this->queryService->getEnMission($filters);
-    }
-
-    /**
-     * Véhicules en maintenance
-     */
-    public function getVehiculesEnMaintenance(array $filters = []): Collection
-    {
-        return $this->queryService->getEnMaintenance($filters);
-    }
-
-    /**
      * Recherche de véhicules
      */
     public function searchVehicules(string $query, array $filters = []): Collection
@@ -107,6 +83,15 @@ class VehiculeService
     {
         return $this->queryService->getCamionsOptions();
     }
+
+    /**
+     * Options pour sélection (remorques)
+     */
+    public function getRemorquesPourSelection(): array
+    {
+        return $this->queryService->getRemorquesOptions();
+    }
+}
 
     /**
      * Options pour sélection (remorques)
