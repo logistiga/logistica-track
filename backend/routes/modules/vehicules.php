@@ -17,6 +17,7 @@ Route::prefix('vehicules')->name('vehicules.')->group(function () {
     Route::get('/maintenance', [VehiculeStatusController::class, 'maintenance'])->name('maintenance');
     Route::get('/search', [VehiculeSearchController::class, 'search'])->name('search');
     Route::get('/export', [VehiculeReportController::class, 'export'])->name('export');
+    Route::post('/reset-statuts', [VehiculeStatusController::class, 'resetAllStatuts'])->middleware('role:admin')->name('reset-statuts');
     
     Route::prefix('{vehicule}')->group(function () {
         Route::get('/', [VehiculeController::class, 'show'])->name('show');
@@ -24,6 +25,7 @@ Route::prefix('vehicules')->name('vehicules.')->group(function () {
         Route::delete('/', [VehiculeController::class, 'destroy'])->middleware('role:admin')->name('destroy');
         Route::post('/assign', [VehiculeStatusController::class, 'assign'])->middleware('role:admin,manager,operator')->name('assign');
         Route::post('/release', [VehiculeStatusController::class, 'release'])->middleware('role:admin,manager,operator')->name('release');
+        Route::put('/statut', [VehiculeStatusController::class, 'updateStatut'])->middleware('role:admin,manager')->name('update-statut');
         Route::get('/history', [VehiculeReportController::class, 'history'])->name('history');
         Route::get('/maintenance-schedule', [VehiculeReportController::class, 'maintenanceSchedule'])->name('maintenance-schedule');
     });
