@@ -1,7 +1,7 @@
 <?php
 
 use App\Http\Controllers\API\ArmateurController;
-use App\Http\Controllers\API\VehiculeStatusController;
+use App\Http\Controllers\API\VehiculeController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -23,7 +23,7 @@ require __DIR__.'/admin.php';
 // Routes publiques (sans authentification)
 Route::prefix('public')->group(function () {
     Route::get('/armateurs/actifs', [ArmateurController::class, 'actifsPublic'])->name('public.armateurs.actifs');
-    Route::get('/vehicules/disponibles', [VehiculeStatusController::class, 'disponiblesPublic'])->name('public.vehicules.disponibles');
+    Route::get('/vehicules/disponibles', [VehiculeController::class, 'actifs'])->name('public.vehicules.disponibles');
 });
 
 // System routes (health check & CORS test)

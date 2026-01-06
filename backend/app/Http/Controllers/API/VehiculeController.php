@@ -124,4 +124,24 @@ class VehiculeController extends Controller
             return $this->errorResponse('Erreur lors de la récupération du véhicule', 500);
         }
     }
+
+    /**
+     * Récupérer les véhicules actifs (pour les routes publiques)
+     */
+    public function actifs(): JsonResponse
+    {
+        try {
+            $vehicules = Vehicule::where('actif', true)
+                ->orderBy('numero_parc')
+                ->get();
+
+            return $this->successResponse(
+                VehiculeResource::collection($vehicules),
+                'Véhicules actifs récupérés avec succès'
+            );
+
+        } catch (\Exception $e) {
+            return $this->errorResponse('Erreur lors de la récupération des véhicules actifs', 500);
+        }
+    }
 }

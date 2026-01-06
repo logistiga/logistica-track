@@ -201,8 +201,12 @@ class StatistiqueController extends Controller
     {
         $query = DB::table('vehicules');
         
-        if ($status) {
-            $query->where('statut', $status);
+        // Statut simplifié: on utilise uniquement 'actif'
+        if ($status === 'disponible') {
+            $query->where('actif', true);
+        } elseif ($status === 'en_mission') {
+            // Plus de statut en_mission - retourne 0
+            return 0;
         }
 
         return $query->count();
@@ -306,10 +310,11 @@ class StatistiqueController extends Controller
 
     private function getTauxUtilisationVehicules(): float
     {
+        // Simplifié: retourne le % de véhicules actifs
         $total = $this->getVehiculesCount();
-        $enMission = $this->getVehiculesCount('en_mission');
+        $actifs = $this->getVehiculesCount('disponible');
         
-        return $total > 0 ? ($enMission / $total) * 100 : 0;
+        return $total > 0 ? ($actifs / $total) * 100 : 0;
     }
 
     private function getTopArmateurs(): array

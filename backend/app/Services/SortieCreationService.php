@@ -151,14 +151,7 @@ class SortieCreationService
         DB::beginTransaction();
 
         try {
-            // Libérer les véhicules si la sortie n'est pas terminée
-            if ($sortie->statut !== 'retourne_port') {
-                $this->vehiculeService->updateVehiculeStatut($sortie->camion_id, 'disponible');
-                $this->vehiculeService->updateVehiculeStatut($sortie->remorque_id, 'disponible');
-            }
-
             $sortie->delete();
-
             DB::commit();
         } catch (\Exception $e) {
             DB::rollback();

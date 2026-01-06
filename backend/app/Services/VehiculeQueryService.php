@@ -89,17 +89,3 @@ class VehiculeQueryService
             ->toArray();
     }
 }
-
-    /**
-     * Options pour sélection (remorques)
-     */
-    public function getRemorquesOptions(): array
-    {
-        return Vehicule::remorques()
-            ->actifs()
-            ->orderBy('numero_parc')
-            ->get()
-            ->map(fn($v) => ['value' => $v->id, 'label' => $v->libelle_complet])
-            ->toArray();
-    }
-}
