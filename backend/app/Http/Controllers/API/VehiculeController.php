@@ -26,14 +26,15 @@ class VehiculeController extends Controller
 
     /**
      * Lister tous les véhicules avec filtres
+     * Retourne directement le tableau sans double wrapping
      */
     public function index(Request $request): JsonResponse
     {
         try {
-            $result = $this->vehiculeService->getAllVehicules($request->all());
+            $vehicules = $this->vehiculeService->getVehiculesList($request->all());
 
             return $this->successResponse(
-                VehiculeResource::collection($result['data']),
+                VehiculeResource::collection($vehicules),
                 'Véhicules récupérés avec succès'
             );
 
