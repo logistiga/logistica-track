@@ -12,22 +12,22 @@ class SortieConteneurService
     protected SortieCreationService $creationService;
     protected SortieStatisticsService $statisticsService;
     protected VehiculeManagementService $vehiculeService;
-    protected DetentionService $detentionService;
+    protected DetentionCalculatorService $detentionCalculator;
 
     public function __construct(
         SortieQueryService $queryService,
         SortieCreationService $creationService,
         SortieStatisticsService $statisticsService,
         VehiculeManagementService $vehiculeService,
-        DetentionService $detentionService
+        DetentionCalculatorService $detentionCalculator
     ) {
         $this->queryService = $queryService;
         $this->creationService = $creationService;
         $this->statisticsService = $statisticsService;
         $this->vehiculeService = $vehiculeService;
-        $this->detentionService = $detentionService;
+        $this->detentionCalculator = $detentionCalculator;
     }
-    // Déléguer aux services spécialisés
+
     public function getAllSorties(array $filters = [])
     {
         return $this->queryService->getAllSorties($filters);
@@ -56,7 +56,6 @@ class SortieConteneurService
         DB::beginTransaction();
 
         try {
-            // Vérifier la disponibilité des véhicules de retour
             $this->checkVehiculeDisponibilite($data['camion_retour_id'], $data['remorque_retour_id']);
 
             $sortie->update([
@@ -65,7 +64,6 @@ class SortieConteneurService
                 'remorque_retour_id' => $data['remorque_retour_id'],
                 'observations' => $data['observations'] ?? null,
                 'statut' => 'retourne_port',
-                // 'updated_by' => Auth::id(), // Temporairement désactivé
             ]);
 
             // Libérer les véhicules de sortie
@@ -76,8 +74,8 @@ class SortieConteneurService
             $this->updateVehiculeStatut($data['camion_retour_id'], 'en_mission');
             $this->updateVehiculeStatut($data['remorque_retour_id'], 'en_mission');
 
-            // Calculer automatiquement la détention si dépassement
-            $this->calculerDetentionApresRetour($sortie);
+            // Créer automatiquement la détention si dépassement (via le calculator centralisé)
+            $this->detentionCalculator->creerDetentionSiNecessaire($sortie);
 
             DB::commit();
 
@@ -88,76 +86,19 @@ class SortieConteneurService
         }
     }
 
-    /**
-     * Calculer et créer automatiquement une détention après retour si dépassement
-     */
-    private function calculerDetentionApresRetour(SortieConteneur $sortie): void
+    public function getStatistics(array $filters = [])
     {
-        if (!$sortie->date_sortie || !$sortie->date_retour) {
-            return;
-        }
-
-        $joursReels = $sortie->date_sortie->diffInDays($sortie->date_retour);
-        $joursAutorises = $this->determinerJoursAutorises($sortie);
-
-        if ($joursReels <= $joursAutorises) {
-            return;
-        }
-
-        $joursDepassement = $joursReels - $joursAutorises;
-
-        // Vérifier qu'une détention n'existe pas déjà
-        if (\App\Models\Detention::where('sortie_conteneur_id', $sortie->id)->exists()) {
-            return;
-        }
-
-        $coutParJour = $this->getCoutDetentionParJour($sortie);
-
-        try {
-            \App\Models\Detention::create([
-                'sortie_conteneur_id' => $sortie->id,
-                'date_debut_detention' => $sortie->date_sortie->copy()->addDays($joursAutorises),
-                'date_fin_detention' => $sortie->date_retour,
-                'jours_detention' => $joursDepassement,
-                'cout_par_jour' => $coutParJour,
-                'cout_total' => $joursDepassement * $coutParJour,
-                'responsabilite' => null,
-                'motif_detention' => "Dépassement de franchise de {$joursDepassement} jour(s)",
-                'statut' => 'active',
-                'observations' => "Détention créée automatiquement lors du retour du conteneur {$sortie->numero_conteneur}",
-            ]);
-        } catch (\Exception $e) {
-            \Log::error('Erreur création détention automatique:', ['error' => $e->getMessage()]);
-        }
+        return $this->statisticsService->getStatistics($filters);
     }
 
-    /**
-     * Déterminer les jours autorisés selon le type de destination
-     */
-    private function determinerJoursAutorises(SortieConteneur $sortie): int
+    public function getSortiesEnCours(array $filters = [])
     {
-        if ($sortie->jours_bad && $sortie->jours_bad > 0) {
-            return $sortie->jours_bad;
-        }
-
-        return match ($sortie->type_destination) {
-            'detention' => 0,
-            'bad' => 2,
-            'depot' => 7,
-            default => 5,
-        };
+        return $this->queryService->getSortiesEnCours($filters);
     }
 
-    /**
-     * Obtenir le coût de détention par jour selon l'armateur
-     */
-    private function getCoutDetentionParJour(SortieConteneur $sortie): float
+    public function getSortiesRetournees(array $filters = [])
     {
-        if ($sortie->armateur && $sortie->armateur->prix_par_jour) {
-            return (float) $sortie->armateur->prix_par_jour;
-        }
-
-        return config('detention.tarifs_par_jour.default', 15000);
+        return $this->queryService->getSortiesRetournees($filters);
     }
 
     /**
@@ -165,21 +106,12 @@ class SortieConteneurService
      */
     private function checkVehiculeDisponibilite($camionId = null, $remorqueId = null)
     {
-        if ($camionId) {
-            $camion = Vehicule::find($camionId);
-            if (!$camion) {
-                throw new \Exception("Camion introuvable (ID: {$camionId})");
-            }
-            // Note: La vérification du statut est désactivée pour le moment
-            // car tous les véhicules sont marqués comme 'disponible' par défaut
+        if ($camionId && !Vehicule::find($camionId)) {
+            throw new \Exception("Camion introuvable (ID: {$camionId})");
         }
 
-        if ($remorqueId) {
-            $remorque = Vehicule::find($remorqueId);
-            if (!$remorque) {
-                throw new \Exception("Remorque introuvable (ID: {$remorqueId})");
-            }
-            // Note: La vérification du statut est désactivée pour le moment
+        if ($remorqueId && !Vehicule::find($remorqueId)) {
+            throw new \Exception("Remorque introuvable (ID: {$remorqueId})");
         }
     }
 
@@ -196,7 +128,6 @@ class SortieConteneurService
             Vehicule::where('id', $vehiculeId)->update(['statut' => $statut]);
         } catch (\Exception $e) {
             \Log::warning("Impossible de mettre à jour le statut du véhicule {$vehiculeId}: " . $e->getMessage());
-            // Ne pas faire échouer l'opération principale si la mise à jour du statut échoue
         }
     }
 
@@ -210,7 +141,6 @@ class SortieConteneurService
                   ->orWhere('nom_transitaire', 'like', "%{$query}%");
             });
 
-        // Appliquer les filtres additionnels
         if (!empty($filters['statut'])) {
             $searchQuery->where('statut', $filters['statut']);
         }
@@ -230,14 +160,12 @@ class SortieConteneurService
             $sortie = SortieConteneur::findOrFail($sortieData['id']);
             
             if ($sortie->statut === 'en_cours') {
-                $returnData = [
+                $results[] = $this->confirmerRetour($sortie, [
                     'date_retour' => now()->format('Y-m-d'),
                     'camion_retour_id' => $sortieData['camion_retour_id'],
                     'remorque_retour_id' => $sortieData['remorque_retour_id'],
                     'observations' => $sortieData['observations'] ?? null,
-                ];
-                
-                $results[] = $this->confirmerRetour($sortie, $returnData);
+                ]);
             }
         }
         
@@ -271,24 +199,7 @@ class SortieConteneurService
 
     public function getDetentionInfo(SortieConteneur $sortie)
     {
-        $info = [
-            'jours_hors_port' => $sortie->jours_hors_port,
-            'jours_bad' => $sortie->jours_bad,
-            'date_fin_franchise' => $sortie->date_fin_franchise,
-            'franchise_expiree' => false,
-            'jours_detention' => 0,
-        ];
-
-        if ($sortie->date_fin_franchise) {
-            $info['franchise_expiree'] = now()->gt($sortie->date_fin_franchise);
-            
-            if ($info['franchise_expiree']) {
-                $dateReference = $sortie->date_retour ? $sortie->date_retour : now();
-                $info['jours_detention'] = now()->parse($sortie->date_fin_franchise)->diffInDays($dateReference);
-            }
-        }
-
-        return $info;
+        return $this->detentionCalculator->getDetailsCalcul($sortie);
     }
 
     public function getFacturationInfo(SortieConteneur $sortie)

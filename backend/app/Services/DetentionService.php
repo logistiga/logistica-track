@@ -9,6 +9,13 @@ use Carbon\Carbon;
 
 class DetentionService
 {
+    protected DetentionCalculatorService $calculator;
+
+    public function __construct(DetentionCalculatorService $calculator)
+    {
+        $this->calculator = $calculator;
+    }
+
     /**
      * Récupérer toutes les détentions avec filtres
      */
@@ -17,7 +24,6 @@ class DetentionService
         try {
             $query = Detention::with(['sortieConteneur.armateur']);
             
-            // Filtres
             if (isset($filters['statut']) && $filters['statut'] !== 'tous') {
                 $query->where('statut', $filters['statut']);
             }
@@ -42,7 +48,6 @@ class DetentionService
                 });
             }
 
-            // Pagination
             $perPage = $filters['per_page'] ?? 15;
             $paginatedResult = $query->orderBy('date_debut_detention', 'desc')->paginate($perPage);
 
@@ -56,9 +61,7 @@ class DetentionService
                 ],
             ];
         } catch (\Exception $e) {
-            \Log::error('❌ Database error in DetentionService:', ['error' => $e->getMessage()]);
-            
-            // Retourner des données de test si erreur
+            \Log::error('Database error in DetentionService:', ['error' => $e->getMessage()]);
             return [
                 'data' => [],
                 'meta' => ['current_page' => 1, 'per_page' => 15, 'total' => 0, 'last_page' => 1],
@@ -78,6 +81,7 @@ class DetentionService
                 : now();
             
             $joursDetention = (int) $dateDebut->diffInDays($dateFin);
+            $coutTotal = $this->calculator->calculerCoutPourJours($joursDetention, $data['cout_par_jour']);
             
             return Detention::create([
                 'sortie_conteneur_id' => $data['sortie_conteneur_id'],
@@ -85,7 +89,7 @@ class DetentionService
                 'date_fin_detention' => $data['date_fin_detention'] ?? null,
                 'jours_detention' => $joursDetention,
                 'cout_par_jour' => $data['cout_par_jour'],
-                'cout_total' => $joursDetention * $data['cout_par_jour'],
+                'cout_total' => $coutTotal,
                 'responsabilite' => $data['responsabilite'],
                 'motif_detention' => $data['motif_detention'],
                 'statut' => 'active',
@@ -100,18 +104,10 @@ class DetentionService
     public function updateDetention(Detention $detention, array $data): Detention
     {
         return DB::transaction(function () use ($detention, $data) {
-            // Recalculer les coûts si la responsabilité est "partagee"
             if (isset($data['responsabilite']) && $data['responsabilite'] === 'partagee') {
-                $joursClient = $data['jours_client'] ?? 0;
-                $joursLogistiga = $data['jours_logistiga'] ?? 0;
-                $coutParJour = $data['cout_par_jour'] ?? $detention->cout_par_jour;
-                
-                // Calculer le coût total basé sur les jours client + logistiga
-                $data['jours_detention'] = $joursClient + $joursLogistiga;
-                $data['cout_total'] = $data['jours_detention'] * $coutParJour;
-            }
-            // Recalculer les jours et le coût si nécessaire pour les autres cas
-            else if (isset($data['date_fin_detention']) || isset($data['cout_par_jour'])) {
+                $recalcul = $this->calculator->recalculerDetention($detention, $data);
+                $data = array_merge($data, $recalcul);
+            } elseif (isset($data['date_fin_detention']) || isset($data['cout_par_jour'])) {
                 $dateDebut = $detention->date_debut_detention;
                 $dateFin = isset($data['date_fin_detention']) 
                     ? Carbon::parse($data['date_fin_detention'])
@@ -121,7 +117,7 @@ class DetentionService
                 $coutParJour = $data['cout_par_jour'] ?? $detention->cout_par_jour;
                 
                 $data['jours_detention'] = $joursDetention;
-                $data['cout_total'] = $joursDetention * $coutParJour;
+                $data['cout_total'] = $this->calculator->calculerCoutPourJours($joursDetention, $coutParJour);
             }
 
             $detention->update($data);
@@ -170,80 +166,18 @@ class DetentionService
     }
 
     /**
-     * Calculer et créer automatiquement une détention après retour si dépassement
+     * Calculer et créer une détention après retour (délègue au calculator)
      */
-    public function calculerDetentionApresRetour(SortieConteneur $sortie): void
+    public function calculerDetentionApresRetour(SortieConteneur $sortie): ?Detention
     {
-        if (!$sortie->date_sortie || !$sortie->date_retour) {
-            return;
-        }
-
-        $joursReels = (int) $sortie->date_sortie->diffInDays($sortie->date_retour);
-        $joursAutorises = $this->determinerJoursAutorises($sortie);
-
-        if ($joursReels <= $joursAutorises) {
-            return; // Pas de dépassement
-        }
-
-        // Vérifier qu'une détention n'existe pas déjà
-        if (Detention::where('sortie_conteneur_id', $sortie->id)->exists()) {
-            return;
-        }
-
-        $joursDepassement = $joursReels - $joursAutorises;
-        $coutParJour = $this->getCoutDetentionParJour($sortie);
-
-        try {
-            Detention::create([
-                'sortie_conteneur_id' => $sortie->id,
-                'date_debut_detention' => $sortie->date_sortie->copy()->addDays($joursAutorises),
-                'date_fin_detention' => $sortie->date_retour,
-                'jours_detention' => $joursDepassement,
-                'cout_par_jour' => $coutParJour,
-                'cout_total' => $joursDepassement * $coutParJour,
-                'responsabilite' => 'client',
-                'motif_detention' => "Dépassement de franchise de {$joursDepassement} jour(s)",
-                'statut' => 'active',
-                'observations' => "Détention créée automatiquement lors du retour du conteneur {$sortie->numero_conteneur}",
-            ]);
-        } catch (\Exception $e) {
-            \Log::error('❌ Error creating automatic detention:', [
-                'sortie_id' => $sortie->id,
-                'error' => $e->getMessage(),
-            ]);
-        }
+        return $this->calculator->creerDetentionSiNecessaire($sortie);
     }
 
     /**
-     * Déterminer les jours autorisés selon le type de destination
+     * Obtenir les détails de calcul pour une sortie
      */
-    private function determinerJoursAutorises(SortieConteneur $sortie): int
+    public function getDetailsCalcul(SortieConteneur $sortie): array
     {
-        if ($sortie->jours_bad && $sortie->jours_bad > 0) {
-            return $sortie->jours_bad;
-        }
-
-        switch ($sortie->type_destination) {
-            case 'detention':
-                return 0;
-            case 'bad':
-                return 2;
-            case 'depot':
-                return 7;
-            default:
-                return 5;
-        }
-    }
-
-    /**
-     * Obtenir le coût de détention par jour selon l'armateur
-     */
-    private function getCoutDetentionParJour(SortieConteneur $sortie): float
-    {
-        if ($sortie->armateur && $sortie->armateur->prix_par_jour) {
-            return (float) $sortie->armateur->prix_par_jour;
-        }
-
-        return 15000; // Tarif par défaut
+        return $this->calculator->getDetailsCalcul($sortie);
     }
 }
