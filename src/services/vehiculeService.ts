@@ -8,7 +8,10 @@ export interface Vehicule {
   type_label: string;
   libelle_complet: string;
   actif: boolean;
-  statut?: string | null;
+  statut: 'disponible' | 'en_mission' | 'maintenance';
+  prochaine_revision?: string | null;
+  derniere_revision?: string | null;
+  kilometrage?: number;
   created_at: string;
   updated_at: string;
 }
@@ -18,11 +21,13 @@ export interface CreateVehiculeData {
   immatriculation: string;
   type: 'camion' | 'remorque';
   actif?: boolean;
+  statut?: 'disponible' | 'en_mission' | 'maintenance';
 }
 
 class VehiculeService {
-  async getVehicules(): Promise<Vehicule[]> {
-    const response = await apiService.get('/vehicules');
+  async getVehicules(filters?: Record<string, string>): Promise<Vehicule[]> {
+    const params = filters ? `?${new URLSearchParams(filters).toString()}` : '';
+    const response = await apiService.get(`/vehicules${params}`);
     return response.data;
   }
 
@@ -45,9 +50,19 @@ class VehiculeService {
     await apiService.delete(`/vehicules/${id}`);
   }
 
-  async getVehiculesActifs(type?: 'camion' | 'remorque'): Promise<Vehicule[]> {
-    const queryParam = type ? `?type=${type}&actif=true` : '?actif=true';
-    const response = await apiService.get(`/vehicules${queryParam}`);
+  async getVehiculesDisponibles(type?: 'camion' | 'remorque'): Promise<Vehicule[]> {
+    const params = type ? `?type=${type}` : '';
+    const response = await apiService.get(`/vehicules/disponibles${params}`);
+    return response.data;
+  }
+
+  async getCamions(): Promise<Vehicule[]> {
+    const response = await apiService.get('/vehicules/camions');
+    return response.data;
+  }
+
+  async getRemorques(): Promise<Vehicule[]> {
+    const response = await apiService.get('/vehicules/remorques');
     return response.data;
   }
 }

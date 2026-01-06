@@ -64,6 +64,21 @@ class Vehicule extends Model
         return $query->where('type', 'remorque');
     }
 
+    public function scopeDisponibles($query)
+    {
+        return $query->where('statut', 'disponible')->where('actif', true);
+    }
+
+    public function scopeEnMission($query)
+    {
+        return $query->where('statut', 'en_mission');
+    }
+
+    public function scopeEnMaintenance($query)
+    {
+        return $query->where('statut', 'maintenance');
+    }
+
     // Accesseurs
     public function getLibelleCompletAttribute()
     {
