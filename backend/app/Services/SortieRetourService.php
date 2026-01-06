@@ -3,18 +3,11 @@
 namespace App\Services;
 
 use App\Models\SortieConteneur;
-use App\Models\Detention;
-use App\Http\Requests\RetourSortieRequest;
-use App\Traits\ApiResponseTrait;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Carbon\Carbon;
 
 class SortieRetourService
 {
-    use ApiResponseTrait;
-
     protected SortieConteneurService $sortieService;
 
     public function __construct(SortieConteneurService $sortieService)
@@ -24,6 +17,7 @@ class SortieRetourService
 
     /**
      * Confirmer le retour d'une sortie
+     * Note: La création de détention est gérée automatiquement par SortieConteneurService::confirmerRetour
      */
     public function confirmerRetour(SortieConteneur $sortie, array $data): SortieConteneur
     {
@@ -31,32 +25,11 @@ class SortieRetourService
             throw new \Exception('Cette sortie est déjà retournée');
         }
 
+        // La détention est créée automatiquement dans confirmerRetour si nécessaire
         $returnedSortie = $this->sortieService->confirmerRetour($sortie, $data);
 
-        // Créer automatiquement une détention si nécessaire
-        $this->creerDetentionSiNecessaire($returnedSortie, $data['responsabilite'] ?? null);
-
-        // Logger l'activité
-        try {
-            logActivity('sortie_returned', $returnedSortie, 'Retour de conteneur confirmé');
-        } catch (\Exception $e) {
-            // Silently fail to avoid breaking the application
-        }
-
-        // Envoyer une notification
-        try {
-            if (Auth::check()) {
-                sendNotification(
-                    Auth::id(),
-                    'sortie_returned',
-                    'Retour de conteneur',
-                    "Le conteneur {$sortie->numero_conteneur} est retourné au port",
-                    ['sortie_id' => $sortie->id]
-                );
-            }
-        } catch (\Exception $e) {
-            // Silently fail to avoid breaking the application
-        }
+        $this->logActivity($returnedSortie);
+        $this->sendNotification($sortie);
 
         return $returnedSortie;
     }
@@ -68,53 +41,44 @@ class SortieRetourService
     {
         $results = $this->sortieService->bulkReturn($sorties);
 
-        // Logger l'activité
-        logActivity('bulk_return', null, 'Retour en lot de ' . count($sorties) . ' conteneurs');
+        try {
+            logActivity('bulk_return', null, 'Retour en lot de ' . count($sorties) . ' conteneurs');
+        } catch (\Exception $e) {
+            // Silently fail
+        }
 
         return $results;
     }
 
     /**
-     * Créer une détention automatiquement si nécessaire
+     * Logger l'activité de retour
      */
-    private function creerDetentionSiNecessaire(SortieConteneur $sortie, ?string $responsabilite = null)
+    private function logActivity(SortieConteneur $sortie): void
     {
-        // Vérifier si une détention existe déjà
-        if ($sortie->detention) {
-            return;
+        try {
+            logActivity('sortie_returned', $sortie, 'Retour de conteneur confirmé');
+        } catch (\Exception $e) {
+            // Silently fail
         }
+    }
 
-        // Calculer les jours de franchise autorisés
-        $joursGratuits = $sortie->armateur->jours_gratuits ?? 0;
-        
-        // Calculer les jours réalisés
-        $dateSortie = Carbon::parse($sortie->date_sortie);
-        $dateRetour = Carbon::parse($sortie->date_retour);
-        $joursRealises = $dateSortie->diffInDays($dateRetour);
-        
-        // Vérifier s'il y a dépassement
-        $joursDepassement = $joursRealises - $joursGratuits;
-        
-        if ($joursDepassement > 0) {
-            // Créer la détention
-            $detention = new Detention();
-            $detention->sortie_conteneur_id = $sortie->id;
-            $detention->date_debut_detention = $dateSortie->addDays($joursGratuits);
-            $detention->date_fin_detention = null;
-            $detention->jours_detention = $joursDepassement;
-            $detention->cout_par_jour = $sortie->armateur->prix_par_jour ?? config('detention.tarifs_par_jour.default');
-            $detention->cout_total = $joursDepassement * $detention->cout_par_jour;
-            $detention->responsabilite = $responsabilite; // Laisser vide, sera défini après
-            $detention->motif_detention = 'Dépassement automatique calculé après retour';
-            $detention->statut = 'active';
-            $detention->save();
-
-            Log::info("Détention automatique créée", [
-                'sortie_id' => $sortie->id,
-                'detention_id' => $detention->id,
-                'jours_depassement' => $joursDepassement,
-                'cout_total' => $detention->cout_total
-            ]);
+    /**
+     * Envoyer notification de retour
+     */
+    private function sendNotification(SortieConteneur $sortie): void
+    {
+        try {
+            if (Auth::check()) {
+                sendNotification(
+                    Auth::id(),
+                    'sortie_returned',
+                    'Retour de conteneur',
+                    "Le conteneur {$sortie->numero_conteneur} est retourné au port",
+                    ['sortie_id' => $sortie->id]
+                );
+            }
+        } catch (\Exception $e) {
+            // Silently fail
         }
     }
 }
