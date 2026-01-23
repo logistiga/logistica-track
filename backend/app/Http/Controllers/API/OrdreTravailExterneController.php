@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
@@ -309,13 +311,13 @@ class OrdreTravailExterneController extends Controller
                     'montant' => $montant,
                 ];
             }, $lignes, array_keys($lignes)),
-            'montant_total' => (float) $ordre->montant_total,
+            'montant_total' => (float) ($ordre->montant_total ?? 0),
             'notes' => $ordre->notes,
             'source' => $ordre->source,
             'validated_by' => $ordre->validated_by,
             'validated_at' => $ordre->validated_at?->toISOString(),
-            'created_at' => $ordre->created_at->toISOString(),
-            'updated_at' => $ordre->updated_at->toISOString(),
+            'created_at' => $ordre->created_at?->toISOString(),
+            'updated_at' => $ordre->updated_at?->toISOString(),
         ];
     }
 }
