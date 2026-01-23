@@ -17,26 +17,63 @@ import {
   X,
   Ship,
   Building2,
-  Coins
+  Coins,
+  Settings,
+  ChevronDown,
+  ChevronRight,
+  FolderOpen
 } from "lucide-react";
 
-const navigation = [
-  { name: "Tableau de Bord", href: "/", icon: BarChart3 },
-  { name: "Sorties de Conteneur", href: "/sorties", icon: Package },
-  { name: "Base", href: "/base", icon: Building2 },
-  { name: "Matériel", href: "/materiel", icon: Truck },
-  { name: "Armateurs", href: "/armateurs", icon: Ship },
-  { name: "Primes Chauffeur", href: "/primes", icon: Coins },
-  { name: "Détention", href: "/detention", icon: AlertTriangle },
-  { name: "Facturation", href: "/facturation", icon: CreditCard },
-  { name: "Opérations", href: "/operations", icon: FileText },
-  { name: "Ordres", href: "/ordres", icon: Archive },
-  { name: "Archives Base", href: "/archives-base", icon: Archive },
-  { name: "Archives Sortie", href: "/archives-sortie", icon: Archive },
-  { name: "Archives Opération", href: "/archives-operation", icon: Archive },
-  { name: "Utilisateurs", href: "/utilisateurs", icon: Users },
-  { name: "Notifications", href: "/notifications", icon: Bell },
-  { name: "E-mails", href: "/emails", icon: Mail },
+interface NavItem {
+  name: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+}
+
+interface NavGroup {
+  name: string;
+  icon: React.ComponentType<{ className?: string }>;
+  items: NavItem[];
+}
+
+// Dashboard seul en haut
+const dashboardItem: NavItem = { name: "Tableau de Bord", href: "/", icon: BarChart3 };
+
+// Groupes de navigation
+const navGroups: NavGroup[] = [
+  {
+    name: "Opérations",
+    icon: FileText,
+    items: [
+      { name: "Sorties de Conteneur", href: "/sorties", icon: Package },
+      { name: "Base", href: "/base", icon: Building2 },
+      { name: "Opérations", href: "/operations", icon: FileText },
+      { name: "Ordres", href: "/ordres", icon: Archive },
+      { name: "Détention", href: "/detention", icon: AlertTriangle },
+      { name: "Facturation", href: "/facturation", icon: CreditCard },
+      { name: "Primes Chauffeur", href: "/primes", icon: Coins },
+    ]
+  },
+  {
+    name: "Archives",
+    icon: FolderOpen,
+    items: [
+      { name: "Archives Base", href: "/archives-base", icon: Archive },
+      { name: "Archives Sortie", href: "/archives-sortie", icon: Archive },
+      { name: "Archives Opération", href: "/archives-operation", icon: Archive },
+    ]
+  },
+  {
+    name: "Paramètres",
+    icon: Settings,
+    items: [
+      { name: "Matériel", href: "/materiel", icon: Truck },
+      { name: "Armateurs", href: "/armateurs", icon: Ship },
+      { name: "Utilisateurs", href: "/utilisateurs", icon: Users },
+      { name: "Notifications", href: "/notifications", icon: Bell },
+      { name: "E-mails", href: "/emails", icon: Mail },
+    ]
+  }
 ];
 
 interface SidebarProps {
@@ -46,6 +83,17 @@ interface SidebarProps {
 export function Sidebar({ onNavigate }: SidebarProps = {}) {
   const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [openGroups, setOpenGroups] = useState<string[]>(["Opérations", "Archives", "Paramètres"]);
+
+  const toggleGroup = (groupName: string) => {
+    setOpenGroups(prev => 
+      prev.includes(groupName) 
+        ? prev.filter(g => g !== groupName)
+        : [...prev, groupName]
+    );
+  };
+
+  const isGroupOpen = (groupName: string) => openGroups.includes(groupName);
 
   return (
     <div className={cn(
@@ -74,25 +122,82 @@ export function Sidebar({ onNavigate }: SidebarProps = {}) {
         </Button>
       </div>
 
-      <nav className="flex-1 px-2 py-4 space-y-2 overflow-y-auto">
-        {navigation.map((item) => {
-          const isActive = location.pathname === item.href;
+      <nav className="flex-1 px-2 py-4 space-y-1 overflow-y-auto">
+        {/* Dashboard - seul en haut */}
+        <Link
+          to={dashboardItem.href}
+          onClick={onNavigate}
+          className={cn(
+            "flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+            location.pathname === dashboardItem.href 
+              ? "bg-primary-foreground text-primary shadow-md" 
+              : "text-primary-light hover:bg-primary-light/20 hover:text-primary-foreground",
+            isCollapsed && "justify-center"
+          )}
+        >
+          <dashboardItem.icon className={cn("w-5 h-5", !isCollapsed && "mr-3")} />
+          {!isCollapsed && <span>{dashboardItem.name}</span>}
+        </Link>
+
+        {/* Séparateur */}
+        <div className="my-3 border-t border-primary-light/30" />
+
+        {/* Groupes de navigation */}
+        {navGroups.map((group) => {
+          const isOpen = isGroupOpen(group.name);
+          const hasActiveItem = group.items.some(item => location.pathname === item.href);
+
           return (
-            <Link
-              key={item.name}
-              to={item.href}
-              onClick={onNavigate}
-              className={cn(
-                "flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors",
-                isActive 
-                  ? "bg-primary-foreground text-primary shadow-md" 
-                  : "text-primary-light hover:bg-primary-light/20 hover:text-primary-foreground",
-                isCollapsed && "justify-center"
+            <div key={group.name} className="space-y-1">
+              {/* En-tête du groupe */}
+              <button
+                onClick={() => !isCollapsed && toggleGroup(group.name)}
+                className={cn(
+                  "w-full flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+                  hasActiveItem 
+                    ? "bg-primary-light/30 text-primary-foreground" 
+                    : "text-primary-light hover:bg-primary-light/20 hover:text-primary-foreground",
+                  isCollapsed && "justify-center"
+                )}
+              >
+                <group.icon className={cn("w-5 h-5", !isCollapsed && "mr-3")} />
+                {!isCollapsed && (
+                  <>
+                    <span className="flex-1 text-left">{group.name}</span>
+                    {isOpen ? (
+                      <ChevronDown className="w-4 h-4" />
+                    ) : (
+                      <ChevronRight className="w-4 h-4" />
+                    )}
+                  </>
+                )}
+              </button>
+
+              {/* Items du groupe */}
+              {!isCollapsed && isOpen && (
+                <div className="ml-4 space-y-1 border-l border-primary-light/30 pl-2">
+                  {group.items.map((item) => {
+                    const isActive = location.pathname === item.href;
+                    return (
+                      <Link
+                        key={item.name}
+                        to={item.href}
+                        onClick={onNavigate}
+                        className={cn(
+                          "flex items-center px-3 py-2 rounded-lg text-sm transition-colors",
+                          isActive 
+                            ? "bg-primary-foreground text-primary shadow-md font-medium" 
+                            : "text-primary-light hover:bg-primary-light/20 hover:text-primary-foreground"
+                        )}
+                      >
+                        <item.icon className="w-4 h-4 mr-3" />
+                        <span>{item.name}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
               )}
-            >
-              <item.icon className={cn("w-5 h-5", !isCollapsed && "mr-3")} />
-              {!isCollapsed && <span>{item.name}</span>}
-            </Link>
+            </div>
           );
         })}
       </nav>
