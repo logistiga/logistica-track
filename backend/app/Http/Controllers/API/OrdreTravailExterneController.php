@@ -70,68 +70,54 @@ class OrdreTravailExterneController extends Controller
     }
 
     /**
-     * Afficher un ordre spécifique
+     * Afficher un ordre specifique
      */
     public function show(int $id): JsonResponse
     {
         $ordre = OrdreTravailExterne::find($id);
 
         if (!$ordre) {
-            return $this->errorResponse('Ordre non trouvé', 404);
+            return $this->errorResponse('Ordre non trouve', 404);
         }
 
         return $this->successResponse($this->transformOrdre($ordre));
     }
 
     /**
-     * Créer un ordre de travail (reçu de l'application externe)
+     * Creer un ordre de travail (recu de l'application externe)
      */
     public function store(Request $request): JsonResponse
     {
-        // Validation simplifiée - données minimales de l'app externe
         $validator = Validator::make($request->all(), [
-            // Obligatoires
             'booking_number' => 'required|string|max:100',
             'client_nom' => 'required|string|max:255',
-            
-            // Optionnels de l'externe
             'transitaire_nom' => 'nullable|string|max:255',
             'external_id' => 'nullable|string|max:100',
             'date' => 'nullable|date',
-            
-            // Conteneurs - uniquement le numéro requis
             'containers' => 'required|array|min:1',
             'containers.*.numero_conteneur' => 'required|string|max:20',
-            
-            // Champs optionnels (ignorés si envoyés, seront complétés par Logistiga)
             'client_email' => 'nullable|email|max:255',
             'client_telephone' => 'nullable|string|max:50',
             'notes' => 'nullable|string|max:1000',
         ]);
 
         if ($validator->fails()) {
-            return $this->errorResponse('Validation échouée', 422, $validator->errors());
+            return $this->errorResponse('Validation echouee', 422, $validator->errors());
         }
 
         $data = $validator->validated();
-        
-        // Générer le numéro unique
         $data['numero'] = OrdreTravailExterne::generateNumero();
         $data['source'] = $request->header('X-Source', 'external');
-        
-        // Date par défaut = aujourd'hui
+
         if (empty($data['date'])) {
             $data['date'] = now()->toDateString();
         }
-        
-        // Transformer les conteneurs au format interne
-        // L'app externe envoie: [{ numero_conteneur: "MSCU1234567" }]
-        // On stocke: [{ number: "MSCU1234567", type: null, description: null }]
+
         if (!empty($data['containers'])) {
             $data['containers'] = array_map(function ($c) {
                 return [
                     'number' => $c['numero_conteneur'] ?? $c['number'] ?? '',
-                    'type' => $c['type'] ?? null, // Sera complété par Logistiga
+                    'type' => $c['type'] ?? null,
                     'description' => $c['description'] ?? null,
                 ];
             }, $data['containers']);
@@ -141,20 +127,20 @@ class OrdreTravailExterneController extends Controller
 
         return $this->successResponse(
             $this->transformOrdre($ordre),
-            'Ordre créé avec succès',
+            'Ordre cree avec succes',
             201
         );
     }
 
     /**
-     * Mettre à jour un ordre
+     * Mettre a jour un ordre
      */
     public function update(Request $request, int $id): JsonResponse
     {
         $ordre = OrdreTravailExterne::find($id);
 
         if (!$ordre) {
-            return $this->errorResponse('Ordre non trouvé', 404);
+            return $this->errorResponse('Ordre non trouve', 404);
         }
 
         $validator = Validator::make($request->all(), [
@@ -170,32 +156,31 @@ class OrdreTravailExterneController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return $this->errorResponse('Validation échouée', 422, $validator->errors());
+            return $this->errorResponse('Validation echouee', 422, $validator->errors());
         }
 
         $ordre->update($validator->validated());
 
         return $this->successResponse(
             $this->transformOrdre($ordre->fresh()),
-            'Ordre mis à jour'
+            'Ordre mis a jour'
         );
     }
 
     /**
-     * Mettre à jour le statut d'un ordre
+     * Mettre a jour le statut d'un ordre
      */
     public function updateStatus(Request $request, int $id): JsonResponse
     {
         $ordre = OrdreTravailExterne::find($id);
 
         if (!$ordre) {
-            return $this->errorResponse('Ordre non trouvé', 404);
+            return $this->errorResponse('Ordre non trouve', 404);
         }
 
         $validator = Validator::make($request->all(), [
             'status' => 'required|string|in:brouillon,en_cours,termine,facture,annule',
             'notes' => 'nullable|string|max:1000',
-            // Données complétées par Logistiga lors de la validation
             'containers' => 'nullable|array',
             'containers.*.number' => 'required_with:containers|string|max:20',
             'containers.*.type' => 'nullable|string|max:10',
@@ -207,34 +192,30 @@ class OrdreTravailExterneController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return $this->errorResponse('Validation échouée', 422, $validator->errors());
+            return $this->errorResponse('Validation echouee', 422, $validator->errors());
         }
 
         $updateData = [
             'status' => $request->status,
         ];
 
-        // Mettre à jour les conteneurs enrichis
         if ($request->has('containers')) {
             $updateData['containers'] = $request->containers;
         }
 
-        // Mettre à jour les prestations
         if ($request->has('lignes_prestations')) {
             $updateData['lignes_prestations'] = $request->lignes_prestations;
-            // Recalculer le montant total
             $updateData['montant_total'] = collect($request->lignes_prestations)->sum(function ($ligne) {
                 return ($ligne['quantite'] ?? 0) * ($ligne['prix_unitaire'] ?? 0);
             });
         }
 
         if ($request->notes) {
-            $updateData['notes'] = $ordre->notes 
-                ? $ordre->notes . "\n---\n" . $request->notes 
+            $updateData['notes'] = $ordre->notes
+                ? $ordre->notes . "\n---\n" . $request->notes
                 : $request->notes;
         }
 
-        // Si validation (termine), enregistrer qui et quand
         if ($request->status === 'termine' && $ordre->status !== 'termine') {
             $updateData['validated_by'] = Auth::id();
             $updateData['validated_at'] = now();
@@ -244,7 +225,7 @@ class OrdreTravailExterneController extends Controller
 
         return $this->successResponse(
             $this->transformOrdre($ordre->fresh()),
-            'Statut mis à jour'
+            'Statut mis a jour'
         );
     }
 
@@ -256,16 +237,16 @@ class OrdreTravailExterneController extends Controller
         $ordre = OrdreTravailExterne::find($id);
 
         if (!$ordre) {
-            return $this->errorResponse('Ordre non trouvé', 404);
+            return $this->errorResponse('Ordre non trouve', 404);
         }
 
         if (in_array($ordre->status, ['termine', 'facture'])) {
-            return $this->errorResponse('Impossible de supprimer un ordre validé ou facturé', 400);
+            return $this->errorResponse('Impossible de supprimer un ordre valide ou facture', 400);
         }
 
         $ordre->delete();
 
-        return $this->successResponse(null, 'Ordre supprimé');
+        return $this->successResponse(null, 'Ordre supprime');
     }
 
     /**
@@ -314,7 +295,7 @@ class OrdreTravailExterneController extends Controller
                 return [
                     'id' => $i + 1,
                     'number' => $c['number'] ?? '',
-                    'type' => $c['type'] ?? null, // null = non complété
+                    'type' => $c['type'] ?? null,
                     'description' => $c['description'] ?? null,
                 ];
             }, $containers, array_keys($containers)),
