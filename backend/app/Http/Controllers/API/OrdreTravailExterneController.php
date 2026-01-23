@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Http\Traits\ApiResponseTrait;
 use App\Models\OrdreTravailExterne;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -13,7 +14,7 @@ use Illuminate\Support\Facades\Validator;
 
 class OrdreTravailExterneController extends Controller
 {
-    // ApiResponseTrait est déjà inclus via Controller
+    use ApiResponseTrait;
 
     /**
      * Liste des ordres de travail externes
