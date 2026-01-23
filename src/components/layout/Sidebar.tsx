@@ -21,7 +21,8 @@ import {
   Settings,
   ChevronDown,
   ChevronRight,
-  FolderOpen
+  FolderOpen,
+  Clock
 } from "lucide-react";
 
 interface NavItem {
@@ -49,6 +50,7 @@ const navGroups: NavGroup[] = [
       { name: "Base", href: "/base", icon: Building2 },
       { name: "Opérations", href: "/operations", icon: FileText },
       { name: "Ordres", href: "/ordres", icon: Archive },
+      { name: "Ordres en Attente", href: "/ordres-attente", icon: Clock },
       { name: "Détention", href: "/detention", icon: AlertTriangle },
       { name: "Facturation", href: "/facturation", icon: CreditCard },
       { name: "Primes Chauffeur", href: "/primes", icon: Coins },
