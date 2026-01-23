@@ -1,10 +1,15 @@
 import { useState, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { OrdreTravail } from "@/types/logistique.types";
+import { OrdreTravail, Container, LignePrestation } from "@/types/logistique.types";
 import { apiService } from "@/services/apiService";
 
 const SYNC_INTERVAL = 30000; // 30 secondes
+
+interface ValidationData {
+  containers: Container[];
+  lignes_prestations: Omit<LignePrestation, 'id' | 'montant'>[];
+}
 
 export function useOrdresEnAttente() {
   const queryClient = useQueryClient();
@@ -45,12 +50,34 @@ export function useOrdresEnAttente() {
     }
   }, [refetch]);
 
-  // Valider un ordre (changer le statut à "termine")
+  // Valider un ordre avec les données enrichies
   const validateMutation = useMutation({
-    mutationFn: async (ordreId: number) => {
+    mutationFn: async ({ ordreId, data }: { ordreId: number; data?: ValidationData }) => {
+      const payload: Record<string, unknown> = {
+        status: "termine",
+        notes: "Validé depuis Logistiga",
+      };
+
+      // Ajouter les données enrichies si fournies
+      if (data?.containers) {
+        payload.containers = data.containers.map(c => ({
+          number: c.number,
+          type: c.type,
+          description: c.description || null,
+        }));
+      }
+
+      if (data?.lignes_prestations) {
+        payload.lignes_prestations = data.lignes_prestations.map(p => ({
+          description: p.description,
+          quantite: p.quantite,
+          prix_unitaire: p.prix_unitaire,
+        }));
+      }
+
       const response = await apiService.put(
         `/ordres-externes/${ordreId}/status`,
-        { status: "termine", notes: "Validé depuis Logistiga" }
+        payload
       );
       return response;
     },
@@ -81,8 +108,8 @@ export function useOrdresEnAttente() {
     },
   });
 
-  const validateOrdre = useCallback(async (ordreId: number) => {
-    await validateMutation.mutateAsync(ordreId);
+  const validateOrdre = useCallback(async (ordreId: number, data?: ValidationData) => {
+    await validateMutation.mutateAsync({ ordreId, data });
   }, [validateMutation]);
 
   const rejectOrdre = useCallback(async (ordreId: number) => {

@@ -15,17 +15,24 @@ return new class extends Migration
             $table->id();
             $table->string('numero')->unique();
             $table->string('external_id')->nullable()->index();
-            $table->string('client_nom');
+            
+            // Données minimales requises de l'application externe
+            $table->string('booking_number'); // Obligatoire
+            $table->string('client_nom');     // Obligatoire
+            $table->string('transitaire_nom')->nullable();
+            
+            // Données optionnelles de l'externe
             $table->string('client_email')->nullable();
             $table->string('client_telephone')->nullable();
-            $table->date('date');
+            $table->date('date')->nullable(); // Défaut = aujourd'hui
+            
+            // Données complétées par Logistiga
             $table->string('type')->default('import');
             $table->enum('status', ['brouillon', 'en_cours', 'termine', 'facture', 'annule'])->default('brouillon');
             $table->string('reference')->nullable();
-            $table->string('booking_number')->nullable();
             $table->string('vessel_name')->nullable();
-            $table->json('containers')->nullable();
-            $table->json('lignes_prestations')->nullable();
+            $table->json('containers')->nullable(); // Enrichi par Logistiga (taille, description)
+            $table->json('lignes_prestations')->nullable(); // Ajouté par Logistiga
             $table->decimal('montant_total', 15, 2)->default(0);
             $table->text('notes')->nullable();
             $table->string('source')->default('external'); // external, manual, api
