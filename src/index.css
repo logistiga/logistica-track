@@ -132,9 +132,41 @@ All colors MUST be HSL.
     @apply border-border;
   }
 
+  html {
+    font-size: 16px; /* Base font size */
+  }
+
   body {
     @apply bg-background text-foreground;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-size: 1rem; /* 16px */
+    line-height: 1.6;
+  }
+
+  /* Augmentation globale des tailles de police */
+  h1 {
+    @apply text-3xl font-bold;
+  }
+
+  h2 {
+    @apply text-2xl font-semibold;
+  }
+
+  h3 {
+    @apply text-xl font-semibold;
+  }
+
+  h4 {
+    @apply text-lg font-medium;
+  }
+
+  p, span, label {
+    @apply text-base;
+  }
+
+  /* Tables plus lisibles */
+  th, td {
+    @apply text-sm;
   }
 }
 
