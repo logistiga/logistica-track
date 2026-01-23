@@ -88,23 +88,24 @@ class OrdreTravailExterneController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
+        // Validation simplifiée - données minimales de l'app externe
         $validator = Validator::make($request->all(), [
+            // Obligatoires
+            'booking_number' => 'required|string|max:100',
             'client_nom' => 'required|string|max:255',
+            
+            // Optionnels de l'externe
+            'transitaire_nom' => 'nullable|string|max:255',
+            'external_id' => 'nullable|string|max:100',
+            'date' => 'nullable|date',
+            
+            // Conteneurs - uniquement le numéro requis
+            'containers' => 'required|array|min:1',
+            'containers.*.numero_conteneur' => 'required|string|max:20',
+            
+            // Champs optionnels (ignorés si envoyés, seront complétés par Logistiga)
             'client_email' => 'nullable|email|max:255',
             'client_telephone' => 'nullable|string|max:50',
-            'date' => 'required|date',
-            'type' => 'sometimes|string|max:100',
-            'reference' => 'nullable|string|max:100',
-            'booking_number' => 'nullable|string|max:100',
-            'vessel_name' => 'nullable|string|max:255',
-            'containers' => 'nullable|array',
-            'containers.*.number' => 'required_with:containers|string|max:20',
-            'containers.*.type' => 'required_with:containers|string|max:10',
-            'lignes_prestations' => 'nullable|array',
-            'lignes_prestations.*.description' => 'required_with:lignes_prestations|string|max:500',
-            'lignes_prestations.*.quantite' => 'required_with:lignes_prestations|numeric|min:0',
-            'lignes_prestations.*.prix_unitaire' => 'required_with:lignes_prestations|numeric|min:0',
-            'external_id' => 'nullable|string|max:100',
             'notes' => 'nullable|string|max:1000',
         ]);
 
@@ -113,14 +114,27 @@ class OrdreTravailExterneController extends Controller
         }
 
         $data = $validator->validated();
+        
+        // Générer le numéro unique
         $data['numero'] = OrdreTravailExterne::generateNumero();
         $data['source'] = $request->header('X-Source', 'external');
-
-        // Calculer le montant total
-        if (!empty($data['lignes_prestations'])) {
-            $data['montant_total'] = collect($data['lignes_prestations'])->sum(function ($ligne) {
-                return ($ligne['quantite'] ?? 0) * ($ligne['prix_unitaire'] ?? 0);
-            });
+        
+        // Date par défaut = aujourd'hui
+        if (empty($data['date'])) {
+            $data['date'] = now()->toDateString();
+        }
+        
+        // Transformer les conteneurs au format interne
+        // L'app externe envoie: [{ numero_conteneur: "MSCU1234567" }]
+        // On stocke: [{ number: "MSCU1234567", type: null, description: null }]
+        if (!empty($data['containers'])) {
+            $data['containers'] = array_map(function ($c) {
+                return [
+                    'number' => $c['numero_conteneur'] ?? $c['number'] ?? '',
+                    'type' => $c['type'] ?? null, // Sera complété par Logistiga
+                    'description' => $c['description'] ?? null,
+                ];
+            }, $data['containers']);
         }
 
         $ordre = OrdreTravailExterne::create($data);
@@ -181,6 +195,15 @@ class OrdreTravailExterneController extends Controller
         $validator = Validator::make($request->all(), [
             'status' => 'required|string|in:brouillon,en_cours,termine,facture,annule',
             'notes' => 'nullable|string|max:1000',
+            // Données complétées par Logistiga lors de la validation
+            'containers' => 'nullable|array',
+            'containers.*.number' => 'required_with:containers|string|max:20',
+            'containers.*.type' => 'nullable|string|max:10',
+            'containers.*.description' => 'nullable|string|max:500',
+            'lignes_prestations' => 'nullable|array',
+            'lignes_prestations.*.description' => 'required_with:lignes_prestations|string|max:500',
+            'lignes_prestations.*.quantite' => 'required_with:lignes_prestations|numeric|min:0',
+            'lignes_prestations.*.prix_unitaire' => 'required_with:lignes_prestations|numeric|min:0',
         ]);
 
         if ($validator->fails()) {
@@ -190,6 +213,20 @@ class OrdreTravailExterneController extends Controller
         $updateData = [
             'status' => $request->status,
         ];
+
+        // Mettre à jour les conteneurs enrichis
+        if ($request->has('containers')) {
+            $updateData['containers'] = $request->containers;
+        }
+
+        // Mettre à jour les prestations
+        if ($request->has('lignes_prestations')) {
+            $updateData['lignes_prestations'] = $request->lignes_prestations;
+            // Recalculer le montant total
+            $updateData['montant_total'] = collect($request->lignes_prestations)->sum(function ($ligne) {
+                return ($ligne['quantite'] ?? 0) * ($ligne['prix_unitaire'] ?? 0);
+            });
+        }
 
         if ($request->notes) {
             $updateData['notes'] = $ordre->notes 
@@ -266,7 +303,8 @@ class OrdreTravailExterneController extends Controller
                 'email' => $ordre->client_email,
                 'telephone' => $ordre->client_telephone,
             ],
-            'date' => $ordre->date->format('Y-m-d'),
+            'transitaire_nom' => $ordre->transitaire_nom,
+            'date' => $ordre->date ? $ordre->date->format('Y-m-d') : now()->format('Y-m-d'),
             'type' => $ordre->type,
             'status' => $ordre->status,
             'reference' => $ordre->reference,
@@ -276,7 +314,8 @@ class OrdreTravailExterneController extends Controller
                 return [
                     'id' => $i + 1,
                     'number' => $c['number'] ?? '',
-                    'type' => $c['type'] ?? '20GP',
+                    'type' => $c['type'] ?? null, // null = non complété
+                    'description' => $c['description'] ?? null,
                 ];
             }, $containers, array_keys($containers)),
             'lignes_prestations' => array_map(function ($l, $i) {

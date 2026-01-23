@@ -17,6 +17,7 @@ class OrdreTravailExterne extends Model
         'client_nom',
         'client_email',
         'client_telephone',
+        'transitaire_nom',
         'date',
         'type',
         'status',

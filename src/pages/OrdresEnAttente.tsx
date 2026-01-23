@@ -77,8 +77,8 @@ export default function OrdresEnAttentePage() {
     setIsDetailsOpen(true);
   };
 
-  const handleValidate = async (ordreId: number) => {
-    await validateOrdre(ordreId);
+  const handleValidate = async (ordreId: number, data?: { containers: any[]; lignes_prestations: any[] }) => {
+    await validateOrdre(ordreId, data);
   };
 
   const handleReject = async (ordreId: number) => {

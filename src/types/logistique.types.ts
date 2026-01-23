@@ -11,7 +11,8 @@ export interface Client {
 export interface Container {
   id: number;
   number: string;
-  type: string; // 20GP, 40GP, 40HC, etc.
+  type: string | null; // 20GP, 40GP, 40HC, etc. - null si non complété
+  description?: string | null;
 }
 
 export interface LignePrestation {
@@ -25,17 +26,19 @@ export interface LignePrestation {
 export interface OrdreTravail {
   id: number;
   numero: string;
-  client_id: number;
+  client_id: number | null;
   client?: Client;
+  transitaire_nom?: string | null;
   date: string;
   type: string;
-  status: "brouillon" | "en_cours" | "termine" | "facture";
+  status: "brouillon" | "en_cours" | "termine" | "facture" | "annule";
   reference?: string;
   booking_number?: string;
   vessel_name?: string;
   containers: Container[];
   lignes_prestations: LignePrestation[];
   montant_total: number;
+  source?: string;
   created_at: string;
   updated_at: string;
 }
