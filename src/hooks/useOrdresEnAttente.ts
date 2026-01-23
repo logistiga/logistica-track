@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { OrdreTravail } from "@/types/logistique.types";
@@ -11,16 +11,16 @@ export function useOrdresEnAttente() {
   const [lastSync, setLastSync] = useState<Date | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Récupérer les ordres de travail via le backend Laravel
+  // Récupérer les ordres de travail depuis la base locale
   const {
     data: ordresData,
     isLoading: loading,
     error: queryError,
     refetch,
   } = useQuery({
-    queryKey: ["ordres-en-attente"],
+    queryKey: ["ordres-externes"],
     queryFn: async () => {
-      const response = await apiService.get("/external-logistique/ordres-travail");
+      const response = await apiService.get("/ordres-externes");
       setLastSync(new Date());
       return response;
     },
@@ -28,7 +28,8 @@ export function useOrdresEnAttente() {
     retry: 2,
   });
 
-  const ordres: OrdreTravail[] = ordresData?.data || [];
+  // Transformer les données pour correspondre au type OrdreTravail
+  const ordres: OrdreTravail[] = ordresData?.data?.data || ordresData?.data || [];
   const error = queryError ? (queryError as Error).message : null;
 
   // Rafraîchir manuellement
@@ -48,13 +49,13 @@ export function useOrdresEnAttente() {
   const validateMutation = useMutation({
     mutationFn: async (ordreId: number) => {
       const response = await apiService.put(
-        `/external-logistique/ordres-travail/${ordreId}/status`,
+        `/ordres-externes/${ordreId}/status`,
         { status: "termine", notes: "Validé depuis Logistiga" }
       );
       return response;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["ordres-en-attente"] });
+      queryClient.invalidateQueries({ queryKey: ["ordres-externes"] });
       toast.success("Ordre validé avec succès");
     },
     onError: (error: Error) => {
@@ -62,17 +63,17 @@ export function useOrdresEnAttente() {
     },
   });
 
-  // Rejeter un ordre (changer le statut à "annule" ou supprimer)
+  // Rejeter un ordre (changer le statut à "annule")
   const rejectMutation = useMutation({
     mutationFn: async (ordreId: number) => {
       const response = await apiService.put(
-        `/external-logistique/ordres-travail/${ordreId}/status`,
+        `/ordres-externes/${ordreId}/status`,
         { status: "annule", notes: "Rejeté depuis Logistiga" }
       );
       return response;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["ordres-en-attente"] });
+      queryClient.invalidateQueries({ queryKey: ["ordres-externes"] });
       toast.success("Ordre rejeté");
     },
     onError: (error: Error) => {
