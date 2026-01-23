@@ -128,10 +128,10 @@ export function Sidebar({ onNavigate }: SidebarProps = {}) {
           to={dashboardItem.href}
           onClick={onNavigate}
           className={cn(
-            "flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+            "flex items-center px-3 py-2.5 rounded-lg text-sm font-bold transition-colors",
             location.pathname === dashboardItem.href 
               ? "bg-primary-foreground text-primary shadow-md" 
-              : "text-primary-light hover:bg-primary-light/20 hover:text-primary-foreground",
+              : "text-white hover:bg-primary-light/20",
             isCollapsed && "justify-center"
           )}
         >
@@ -153,10 +153,10 @@ export function Sidebar({ onNavigate }: SidebarProps = {}) {
               <button
                 onClick={() => !isCollapsed && toggleGroup(group.name)}
                 className={cn(
-                  "w-full flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+                  "w-full flex items-center px-3 py-2.5 rounded-lg text-sm font-bold transition-colors",
                   hasActiveItem 
-                    ? "bg-primary-light/30 text-primary-foreground" 
-                    : "text-primary-light hover:bg-primary-light/20 hover:text-primary-foreground",
+                    ? "bg-primary-light/30 text-white" 
+                    : "text-white hover:bg-primary-light/20",
                   isCollapsed && "justify-center"
                 )}
               >
@@ -175,7 +175,7 @@ export function Sidebar({ onNavigate }: SidebarProps = {}) {
 
               {/* Items du groupe */}
               {!isCollapsed && isOpen && (
-                <div className="ml-4 space-y-1 border-l border-primary-light/30 pl-2">
+                <div className="ml-4 space-y-1 border-l border-white/30 pl-2">
                   {group.items.map((item) => {
                     const isActive = location.pathname === item.href;
                     return (
@@ -184,10 +184,10 @@ export function Sidebar({ onNavigate }: SidebarProps = {}) {
                         to={item.href}
                         onClick={onNavigate}
                         className={cn(
-                          "flex items-center px-3 py-2 rounded-lg text-sm transition-colors",
+                          "flex items-center px-3 py-2 rounded-lg text-sm font-semibold transition-colors",
                           isActive 
-                            ? "bg-primary-foreground text-primary shadow-md font-medium" 
-                            : "text-primary-light hover:bg-primary-light/20 hover:text-primary-foreground"
+                            ? "bg-primary-foreground text-primary shadow-md" 
+                            : "text-white hover:bg-primary-light/20"
                         )}
                       >
                         <item.icon className="w-4 h-4 mr-3" />
