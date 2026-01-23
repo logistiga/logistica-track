@@ -128,7 +128,7 @@ export function Sidebar({ onNavigate }: SidebarProps = {}) {
           to={dashboardItem.href}
           onClick={onNavigate}
           className={cn(
-            "flex items-center px-3 py-2.5 rounded-lg text-sm font-bold transition-colors",
+            "flex items-center px-3 py-3 rounded-lg text-base font-bold transition-colors",
             location.pathname === dashboardItem.href 
               ? "bg-primary-foreground text-primary shadow-md" 
               : "text-white hover:bg-primary-light/20",
@@ -153,7 +153,7 @@ export function Sidebar({ onNavigate }: SidebarProps = {}) {
               <button
                 onClick={() => !isCollapsed && toggleGroup(group.name)}
                 className={cn(
-                  "w-full flex items-center px-3 py-2.5 rounded-lg text-sm font-bold transition-colors",
+                  "w-full flex items-center px-3 py-3 rounded-lg text-base font-bold transition-colors",
                   hasActiveItem 
                     ? "bg-primary-light/30 text-white" 
                     : "text-white hover:bg-primary-light/20",
@@ -184,7 +184,7 @@ export function Sidebar({ onNavigate }: SidebarProps = {}) {
                         to={item.href}
                         onClick={onNavigate}
                         className={cn(
-                          "flex items-center px-3 py-2 rounded-lg text-sm font-semibold transition-colors",
+                          "flex items-center px-3 py-2.5 rounded-lg text-[15px] font-semibold transition-colors",
                           isActive 
                             ? "bg-primary-foreground text-primary shadow-md" 
                             : "text-white hover:bg-primary-light/20"
