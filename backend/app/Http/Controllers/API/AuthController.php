@@ -51,7 +51,14 @@ class AuthController extends Controller
             $user->tokens()->delete();
 
             // Créer un nouveau token
-            $token = $user->createToken('auth-token', ['*'], now()->addDays(30))->plainTextToken;
+            $expiresAt = now()->addDays(30);
+            try {
+                // Sanctum récent: 3e paramètre "expiresAt" supporté
+                $token = $user->createToken('auth-token', ['*'], $expiresAt)->plainTextToken;
+            } catch (\Throwable $e) {
+                // Fallback (Sanctum plus ancien)
+                $token = $user->createToken('auth-token', ['*'])->plainTextToken;
+            }
 
             // Mettre à jour la dernière connexion
             $user->update(['derniere_connexion' => now()]);
@@ -63,10 +70,10 @@ class AuthController extends Controller
                 'user' => new UserResource($user),
                 'token' => $token,
                 'token_type' => 'Bearer',
-                'expires_at' => now()->addDays(30)->toISOString(),
+                'expires_at' => $expiresAt->toISOString(),
             ], 'Connexion réussie');
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             return $this->errorResponse('Erreur lors de la connexion', 500);
         }
     }
@@ -143,15 +150,20 @@ class AuthController extends Controller
             $request->user()->currentAccessToken()->delete();
             
             // Créer un nouveau token
-            $token = $user->createToken('auth-token', ['*'], now()->addDays(30))->plainTextToken;
+            $expiresAt = now()->addDays(30);
+            try {
+                $token = $user->createToken('auth-token', ['*'], $expiresAt)->plainTextToken;
+            } catch (\Throwable $e) {
+                $token = $user->createToken('auth-token', ['*'])->plainTextToken;
+            }
 
             return $this->successResponse([
                 'token' => $token,
                 'token_type' => 'Bearer',
-                'expires_at' => now()->addDays(30)->toISOString(),
+                'expires_at' => $expiresAt->toISOString(),
             ], 'Token rafraîchi avec succès');
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             return $this->errorResponse('Erreur lors du rafraîchissement du token', 500);
         }
     }
