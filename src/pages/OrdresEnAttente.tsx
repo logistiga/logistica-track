@@ -20,6 +20,7 @@ import { OrdreDetailsDialog } from "@/components/ordres-attente/OrdreDetailsDial
 import { OrdresEnAttenteStats } from "@/components/ordres-attente/OrdresEnAttenteStats";
 import { useOrdresEnAttente } from "@/hooks/useOrdresEnAttente";
 import { OrdreTravail } from "@/types/logistique.types";
+import { LogistiqueApiStatus } from "@/components/LogistiqueApiStatus";
 
 export default function OrdresEnAttentePage() {
   const {
@@ -118,6 +119,7 @@ export default function OrdresEnAttentePage() {
           </p>
         </div>
         <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center">
+          <LogistiqueApiStatus />
           {lastSync && (
             <span className="text-sm text-muted-foreground flex items-center gap-1">
               <Clock className="h-4 w-4" />
