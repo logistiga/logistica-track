@@ -19,6 +19,7 @@ const Detention = lazy(() => import("./pages/Detention"));
 const Facturation = lazy(() => import("./pages/Facturation"));
 const Operations = lazy(() => import("./pages/Operations"));
 const Ordre = lazy(() => import("./pages/Ordre"));
+const OrdresEnAttente = lazy(() => import("./pages/OrdresEnAttente"));
 const PrimesChauffeur = lazy(() => import("./pages/PrimesChauffeur"));
 const Notifications = lazy(() => import("./pages/Notifications"));
 const Emails = lazy(() => import("./pages/Emails"));
@@ -84,6 +85,7 @@ const App = () => (
                 <Route path="/facturation" element={<Facturation />} />
                 <Route path="/operations" element={<Operations />} />
                 <Route path="/ordres" element={<Ordre />} />
+                <Route path="/ordres-attente" element={<OrdresEnAttente />} />
                 <Route path="/primes" element={<PrimesChauffeur />} />
                 <Route path="/notifications" element={<Notifications />} />
                 <Route path="/emails" element={<Emails />} />
