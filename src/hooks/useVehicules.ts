@@ -92,14 +92,14 @@ export function useVehicules() {
   const getCamionOptions = useCallback(() => {
     return camions.map(c => ({
       value: c.id.toString(),
-      label: c.libelle_complet,
+      label: c.libelle_complet || `${c.numero_parc} - ${c.immatriculation}`,
     }));
   }, [camions]);
 
   const getRemorqueOptions = useCallback(() => {
     return remorques.map(r => ({
       value: r.id.toString(),
-      label: r.libelle_complet,
+      label: r.libelle_complet || `${r.numero_parc} - ${r.immatriculation}`,
     }));
   }, [remorques]);
 
