@@ -25,7 +25,7 @@ export function VehicleCombobox({
 
   // Filtrer les options basé sur le label (pas le value)
   const filteredOptions = options.filter((option) =>
-    option.label.toLowerCase().includes(searchQuery.toLowerCase())
+    option?.label?.toLowerCase()?.includes(searchQuery.toLowerCase()) ?? false
   );
 
   return (
