@@ -33,11 +33,12 @@ class ConteneurTraiteController extends Controller
             ], 401);
         }
 
-        // Valider les données
+        // Valider les données (accepte le payload simplifié de création)
         $validator = Validator::make($request->all(), [
             'numero_conteneur' => 'required|string|max:20',
             'numero_bl' => 'nullable|string|max:100',
             'nom_client' => 'required|string|max:255',
+            'date_livraison' => 'nullable|date', // Date de livraison (depuis création sortie)
             'code_armateur' => 'nullable|string|max:50',
             'type_conteneur' => 'nullable|string|max:10',
             'date_sortie' => 'nullable|date',
@@ -48,6 +49,8 @@ class ConteneurTraiteController extends Controller
             'jours_detention' => 'nullable|integer|min:0',
             'montant_detention' => 'nullable|numeric|min:0',
             'source_id' => 'nullable|integer',
+            'source_system' => 'nullable|string|max:50',
+            'synced_at' => 'nullable|string',
         ]);
 
         if ($validator->fails()) {
@@ -83,6 +86,11 @@ class ConteneurTraiteController extends Controller
                     'updated' => true,
                 ],
             ]);
+        }
+
+        // Mapper date_livraison vers date_sortie si fourni
+        if (isset($data['date_livraison']) && !isset($data['date_sortie'])) {
+            $data['date_sortie'] = $data['date_livraison'];
         }
 
         // Créer le nouveau conteneur traité
