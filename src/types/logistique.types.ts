@@ -29,6 +29,7 @@ export interface OrdreTravail {
   client_id: number | null;
   client?: Client;
   transitaire_nom?: string | null;
+  armateur_nom?: string | null;
   date: string;
   type: string;
   status: "brouillon" | "en_cours" | "termine" | "facture" | "annule";

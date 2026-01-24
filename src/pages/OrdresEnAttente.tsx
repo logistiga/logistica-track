@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,16 +14,20 @@ import {
   Package,
   Ship,
   Calendar,
-  User
+  User,
+  PlusCircle,
+  ArrowRight
 } from "lucide-react";
 import { OrdresEnAttenteTable } from "@/components/ordres-attente/OrdresEnAttenteTable";
+import { ConteneursEnAttenteTable } from "@/components/ordres-attente/ConteneursEnAttenteTable";
 import { OrdreDetailsDialog } from "@/components/ordres-attente/OrdreDetailsDialog";
 import { OrdresEnAttenteStats } from "@/components/ordres-attente/OrdresEnAttenteStats";
 import { useOrdresEnAttente } from "@/hooks/useOrdresEnAttente";
-import { OrdreTravail } from "@/types/logistique.types";
+import { OrdreTravail, Container } from "@/types/logistique.types";
 import { LogistiqueApiStatus } from "@/components/LogistiqueApiStatus";
 
 export default function OrdresEnAttentePage() {
+  const navigate = useNavigate();
   const {
     ordres,
     loading,
@@ -86,6 +91,21 @@ export default function OrdresEnAttentePage() {
     await rejectOrdre(ordreId);
   };
 
+  // Créer une sortie à partir d'un conteneur en attente
+  const handleCreateSortie = (ordre: OrdreTravail, container: { number: string }) => {
+    // Préparer les données pour pré-remplir le formulaire de sortie
+    const params = new URLSearchParams({
+      numeroConteneur: container.number,
+      numeroBL: ordre.booking_number || '',
+      nomClient: ordre.client?.nom || '',
+      nomTransitaire: ordre.transitaire_nom || '',
+      codeArmateur: ordre.armateur_nom || '',
+      ordreExterneId: ordre.id.toString(),
+    });
+    
+    navigate(`/sorties?action=new&${params.toString()}`);
+  };
+
   if (error) {
     return (
       <div className="w-full px-4 lg:px-6 py-6">
@@ -113,9 +133,9 @@ export default function OrdresEnAttentePage() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center">
         <div>
-          <h1 className="text-3xl font-bold">Ordres en Attente</h1>
+          <h1 className="text-3xl font-bold">Conteneurs en Attente</h1>
           <p className="text-muted-foreground">
-            Ordres de travail reçus de l'application externe
+            Conteneurs reçus de l'application de facturation - À traiter pour créer les sorties
           </p>
         </div>
         <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center">
@@ -141,7 +161,7 @@ export default function OrdresEnAttentePage() {
       <OrdresEnAttenteStats 
         ordresEnAttente={ordresEnAttente.length}
         ordresValides={ordresValides.length}
-        totalConteneurs={ordres.reduce((acc, o) => acc + (o.containers?.length || 0), 0)}
+        totalConteneurs={ordresEnAttente.reduce((acc, o) => acc + (o.containers?.length || 0), 0)}
       />
 
       {/* Search */}
@@ -160,19 +180,32 @@ export default function OrdresEnAttentePage() {
       </Card>
 
       {/* Tabs */}
-      <Tabs defaultValue="en-attente" className="space-y-4">
+      <Tabs defaultValue="conteneurs" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="en-attente" className="gap-2">
-            <Clock className="h-4 w-4" />
-            En attente ({filteredEnAttente.length})
+          <TabsTrigger value="conteneurs" className="gap-2">
+            <Package className="h-4 w-4" />
+            Conteneurs ({filteredEnAttente.reduce((acc, o) => acc + (o.containers?.length || 0), 0)})
           </TabsTrigger>
-          <TabsTrigger value="valides" className="gap-2">
+          <TabsTrigger value="ordres" className="gap-2">
+            <Clock className="h-4 w-4" />
+            Ordres ({filteredEnAttente.length})
+          </TabsTrigger>
+          <TabsTrigger value="traites" className="gap-2">
             <CheckCircle2 className="h-4 w-4" />
-            Validés ({filteredValides.length})
+            Traités ({filteredValides.length})
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="en-attente">
+        <TabsContent value="conteneurs">
+          <ConteneursEnAttenteTable
+            ordres={filteredEnAttente}
+            loading={loading}
+            onViewDetails={handleViewDetails}
+            onCreateSortie={handleCreateSortie}
+          />
+        </TabsContent>
+
+        <TabsContent value="ordres">
           <OrdresEnAttenteTable
             ordres={filteredEnAttente}
             loading={loading}
@@ -183,7 +216,7 @@ export default function OrdresEnAttentePage() {
           />
         </TabsContent>
 
-        <TabsContent value="valides">
+        <TabsContent value="traites">
           <OrdresEnAttenteTable
             ordres={filteredValides}
             loading={loading}
