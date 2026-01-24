@@ -1,25 +1,27 @@
 // Configuration et client API pour l'intégration logistique externe
 import type { ApiResponse, Client, OrdreTravail, Invoice, ApiStats } from "@/types/logistique.types";
-import { getApiBaseUrl } from "@/config/api";
+
+const API_BASE_URL = "https://d16b9f7b-d97a-41e1-b5d0-a72f0873dc6d.lovable.app/api/external";
 
 class LogistiqueApiService {
-  private getBaseUrl(): string {
-    return getApiBaseUrl();
+  private apiKey: string;
+
+  constructor(apiKey: string) {
+    this.apiKey = apiKey;
   }
 
   private async request<T>(
     endpoint: string,
     options: RequestInit = {}
   ): Promise<ApiResponse<T>> {
-    const url = `${this.getBaseUrl()}${endpoint}`;
+    const url = `${API_BASE_URL}${endpoint}`;
 
     try {
       const response = await fetch(url, {
         ...options,
         headers: {
           "Content-Type": "application/json",
-          "Accept": "application/json",
-          "ngrok-skip-browser-warning": "true",
+          "X-API-Key": this.apiKey,
           ...options.headers,
         },
       });
@@ -178,7 +180,9 @@ class LogistiqueApiService {
   }
 }
 
-export const createLogistiqueApi = () => new LogistiqueApiService();
+export const createLogistiqueApi = (apiKey: string) => new LogistiqueApiService(apiKey);
 
-// Instance par défaut
-export const logistiqueApi = createLogistiqueApi();
+// Instance par défaut avec clé API depuis les variables d'environnement
+export const logistiqueApi = createLogistiqueApi(
+  import.meta.env.VITE_LOGISTIQUE_API_KEY || ""
+);
