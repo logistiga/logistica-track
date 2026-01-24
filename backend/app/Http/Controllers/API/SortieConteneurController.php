@@ -10,6 +10,7 @@ use App\Models\SortieConteneur;
 use App\Services\SortieConteneurService;
 use App\Services\SortieCacheService;
 use App\Services\SortieArchiveService;
+use App\Services\FacturationSyncService;
 use App\Traits\ApiResponseTrait;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -23,15 +24,18 @@ class SortieConteneurController extends Controller
     protected SortieConteneurService $sortieService;
     protected SortieCacheService $cacheService;
     protected SortieArchiveService $archiveService;
+    protected FacturationSyncService $facturationSync;
 
     public function __construct(
         SortieConteneurService $sortieService,
         SortieCacheService $cacheService,
-        SortieArchiveService $archiveService
+        SortieArchiveService $archiveService,
+        FacturationSyncService $facturationSync
     ) {
         $this->sortieService = $sortieService;
         $this->cacheService = $cacheService;
         $this->archiveService = $archiveService;
+        $this->facturationSync = $facturationSync;
     }
 
     /**
@@ -78,6 +82,17 @@ class SortieConteneurController extends Controller
             $sortie = $this->sortieService->createSortie($request->validated());
 
             $this->cacheService->invalidateAllCaches();
+
+            // Envoyer automatiquement vers l'app de facturation
+            try {
+                $this->facturationSync->envoyerNouvelleSortie($sortie);
+            } catch (\Exception $e) {
+                \Log::warning('Échec sync facturation lors création sortie', [
+                    'sortie_id' => $sortie->id,
+                    'error' => $e->getMessage()
+                ]);
+                // Ne pas bloquer la création si la sync échoue
+            }
 
             // Logger l'activité
             try {

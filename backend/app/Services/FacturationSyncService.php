@@ -80,6 +80,79 @@ class FacturationSyncService
     }
 
     /**
+     * Envoyer les données minimales d'une nouvelle sortie créée
+     * (numéro conteneur, BL, client, date livraison)
+     */
+    public function envoyerNouvelleSortie(SortieConteneur $sortie): array
+    {
+        $payload = [
+            'numero_conteneur' => $sortie->numero_conteneur,
+            'numero_bl' => $sortie->numero_bl,
+            'nom_client' => $sortie->nom_client,
+            'date_livraison' => $sortie->date_sortie?->format('Y-m-d'),
+            'source_id' => $sortie->id,
+            'source_system' => 'logistiga_ops',
+            'synced_at' => now()->toISOString(),
+        ];
+
+        try {
+            $response = Http::timeout($this->timeout)
+                ->withHeaders($this->getHeaders())
+                ->post("{$this->baseUrl}/api/conteneurs-traites", $payload);
+
+            if ($response->successful()) {
+                // Marquer comme synchronisé
+                $sortie->update(['synced_to_facturation_at' => now()]);
+                
+                Log::info('Nouvelle sortie envoyée à facturation', [
+                    'sortie_id' => $sortie->id,
+                    'numero_conteneur' => $sortie->numero_conteneur,
+                ]);
+
+                return [
+                    'success' => true,
+                    'message' => 'Sortie synchronisée',
+                    'data' => $response->json(),
+                ];
+            }
+
+            Log::error('Échec sync nouvelle sortie', [
+                'sortie_id' => $sortie->id,
+                'status' => $response->status(),
+                'body' => $response->body(),
+            ]);
+
+            // Marquer l'échec
+            $sortie->update(['sync_facturation_failed' => true]);
+
+            return [
+                'success' => false,
+                'message' => 'Erreur lors de la synchronisation',
+                'error' => $response->json()['message'] ?? $response->body(),
+            ];
+
+        } catch (\Exception $e) {
+            Log::warning('Exception sync nouvelle sortie', [
+                'sortie_id' => $sortie->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            // Marquer l'échec silencieusement
+            try {
+                $sortie->update(['sync_facturation_failed' => true]);
+            } catch (\Exception $updateException) {
+                // Ignorer si la colonne n'existe pas encore
+            }
+
+            return [
+                'success' => false,
+                'message' => 'Erreur de connexion',
+                'error' => $e->getMessage(),
+            ];
+        }
+    }
+
+    /**
      * Envoyer plusieurs conteneurs en batch
      */
     public function envoyerConteneursEnLot(array $sorties): array
