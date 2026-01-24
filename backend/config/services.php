@@ -41,13 +41,13 @@ return [
     |
     */
     'facturation' => [
-        // URL de base de l'API de facturation
-        'url' => env('FACTURATION_API_URL', 'https://facturation.logistiga.com'),
+        // URL de base de l'API de facturation (avec /public pour Laravel)
+        'url' => env('FACTURATION_API_URL', 'https://facturation.logistiga.com/backend/public'),
         
-        // API Key pour envoyer vers facturation
+        // API Key pour envoyer vers facturation (doit correspondre à LOGISTIGA_OPS_WEBHOOK_KEY de Facturation)
         'api_key' => env('FACTURATION_API_KEY'),
         
-        // API Key attendue pour les webhooks entrants
+        // API Key attendue pour les webhooks entrants (doit correspondre à LOGISTIGA_OPS_API_KEY de Facturation)
         'webhook_key' => env('FACTURATION_WEBHOOK_KEY'),
         
         // Timeout en secondes

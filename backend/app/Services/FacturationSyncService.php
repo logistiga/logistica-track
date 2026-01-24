@@ -81,18 +81,22 @@ class FacturationSyncService
 
     /**
      * Envoyer les données minimales d'une nouvelle sortie créée
-     * (numéro conteneur, BL, client, date livraison)
+     * Format conforme aux spécifications de l'app Facturation
      */
     public function envoyerNouvelleSortie(SortieConteneur $sortie): array
     {
+        // Format structuré selon les specs Facturation
         $payload = [
             'numero_conteneur' => $sortie->numero_conteneur,
+            'sortie_id' => $sortie->id,
             'numero_bl' => $sortie->numero_bl,
-            'nom_client' => $sortie->nom_client,
-            'date_livraison' => $sortie->date_sortie?->format('Y-m-d'),
-            'source_id' => $sortie->id,
             'source_system' => 'logistiga_ops',
-            'synced_at' => now()->toISOString(),
+            'client' => [
+                'nom' => $sortie->nom_client,
+            ],
+            'dates' => [
+                'sortie' => $sortie->date_sortie?->format('Y-m-d'),
+            ],
         ];
 
         try {
@@ -177,54 +181,70 @@ class FacturationSyncService
 
     /**
      * Préparer le payload pour l'envoi vers facturation
+     * Format conforme aux spécifications de l'app Facturation
      */
     private function preparerPayload(SortieConteneur $sortie): array
     {
         return [
+            // Champs obligatoires et recommandés en premier
             'numero_conteneur' => $sortie->numero_conteneur,
+            'sortie_id' => $sortie->id,
             'numero_bl' => $sortie->numero_bl,
+            'source_system' => 'logistiga_ops',
+            'statut' => $sortie->statut,
+            
+            // Armateur
             'armateur' => [
                 'code' => $sortie->code_armateur,
                 'nom' => $sortie->armateur?->nom ?? $sortie->code_armateur,
             ],
+            
+            // Client
             'client' => [
                 'nom' => $sortie->nom_client,
                 'adresse' => $sortie->adresse_client,
             ],
+            
+            // Transitaire
             'transitaire' => [
                 'nom' => $sortie->nom_transitaire,
             ],
+            
+            // Dates (format YYYY-MM-DD)
             'dates' => [
                 'sortie' => $sortie->date_sortie?->format('Y-m-d'),
                 'retour' => $sortie->date_retour?->format('Y-m-d'),
             ],
+            
+            // Véhicule (utiliser immatriculation comme plaque)
             'vehicule' => [
                 'camion' => [
                     'id' => $sortie->camion_id,
-                    'plaque' => $sortie->camion?->numero_parc ?? null,
+                    'plaque' => $sortie->camion?->immatriculation ?? $sortie->camion?->numero_parc,
                 ],
                 'remorque' => [
                     'id' => $sortie->remorque_id,
-                    'plaque' => $sortie->remorque?->numero_parc ?? null,
+                    'plaque' => $sortie->remorque?->immatriculation ?? $sortie->remorque?->numero_parc,
                 ],
             ],
+            
+            // Chauffeur
             'chauffeur' => [
-                'nom' => $sortie->camion?->chauffeur ?? null,
+                'nom' => null, // Pas de relation chauffeur directe dans le modèle actuel
                 'prime' => $sortie->prime_chauffeur,
             ],
+            
+            // Destination
             'destination' => [
-                'type' => $sortie->destination,
+                'type' => $sortie->type_destination ?? $sortie->destination,
                 'adresse' => $sortie->adresse_client,
             ],
-            'statut' => $sortie->statut,
-            'source_system' => 'logistiga_ops',
-            'sortie_id' => $sortie->id,
-            'synced_at' => now()->toISOString(),
         ];
     }
 
     /**
      * Headers pour les requêtes vers facturation
+     * Envoie les deux formats d'auth pour compatibilité maximale
      */
     private function getHeaders(): array
     {
@@ -235,6 +255,8 @@ class FacturationSyncService
         ];
 
         if ($this->apiKey) {
+            // Envoyer les DEUX headers pour compatibilité avec les specs Facturation
+            $headers['X-API-Key'] = $this->apiKey;
             $headers['Authorization'] = "Bearer {$this->apiKey}";
         }
 
