@@ -30,6 +30,9 @@ Route::prefix('public')->group(function () {
 Route::get('/health', [\App\Http\Controllers\API\SystemController::class, 'health'])->name('system.health');
 Route::get('/cors-test', [\App\Http\Controllers\API\SystemController::class, 'corsTest'])->name('system.cors-test');
 
+// Webhooks publics (protégés par API Key, pas par Sanctum)
+require __DIR__.'/modules/webhook.php';
+
 // Routes protégées par authentification
 Route::middleware('auth:sanctum')->group(function () {
     
